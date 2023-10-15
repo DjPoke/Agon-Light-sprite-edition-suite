@@ -12,10 +12,10 @@ easily be compiled for Mac (intel, M1/M2), Linux and Raspberry Pi.
 
 sprite structure:
 =================
-colors count    : byte
-frames count	  :	byte
-spr size		    :	byte
-data			      : width x height bytes of colors
+colors count : byte
+frames count :	byte
+spr size     :	byte
+data         : width x height bytes of colors
 
 
 DjPoke
