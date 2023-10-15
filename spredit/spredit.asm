@@ -2428,12 +2428,3 @@ rgb_palette:
 ; frames count	:	byte
 ; spr size		:	byte
 ; data			:   width x height bytes of colors
-
-
-; TODO:
-;---------
-; add/remove frames must be done correctly
-; read animations with 'p' key
-; create a help text file with keyboard shorcuts list
-; solve the 'copy frame' bug
-; solve the bug of frames in fn_load/save sprite
