@@ -1,4 +1,4 @@
-; SprEdit.asm (Work In Progress)
+; SprEdit.asm
 ;
 ; by B.Vignoli
 ; MIT 2023-2024
@@ -2327,7 +2327,9 @@ ss_file_error:
 
 ; print 'file error'
 fn_print_file_error:
+	vdu 7	
 	call fn_wait_key_released
+	
 	; locate x,y
 	vdu 31
 	vdu FILENAME_X
@@ -2356,7 +2358,9 @@ fn_print_file_error:
 
 ; print 'folder error'
 fn_print_folder_error:
+	vdu 7	
 	call fn_wait_key_released
+	
 	; locate x,y
 	vdu 31
 	vdu FILENAME_X
