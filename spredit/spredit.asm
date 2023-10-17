@@ -411,65 +411,9 @@ palette_loop:
 	; draw the sprite's border rectangle
 	call fn_rect
 
-	; locate 15,4
-	vdu 31
-	vdu 15
-	vdu 4
-
-	; print text
-	ld hl,spr_descr
-	ld bc,0
-	xor a
-	rst.lis $18
-
-	; locate 15,6
-	vdu 31
-	vdu 15
-	vdu 6
-
-	; check for sprite size...
-	ld hl,spr_size
-	ld a,(hl)
+	; update sprite size descriptions
+	call fn_show_spr_descr
 	
-	cp 4
-	jr nz, not4x4
-
-	; print text 4x4
-	ld hl,spr_descr1
-	ld bc,0
-	xor a
-	rst.lis $18
-	jr init_sprite_vars
-	
-not4x4:
-	cp 8
-	jr nz, not8x8
-
-	; print text 8x8
-	ld hl,spr_descr2
-	ld bc,0
-	xor a
-	rst.lis $18
-	jr init_sprite_vars
-	
-not8x8:
-	cp 16
-	jr nz, not16x16
-
-	; print text 16x16
-	ld hl,spr_descr3
-	ld bc,0
-	xor a
-	rst.lis $18
-	jr init_sprite_vars
-
-not16x16:
-	; print text 32x32
-	ld hl,spr_descr4
-	ld bc,0
-	xor a
-	rst.lis $18
-
 ; initialize sprite vars
 init_sprite_vars:
 	; initialize coordinates before drawing the sprite
@@ -2019,33 +1963,43 @@ ls_clear_filename:
 	ld hl,spr_size
 	ld (hl),a
 	
+	; set 4x4 pixel width
+	cp SPR44
+	jr nz,ls_next1
+
+	ld hl,pixel_width
+	ld b,SPR44_width
+	ld (hl),b
+	jr ls_next4
+
+ls_next1:
 	; set 8x8 pixel width
 	cp SPR88
-	jr nz,ls_next1
+	jr nz,ls_next2
 
 	ld hl,pixel_width
 	ld b,SPR88_width
 	ld (hl),b
-	jr ls_next3
+	jr ls_next4
 
-ls_next1:
+ls_next2:
 
 	; set 16x16 pixel width
 	cp SPR1616
-	jr nz,ls_next2
+	jr nz,ls_next3
 
 	ld hl,pixel_width
 	ld b,SPR1616_width
 	ld (hl),b
-	jr ls_next3
+	jr ls_next4
 	
-ls_next2:
+ls_next3:
 
 	ld hl,pixel_width
 	ld b,SPR3232_width
 	ld (hl),b
 	
-ls_next3:
+ls_next4:
 
 	ld l,a
 	ld h,a
@@ -2096,11 +2050,6 @@ ls_close_error:
 	moscall mos_fclose
 	
 	; reset current frame and coordinates of the drawing pixel
-	ld hl,frames_count
-	ld a,(hl)
-	dec a
-	ld hl,current_frame
-	ld (hl),a
 	ld hl,xpix
 	xor a
 	ld (hl),a
@@ -2118,11 +2067,6 @@ ls_close:
 	moscall mos_fclose
 
 	; reset current frame and coordinates of the drawing pixel
-	ld hl,frames_count
-	ld a,(hl)
-	dec a
-	ld hl,current_frame
-	ld (hl),a
 	ld hl,xpix
 	xor a
 	ld (hl),a
@@ -2130,6 +2074,7 @@ ls_close:
 	ld (hl),a
 
 ls_exit:
+	call fn_show_spr_descr
 	call fn_change_frames_count
 	ret
 
@@ -2436,6 +2381,68 @@ sd_loop:
 	sub c
 	cp SLOWDOWN_DELAY
 	jr nz,sd_loop
+	ret
+	
+fn_show_spr_descr:
+	; locate 15,4
+	vdu 31
+	vdu 15
+	vdu 4
+
+	; print text
+	ld hl,spr_descr
+	ld bc,0
+	xor a
+	rst.lis $18
+
+	; locate 15,6
+	vdu 31
+	vdu 15
+	vdu 6
+
+	; check for sprite size...
+	ld hl,spr_size
+	ld a,(hl)
+	
+	cp 4
+	jr nz,ssd_8x8
+
+	; print text 4x4
+	ld hl,spr_descr1
+	ld bc,0
+	xor a
+	rst.lis $18
+	ret
+	
+ssd_8x8:
+	cp 8
+	jr nz,ssd_16x16
+
+	; print text 8x8
+	ld hl,spr_descr2
+	ld bc,0
+	xor a
+	rst.lis $18
+	ret
+	
+ssd_16x16:
+	cp 16
+	jr nz,ssd_32x32
+
+	; print text 16x16
+	ld hl,spr_descr3
+	ld bc,0
+	xor a
+	rst.lis $18
+	ret
+
+ssd_32x32:
+	; print text 32x32
+	ld hl,spr_descr4
+	ld bc,0
+	xor a
+	rst.lis $18
+
 	ret
 ;======================================================================
 

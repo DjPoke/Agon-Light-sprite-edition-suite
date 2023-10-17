@@ -1,4 +1,5 @@
 TODO:
 =====
-* solve the bugs:
-  Loading a sprite resize it at a low size
+* Add r/R key to rotate frame
+* Add f/F key to flip horizontally a frame
+* Add m/M key to mirror vertically a frame
