@@ -43,10 +43,10 @@ SPR88: 		equ 8
 SPR1616: 	equ 16
 SPR3232: 	equ 32
 
-SPR44_width: 	equ 128
-SPR88_width: 	equ 64
-SPR1616_width: 	equ 32
-SPR3232_width: 	equ 16
+SPR44_width: 	equ 32
+SPR88_width: 	equ 16
+SPR1616_width: 	equ 8
+SPR3232_width: 	equ 4
 
 BUFFER_SIZE:			equ 8192 ; 8 frames
 ONE_FRAME_BUFFER_SIZE:	equ 1024
@@ -150,6 +150,12 @@ start:
 	vdu 22
 	vdu 8
 	
+	; set logical coordinates system
+	vdu 23
+	vdu 0
+	vdu $c0
+	vdu 0
+	
 	; set text colors
 	vdu 17
 	vdu 128 ; black background
@@ -179,12 +185,12 @@ start:
 	ld (ix+1),h
 
 	ld ix,x2
-	ld hl,1279
+	ld hl,319
 	ld (ix+0),l
 	ld (ix+1),h
 
 	ld ix,y2
-	ld hl,1023
+	ld hl,239
 	ld (ix+0),l
 	ld (ix+1),h
 	
@@ -322,26 +328,26 @@ palette_loop:
 	ld ix,x1
 	pop hl
 	push hl
-	ld h,20
+	ld h,5
 	mlt hl
 	push hl
 	ld (ix+0),l
 	ld (ix+1),h
 
 	ld ix,y1
-	ld hl,984
+	ld hl,0
 	ld (ix+0),l
 	ld (ix+1),h
 
 	ld ix,x2
 	pop hl
-	ld de,19
+	ld de,4
 	add hl,de
 	ld (ix+0),l
 	ld (ix+1),h
 
 	ld ix,y2
-	ld hl,1019
+	ld hl,10
 	ld (ix+0),l
 	ld (ix+1),h
 	
@@ -362,17 +368,17 @@ palette_loop:
 	ld (ix+1),h
 
 	ld ix,y1
-	ld hl,0
+	ld hl,11
 	ld (ix+0),l
 	ld (ix+1),h
 
 	ld ix,x2
-	ld hl,1279
+	ld hl,319
 	ld (ix+0),l
 	ld (ix+1),h
 
 	ld ix,y2
-	ld hl,1023
+	ld hl,239
 	ld (ix+0),l
 	ld (ix+1),h
 	
@@ -1332,13 +1338,11 @@ fn_rect:
 	ld ix,x1
 	ld a,(ix + 0)
 	vdu_a
-	ld ix,x1
 	ld a,(ix + 1)
 	vdu_a
 	ld iy,y1
 	ld a,(iy + 0)
 	vdu_a
-	ld iy,y1
 	ld a,(iy + 1)
 	vdu_a
 
@@ -1347,13 +1351,11 @@ fn_rect:
 	ld ix,x2
 	ld a,(ix + 0)
 	vdu_a
-	ld ix,x2
 	ld a,(ix + 1)
 	vdu_a
 	ld iy,y1
 	ld a,(iy + 0)
 	vdu_a
-	ld iy,y1
 	ld a,(iy + 1)
 	vdu_a
 
@@ -1362,13 +1364,11 @@ fn_rect:
 	ld ix,x2
 	ld a,(ix + 0)
 	vdu_a
-	ld ix,x2
 	ld a,(ix + 1)
 	vdu_a
 	ld iy,y2
 	ld a,(iy + 0)
 	vdu_a
-	ld iy,y2
 	ld a,(iy + 1)
 	vdu_a
 
@@ -1377,13 +1377,11 @@ fn_rect:
 	ld ix,x1
 	ld a,(ix + 0)
 	vdu_a
-	ld ix,x1
 	ld a,(ix + 1)
 	vdu_a
 	ld iy,y2
 	ld a,(iy + 0)
 	vdu_a
-	ld iy,y2
 	ld a,(iy + 1)
 	vdu_a
 
@@ -1392,13 +1390,11 @@ fn_rect:
 	ld ix,x1
 	ld a,(ix + 0)
 	vdu_a
-	ld ix,x1
 	ld a,(ix + 1)
 	vdu_a
 	ld iy,y1
 	ld a,(iy + 0)
 	vdu_a
-	ld iy,y1
 	ld a,(iy + 1)
 	vdu_a
 	
@@ -1406,62 +1402,105 @@ fn_rect:
 
 ; draw a filled rectangle
 fn_rectf:
-	ld iy,y1
-	ld c,(iy+0)
-	ld b,(iy+1)	
-
-fn_rectf_loop:
-	push bc
-	
 	ld ix,x1
+	ld iy,y1
+	
 	vdu 25
 	vdu 4
-	ld a,(ix + 0)
+	ld a,(ix+0)
 	vdu_a
-	ld a,(ix + 1)
+	ld a,(ix+1)
 	vdu_a
-	pop bc
-	ld a,c
-	push bc
+	ld a,(iy+0)
 	vdu_a
-	pop bc
-	ld a,b
-	push bc
+	ld a,(iy+1)
+	vdu_a
+	
+	ld ix,x2
+	ld iy,y1
+
+	vdu 25
+	vdu 5
+	ld a,(ix+0)
+	vdu_a
+	ld a,(ix+1)
+	vdu_a
+	ld a,(iy+0)
+	vdu_a
+	ld a,(iy+1)
+	vdu_a
+		
+	ld ix,x2
+	ld iy,y2
+	
+	vdu 25
+	vdu 80
+	ld a,(ix+0)
+	vdu_a
+	ld a,(ix+1)
+	vdu_a
+	ld a,(iy+0)
+	vdu_a
+	ld a,(iy+1)
+	vdu_a
+	
+	ld ix,x1
+	ld iy,y2
+	
+	vdu 25
+	vdu 5
+	ld a,(ix+0)
+	vdu_a
+	ld a,(ix+1)
+	vdu_a
+	ld a,(iy+0)
+	vdu_a
+	ld a,(iy+1)
+	vdu_a
+		
+	ld ix,x1
+	ld iy,y1
+	
+	vdu 25
+	vdu 80
+	ld a,(ix+0)
+	vdu_a
+	ld a,(ix+1)
+	vdu_a
+	ld a,(iy+0)
+	vdu_a
+	ld a,(iy+1)
 	vdu_a
 
 	ld ix,x2
+	ld iy,y1
+	
+	vdu 25
+	vdu 4
+	ld a,(ix+0)
+	vdu_a
+	ld a,(ix+1)
+	vdu_a
+	ld a,(iy+0)
+	vdu_a
+	ld a,(iy+1)
+	vdu_a
+
+	ld ix,x2
+	ld iy,y2
+	
 	vdu 25
 	vdu 5
-	ld a,(ix + 0)
+	ld a,(ix+0)
 	vdu_a
-	ld a,(ix + 1)
+	ld a,(ix+1)
 	vdu_a
-	pop bc
-	ld a,c
-	push bc
-	vdu_a
-	pop bc
-	ld a,b
-	push bc
-	vdu_a
-
-	pop bc
-	
-	; y = y2 ?
-	ld iy,y2
-	ld a,(iy+1)
-	cp b
-	jr nz,fn_rectf_not_equal
-	
 	ld a,(iy+0)
-	cp c
-	jr nz,fn_rectf_not_equal
+	vdu_a
+	ld a,(iy+1)
+	vdu_a
 
 	ret
-	
-fn_rectf_not_equal:
-	inc bc
-	jp fn_rectf_loop
 
 fn_calc_pixel_coords:
 	ld de,$000000 ; reset deu
@@ -1477,14 +1516,11 @@ fn_calc_pixel_coords:
 	ld ix,xs1
 	ld e,(ix+0)
 	ld d,(ix+1)
-	inc de
-	inc de
-	inc de
-	inc de ; DE = xs1 + 4
-	add hl,de ; HL = (xpix * pixel_width) + xs1 + 4
+	inc de ; DE = xs1 + 1
+	add hl,de ; HL = (xpix * pixel_width) + xs1 + 1
 	ld iy,x1
 	ld (iy+0),l
-	ld (iy+1),h ; x1 = (xpix * pixel_width) + xs1 + 4
+	ld (iy+1),h ; x1 = (xpix * pixel_width) + xs1 + 1
 	push hl
 	ld hl,pixel_width
 	ld d,0
@@ -1492,39 +1528,28 @@ fn_calc_pixel_coords:
 	pop hl
 	add hl,de
 	dec hl
-	dec hl
-	dec hl
-	dec hl
 	ld iy,x2
 	ld (iy+0),l
-	ld (iy+1),h ; x2 = x1 + pixel_width - 4
+	ld (iy+1),h ; x2 = x1 + pixel_width - 1
 
 	ld de,$000000 ; reset deu
 
 	; calculate coordinates y of the resized pixel
-	ld hl,spr_size
-	ld a,(hl)
-	dec a ; A = sprsize - 1
 	ld hl,ypix
-	ld e,(hl)
-	sub e
-	ld e,a ; E = (sprsize - 1) - ypix
+	ld e,(hl) ; E = ypix
 	ld hl,pixel_width
 	ld d,(hl) ; D = pixel_width
 	push de
-	pop hl
+	pop hl ; HL = DE
 	mlt hl ; HL = ypix * pixel_width
 	ld ix,ys1
 	ld e,(ix+0)
 	ld d,(ix+1) ; ys1 = ypix * pixel_width
-	inc de
-	inc de
-	inc de
-	inc de ; DE = ys1 + 4
-	add hl,de ; HL = (ypix * pixel_width) + ys1 + 4
+	inc de ; DE = ys1 + 1
+	add hl,de ; HL = (ypix * pixel_width) + ys1 + 1
 	ld iy,y1
 	ld (iy+0),l
-	ld (iy+1),h ; y1 = (ypix * pixel_width) + ys1 + 4
+	ld (iy+1),h ; y1 = (ypix * pixel_width) + ys1 + 1
 	push hl
 	ld hl,pixel_width
 	ld d,0
@@ -1532,27 +1557,15 @@ fn_calc_pixel_coords:
 	pop hl
 	add hl,de
 	dec hl
-	dec hl
-	dec hl
-	dec hl
 	ld iy,y2
 	ld (iy+0),l
-	ld (iy+1),h ; y2 = y1 + pixel_width - 4
+	ld (iy+1),h ; y2 = y1 + pixel_width - 1
 	
 	ret
 
 ; draw the resized pixel border, with its color
 fn_draw_pixel_with_border:
-	call fn_calc_pixel_coords
-		
-	; set graphics pen
-	vdu 18
-	vdu 0
-	call fn_get_pixel_color
-	vdu_a
-
-	; draw the sprite's color rectangle
-	call fn_rectf
+	call fn_draw_pixel_without_border
 
 	; set graphics pen
 	vdu 18
@@ -1564,7 +1577,6 @@ fn_draw_pixel_with_border:
 
 ; draw the resized pixel color
 fn_draw_pixel_without_border:
-	; draw the resized pixel border
 	call fn_calc_pixel_coords
 
 	; set graphics pen
@@ -1720,26 +1732,26 @@ fn_draw_palette_with_border:
 	ld ix,x1
 	pop hl
 	push hl
-	ld h,20
+	ld h,5
 	mlt hl
 	push hl
 	ld (ix+0),l
 	ld (ix+1),h
 
 	ld ix,y1
-	ld hl,984
+	ld hl,0
 	ld (ix+0),l
 	ld (ix+1),h
 
 	ld ix,x2
 	pop hl
-	ld de,19
+	ld de,4
 	add hl,de
 	ld (ix+0),l
 	ld (ix+1),h
 
 	ld ix,y2
-	ld hl,1019
+	ld hl,10
 	ld (ix+0),l
 	ld (ix+1),h
 	
@@ -1777,26 +1789,26 @@ fn_draw_palette_without_border:
 	ld ix,x1
 	pop hl
 	push hl
-	ld h,20
+	ld h,5
 	mlt hl
 	push hl
 	ld (ix+0),l
 	ld (ix+1),h
 
 	ld ix,y1
-	ld hl,984
+	ld hl,0
 	ld (ix+0),l
 	ld (ix+1),h
 
 	ld ix,x2
 	pop hl
-	ld de,19
+	ld de,4
 	add hl,de
 	ld (ix+0),l
 	ld (ix+1),h
 
 	ld ix,y2
-	ld hl,1019
+	ld hl,10
 	ld (ix+0),l
 	ld (ix+1),h
 	
@@ -2315,6 +2327,7 @@ ss_file_error:
 
 ; print 'file error'
 fn_print_file_error:
+	call fn_wait_key_released
 	; locate x,y
 	vdu 31
 	vdu FILENAME_X
@@ -2326,10 +2339,7 @@ fn_print_file_error:
 	xor a
 	rst.lis $18
 
-pfe_loop:
-	call fn_wait_key
-	cp 0
-	jr z, pfe_loop
+	call fn_input_key
 
 	; locate x,y
 	vdu 31
@@ -2346,6 +2356,7 @@ pfe_loop:
 
 ; print 'folder error'
 fn_print_folder_error:
+	call fn_wait_key_released
 	; locate x,y
 	vdu 31
 	vdu FILENAME_X
@@ -2357,10 +2368,7 @@ fn_print_folder_error:
 	xor a
 	rst.lis $18
 
-pfre_loop:
-	call fn_wait_key
-	cp 0
-	jr z, pfre_loop
+	call fn_input_key
 
 	; locate x,y
 	vdu 31
@@ -2425,10 +2433,10 @@ fn_change_frame:
 	ld hl,current_frame_ascii
 	ld (hl),a
 	
-	; locate 21,4
+	; locate 21,3
 	vdu 31
 	vdu 21
-	vdu 4
+	vdu 3
 
 	; print text
 	ld hl,current_frame_ascii
@@ -2445,10 +2453,10 @@ fn_change_frames_count:
 	ld hl,frames_count_ascii
 	ld (hl),a
 	
-	; locate 23,4
+	; locate 23,3
 	vdu 31
 	vdu 23
-	vdu 4
+	vdu 3
 
 	; print text
 	ld hl,frames_count_ascii
@@ -2478,10 +2486,10 @@ sd_loop:
 	ret
 	
 fn_show_spr_descr:
-	; locate 15,4
+	; locate 15,3
 	vdu 31
 	vdu 15
-	vdu 4
+	vdu 3
 
 	; print text
 	ld hl,spr_descr
@@ -2489,10 +2497,10 @@ fn_show_spr_descr:
 	xor a
 	rst.lis $18
 
-	; locate 15,6
+	; locate 15,5
 	vdu 31
 	vdu 15
-	vdu 6
+	vdu 5
 
 	; check for sprite size...
 	ld hl,spr_size
@@ -2552,13 +2560,13 @@ y2:
 
 ; coordinates of the edited sprite
 xs1:
-	dw 382
+	dw 95
 ys1:
-	dw 254
+	dw 55
 xs2:
-	dw 896
+	dw 224
 ys2:
-	dw 768
+	dw 184
 
 ; coordinates of active pixels to draw
 xpix:
