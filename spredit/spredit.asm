@@ -63,6 +63,8 @@ VK_RETURN: 		equ 143
 VK_TAB:			equ 142
 VK_DELETE:		equ 130
 VK_BACKSPACE:	equ 132
+VK_PGUP:		equ 146
+VK_PGDOWN:		equ 148
 VK_1: 			equ 93
 VK_2: 			equ 178
 VK_3: 			equ 77
@@ -409,9 +411,9 @@ palette_loop:
 	; draw the sprite's border rectangle
 	call fn_rect
 
-	; locate 13,4
+	; locate 15,4
 	vdu 31
-	vdu 13
+	vdu 15
 	vdu 4
 
 	; print text
@@ -419,7 +421,12 @@ palette_loop:
 	ld bc,0
 	xor a
 	rst.lis $18
-	
+
+	; locate 15,6
+	vdu 31
+	vdu 15
+	vdu 6
+
 	; check for sprite size...
 	ld hl,spr_size
 	ld a,(hl)
@@ -480,6 +487,9 @@ init_sprite_vars:
 	ld (hl),a
 	ld hl,current_frame
 	xor a
+	ld (hl),a
+	inc a
+	ld hl,frames_count
 	ld (hl),a
 
 	; fill buffers with zeros
@@ -552,6 +562,12 @@ draw_sprite_loop:
 
 	cp VK_BACKSPACE ; on backspace key...
 	jp z,dsl_delete_frame
+	
+	cp VK_PGUP ; on pageup key...
+	jp z,dsl_next_frame
+
+	cp VK_PGDOWN ; on pagedown key...
+	jp z,dsl_previous_frame
 
 	cp VK_l ; on l key...
 	jp z,dsl_load_sprite
@@ -564,12 +580,6 @@ draw_sprite_loop:
 
 	cp VK_S ; on S key...
 	jp z,dsl_save_sprite
-
-	cp VK_p ; on p key...
-	jp z,dsl_play_sprite
-
-	cp VK_P ; on P key...
-	jp z,dsl_play_sprite
 
 	cp VK_ESCAPE ; on escape key...
 	jp z,exit_program
@@ -746,144 +756,26 @@ dsl_save_sprite:
 	call fn_refresh_sprite
 	jp draw_sprite_loop
 
-; play the sprite animation
-dsl_play_sprite:
-	call fn_wait_key_released
-	push af
-	
-	; create all the frames in real sprites & bitmaps
-	vdu 23
-	vdu 27
-	vdu 0
-	vdu 0 ; select bitmap 0
-	
-	vdu 23
-	vdu 27
-	vdu 1
-	ld hl,spr_size
-	ld a,(hl) ; set width & height of the bitmap
-	vdu_a
-	xor a
-	vdu_a
-	ld a,(hl)
-	vdu_a
-	xor a
-	vdu_a
-	ld a,(hl)
-
-	ld hl,$000000 ; reset hlu
-	ld l,a
-	ld h,a
-	mlt hl
-	push hl
-	pop bc ; BC = sprsize²
-	ld hl,sprite_buffer
-
-; fill the bitmap
-dsl_ps_loop:
-	ld a,(hl) ; A = color from 0 to 63
-	push hl
-	ld hl,$000000
-	ld l,a
-	ld h,3
-	mlt hl
-	ld de,rgb_palette
-	add hl,de
-	ld a,(hl) ; red
-	inc hl
-	vdu_a
-	ld a,(hl) ; green
-	inc hl
-	vdu_a
-	ld a,(hl) ; blue
-	inc hl
-	vdu_a
-	vdu 255 ; alpha
-	
-	pop hl
-	inc hl
-	dec bc
-	ld a,b
-	or c
-	cp 0
-	jr nz,dsl_ps_loop
-	
-	; select the sprite 0
-	vdu 23
-	vdu 27
-	vdu 4
-	vdu 0
-	
-	; clear all frames
-	vdu 23
-	vdu 27
-	vdu 5
-	
-	; add bitmap 0 as frame of sprite 0
-	vdu 23
-	vdu 27
-	vdu 6
-	vdu 0
-
-	; position sprite 0
-	vdu 23
-	vdu 27
-	vdu 13
-	vdu 16
-	vdu 1
-	vdu 120
-	vdu 0
-	
-	; set sprite 0 active
-	vdu 23
-	vdu 27
-	vdu 7
-	vdu 1
-
-	; set sprite 0 visible
-	vdu 23
-	vdu 27
-	vdu 11
-
-	; update sprite
-	vdu 23
-	vdu 27
-	vdu 15
-	
-	pop af
-
-dsl_ps_key_loop:
-	call fn_wait_key
-	cp 0
-	jr z,dsl_ps_key_loop
-
-	; set sprite 0 invisible
-	vdu 23
-	vdu 27
-	vdu 12
-
-	jp draw_sprite_loop
-
 ; add a frame to the animation
 dsl_add_frame:
 	call fn_wait_key_released
-	ld hl,current_frame
+	ld hl,frames_count
 	ld a,(hl)
-	cp MAX_FRAMES-1
+	cp MAX_FRAMES
 	jp z,draw_sprite_loop
-
+	
 	inc a
-	ld (hl),a
-	call fn_change_frame
+	ld (hl),a	
+	call fn_change_frames_count
 	call fn_refresh_sprite
 	jp draw_sprite_loop
 
 ; add a copy of the current frame to the animation
 dsl_add_and_copy_frame: ; TODO! debug me!
 	call fn_wait_key_released
-	ld hl,current_frame
+	ld hl,frames_count
 	ld a,(hl)
-	cp MAX_FRAMES-1
+	cp MAX_FRAMES
 	jp z,draw_sprite_loop
 
 	; inc frame
@@ -935,7 +827,7 @@ dsl_aacf_loop2:
 	jp draw_sprite_loop
 
 ; delete last frame from animation
-dsl_delete_frame:
+dsl_delete_frame: ; TODO! delete the selected frame
 	call fn_wait_key_released
 	ld hl,current_frame
 	ld a,(hl)
@@ -943,6 +835,36 @@ dsl_delete_frame:
 	jp z,draw_sprite_loop
 	
 	dec a
+	ld (hl),a
+	call fn_change_frame
+	call fn_refresh_sprite
+	jp draw_sprite_loop
+
+; goto previous frame
+dsl_previous_frame:
+	call fn_wait_key_released
+	ld hl,current_frame
+	ld a,(hl)
+	cp 0
+	jp z,draw_sprite_loop
+	
+	dec a
+	ld (hl),a
+	call fn_change_frame
+	call fn_refresh_sprite
+	jp draw_sprite_loop
+
+; goto next frame
+dsl_next_frame:
+	call fn_wait_key_released
+	ld hl,current_frame
+	ld a,(hl)
+	inc a
+	ld hl,frames_count
+	ld c,(hl)
+	cp c
+	jp z,draw_sprite_loop
+	
 	ld (hl),a
 	call fn_change_frame
 	call fn_refresh_sprite
@@ -1837,6 +1759,8 @@ ls_clear_filename:
 	jp c,ls_close_error
 
 	; store frames count
+	ld hl,frames_count
+	ld (hl),a
 	ld hl,current_frame
 	dec a
 	ld (hl),a
@@ -1926,7 +1850,9 @@ ls_close_error:
 	moscall mos_fclose
 	
 	; reset current frame and coordinates of the drawing pixel
-	xor a
+	ld hl,frames_count
+	ld a,(hl)
+	dec a
 	ld hl,current_frame
 	ld (hl),a
 	ld hl,xpix
@@ -1946,7 +1872,9 @@ ls_close:
 	moscall mos_fclose
 
 	; reset current frame and coordinates of the drawing pixel
-	xor a
+	ld hl,frames_count
+	ld a,(hl)
+	dec a
 	ld hl,current_frame
 	ld (hl),a
 	ld hl,xpix
@@ -1956,6 +1884,7 @@ ls_close:
 	ld (hl),a
 
 ls_exit:
+	call fn_change_frames_count
 	ret
 
 ls_file_error:
@@ -2002,9 +1931,8 @@ ss_clear_filename:
 	moscall mos_fputc
 	
 	; store frames count in the file
-	ld hl,current_frame
+	ld hl,frames_count
 	ld b,(hl)
-	inc b
 	moscall mos_fputc
 
 	; store sprite size in the file
@@ -2060,7 +1988,9 @@ ss_close_error:
 	moscall mos_fclose
 	
 	; reset current frame and coordinates of the drawing pixel
-	xor a
+	ld hl,frames_count
+	ld a,(hl)
+	dec a
 	ld hl,current_frame
 	ld (hl),a
 	ld hl,xpix
@@ -2080,7 +2010,9 @@ ss_close:
 	moscall mos_fclose
 
 	; reset current frame and coordinates of the drawing pixel
-	xor a
+	ld hl,frames_count
+	ld a,(hl)
+	dec a
 	ld hl,current_frame
 	ld (hl),a
 	ld hl,xpix
@@ -2203,17 +2135,37 @@ rs_end:
 fn_change_frame:
 	ld hl,current_frame
 	ld a,(hl)
-	add a,48
+	add a,49
 	ld hl,current_frame_ascii
 	ld (hl),a
 	
-	; locate 19,4
+	; locate 21,4
 	vdu 31
-	vdu 19
+	vdu 21
 	vdu 4
 
 	; print text
 	ld hl,current_frame_ascii
+	ld bc,0
+	xor a
+	rst.lis $18
+	
+	ret
+
+fn_change_frames_count:
+	ld hl,frames_count
+	ld a,(hl)
+	add a,48
+	ld hl,frames_count_ascii
+	ld (hl),a
+	
+	; locate 23,4
+	vdu 31
+	vdu 23
+	vdu 4
+
+	; print text
+	ld hl,frames_count_ascii
 	ld bc,0
 	xor a
 	rst.lis $18
@@ -2293,11 +2245,11 @@ menu4:
 
 ; descriptions of sprites
 spr_descr:
-	db "Frame:0  ",0
+	db "Frame:1/1",0
 spr_descr1:
-	db "  4x4",0
+	db "4x4  ",0
 spr_descr2:
-	db "  8x8",0
+	db "8x8  ",0
 spr_descr3:
 	db "16x16",0
 spr_descr4:
@@ -2338,7 +2290,14 @@ colors_count:
 current_frame:
 	db 0
 
+; frames count
+frames_count:
+	db 0
+
 current_frame_ascii:
+	db '0',0
+	
+frames_count_ascii:
 	db '0',0
 
 ; keycode, keydown & keymods are stored here
@@ -2428,3 +2387,12 @@ rgb_palette:
 ; frames count	:	byte
 ; spr size		:	byte
 ; data			:   width x height bytes of colors
+
+
+; TODO:
+;---------
+; add/remove frames must be done correctly
+; read animations with 'p' key
+; create a help text file with keyboard shorcuts list
+; solve the 'copy frame' bug
+; solve the bug of frames in fn_load/save sprite
