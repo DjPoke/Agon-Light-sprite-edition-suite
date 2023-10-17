@@ -2,4 +2,3 @@ TODO:
 =====
 * Add r/R key to rotate frame
 * Add m/M key to mirror vertically a frame
-* flip horizontally a frame : bug!

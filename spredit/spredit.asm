@@ -1093,6 +1093,7 @@ dsl_flip_frame:
 	ld de,$000000
 	ld e,(hl)
 	ld d,(hl)
+	ld c,e
 	mlt de ; DE = sprite length in bytes
 	ld hl,current_frame
 	ld a,(hl) ; A = current frame
@@ -1106,13 +1107,10 @@ ff_loop1:
 	djnz ff_loop1
 	
 ff_noloop1:
-	push hl ; HL = start address of the frame
-	ld hl,spr_size
-	ld b,(hl) ; B = sprite height
-	pop hl
+	ld b,c ; B = sprite height
 	ld de,$000000
-	ld e,b ; DE = sprite width
-	ld a,b ; A = sprite width
+	ld e,c ; DE = sprite width
+	ld a,c ; A = sprite width
 	rrca
 	and 127 ; A = sprite width / 2
 
@@ -1124,6 +1122,7 @@ ff_noloop1:
 	pop iy ; IY = YX + sprite width - 1
 	
 ff_loop2:
+	push af
 	push de
 	push ix
 	push iy
@@ -1140,6 +1139,7 @@ ff_loop3:
 	pop iy
 	pop ix
 	pop de
+	pop af
 	add ix,de
 	add iy,de
 	djnz ff_loop2

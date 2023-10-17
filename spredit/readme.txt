@@ -28,6 +28,7 @@ Now, you are in 'edit sprite mode'. This is the keys you can use :
 * PageDown:				Select the previous frame
 * l or L:				load a sprite
 * s or S:				save a sprite
+* f or F:				flip frame horizontally
 
 While in palette mode, this is the keys you can use :
 
