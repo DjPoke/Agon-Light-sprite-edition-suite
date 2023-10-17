@@ -914,6 +914,37 @@ df_exit_loop3:
 	pop bc
 	ldir
 
+	ld hl,spr_size
+	ld bc,$000000
+	ld c,(hl)
+	ld b,(hl)
+	mlt bc ; DE = one sprite frame length
+	
+	; delete last frame data
+	ld hl,frames_count
+	ld a,(hl) ; A =frames count
+	dec a ; A = last frame
+	ld hl,sprite_buffer ; HL = sprite buffer
+	cp 0
+	jr z,df_loop5
+
+df_loop4:
+	add hl,bc ; HL = sprite buffer + (last frame * sprsize²)
+	dec a
+	cp 0
+	jr nz,df_loop4
+
+; clear the current frame
+df_loop5:
+	xor a
+	ld (hl),a
+	inc hl
+	dec bc
+	ld a,b
+	or c
+	cp 0
+	jr nz,df_loop5
+
 	; decrement frames count
 	ld hl,frames_count
 	dec (hl)

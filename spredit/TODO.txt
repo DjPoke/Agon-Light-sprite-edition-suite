@@ -1,5 +1,6 @@
 TODO:
 =====
 * create a help text file with keyboard shorcuts list
-* TODO: 'Delete frame': clear the deleted last frame
-* solve the bugs 'Create Frame'
+* solve the bugs:
+  'New Frame'  -> Must insert a new frame after current frame
+  'Copy frame' -> Must copy the current frame and insert a copy after
