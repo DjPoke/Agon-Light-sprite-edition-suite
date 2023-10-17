@@ -525,6 +525,24 @@ draw_sprite_loop:
 	cp VK_S ; on S key...
 	jp z,dsl_save_sprite
 
+	cp VK_r ; on r key...
+	jp z,dsl_rotate_frame
+
+	cp VK_R ; on R key...
+	jp z,dsl_rotate_frame
+
+	cp VK_f ; on f key...
+	jp z,dsl_flip_frame
+
+	cp VK_F ; on F key...
+	jp z,dsl_flip_frame
+
+	cp VK_m ; on m key...
+	jp z,dsl_mirror_frame
+
+	cp VK_M ; on M key...
+	jp z,dsl_mirror_frame
+
 	cp VK_ESCAPE ; on escape key...
 	jp z,exit_program
 
@@ -1057,6 +1075,82 @@ dsl_next_frame:
 	ld hl,current_frame
 	ld (hl),a
 	call fn_change_frame
+	call fn_refresh_sprite
+	jp draw_sprite_loop
+
+; rotate a frame 90° clockwise
+dsl_rotate_frame:
+	call fn_wait_key_released
+
+	call fn_refresh_sprite
+	jp draw_sprite_loop
+
+; flip frame horizontally
+dsl_flip_frame:
+	call fn_wait_key_released
+
+	ld hl,spr_size
+	ld de,$000000
+	ld e,(hl)
+	ld d,(hl)
+	mlt de ; DE = sprite length in bytes
+	ld hl,current_frame
+	ld a,(hl) ; A = current frame
+	ld hl,sprite_buffer
+	cp 0
+	jr z,ff_noloop1
+	ld b,a
+	
+ff_loop1:
+	add hl,de ; HL = sprite_buffer + (current frame * sprsize²)
+	djnz ff_loop1
+	
+ff_noloop1:
+	push hl ; HL = start address of the frame
+	ld hl,spr_size
+	ld b,(hl) ; B = sprite height
+	pop hl
+	ld de,$000000
+	ld e,b ; DE = sprite width
+	ld a,b ; A = sprite width
+	rrca
+	and 127 ; A = sprite width / 2
+
+	push hl
+	pop ix ; IX = frame address
+	add hl,de ; HL = frame address + sprite width - 1
+	dec hl
+	push hl
+	pop iy ; IY = YX + sprite width - 1
+	
+ff_loop2:
+	push de
+	push ix
+	push iy
+ff_loop3:
+	ld e,(ix+0)
+	ld d,(iy+0)
+	ld (ix+0),d
+	ld (iy+0),e
+	inc ix
+	dec iy
+	dec a
+	cp 0
+	jr nz,ff_loop3
+	pop iy
+	pop ix
+	pop de
+	add ix,de
+	add iy,de
+	djnz ff_loop2
+
+	call fn_refresh_sprite
+	jp draw_sprite_loop
+
+; mirror frame vertically
+dsl_mirror_frame:
+	call fn_wait_key_released
+
 	call fn_refresh_sprite
 	jp draw_sprite_loop
 
