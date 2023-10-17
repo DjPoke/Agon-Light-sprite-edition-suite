@@ -874,56 +874,72 @@ af_loop3:
 ; add a copy of the current frame to the animation
 dsl_add_and_copy_frame: ; TODO! debug me!
 	call fn_wait_key_released
+	
+	; frames limit reached ? exit
 	ld hl,frames_count
 	ld a,(hl)
 	cp MAX_FRAMES
 	jp z,draw_sprite_loop
-
-	; inc frame
-	inc a
-	ld (hl),a
 	
+	; get the number of frames to copy
+	ld hl,frames_count
+	ld a,(hl)
+	ld hl,current_frame
+	ld b,(hl)
+	sub b
+	
+	; get sprsize² (length of a sprite, in bytes)
 	ld hl,spr_size
+	ld de,$000000
 	ld e,(hl)
 	ld d,(hl)
-	ex de,hl
-	mlt hl ; HL = sprsize²
+	mlt de ; DE = sprsize²
 
-	dec a
-	ld b,a
-	cp 0
-	jr z,dsl_aacf_end_loop
+	ld hl,$000000 ; HL is 0 to store the result
+	ld b,a ; B = frames to copy
+
+; multiply number of frames to copy by sprsize²
+aacf_loop1:
+	add hl,de ; HL = length (in bytes) to copy (a few frames)
+	djnz aacf_loop1
 	
-	ld de,sprite_buffer
-	ex de,hl ; HL = sprite buffer, DE = sprsize²
-dsl_aacf_loop:
-	add hl,de
-	djnz dsl_aacf_loop
-
-dsl_aacf_end_loop:
-
 	push hl
-	pop bc ; BC = 1st sprite address in the buffer
-	add hl,de ; HL = 2nd sprite address in the buffer
+	pop bc ; BC = HL = length (in bytes) to copy (a few frames)
 	
-	push bc ; swap bc/de
-	push de
-	pop bc
-	pop de
-
-; copy the frame
-dsl_aacf_loop2:
-	ld a,(de)
-	ld (hl),a
-	inc de
-	inc hl
-	dec bc
-	ld a,b
-	or c
+	ld hl,current_frame
+	ld a,(hl)
+	ld hl,sprite_buffer
 	cp 0
-	jr nz,dsl_aacf_loop2
+	jr z,aacf_loop_end2
+	
+	push bc
+	ld b,a
 
-	call fn_change_frame ; change frame number in the text
+aacf_loop2:
+	add hl,de ; HL = sprite buffer + length to copy
+	djnz aacf_loop2
+	
+	pop bc
+
+aacf_loop_end2:
+	add hl,bc
+	dec hl ; HL = end address to copy to end target address
+	
+	push hl
+	add hl,de
+	ex de,hl ; DE = end target address
+	pop hl
+
+	lddr
+
+	; increment the frames count and the current frame values
+	ld hl,frames_count
+	inc (hl)
+	ld hl,current_frame
+	inc (hl)
+
+	call fn_change_frame
+	call fn_change_frames_count
 	call fn_refresh_sprite
 	jp draw_sprite_loop
 
