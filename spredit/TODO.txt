@@ -1,4 +1,4 @@
 TODO:
 =====
 * create a help text file with keyboard shorcuts list
-* solve the bugs 'Delete frame', 'Next Frame', 'Create Frame
+* solve the bugs 'Delete frame', 'Create Frame'

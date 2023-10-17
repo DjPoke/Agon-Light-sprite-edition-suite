@@ -861,10 +861,10 @@ dsl_next_frame:
 	ld a,(hl)
 	inc a
 	ld hl,frames_count
-	ld c,(hl)
-	cp c
+	cp (hl)
 	jp z,draw_sprite_loop
-	
+
+	ld hl,current_frame
 	ld (hl),a
 	call fn_change_frame
 	call fn_refresh_sprite
@@ -2135,7 +2135,8 @@ rs_end:
 fn_change_frame:
 	ld hl,current_frame
 	ld a,(hl)
-	add a,49
+	inc a	
+	add a,48
 	ld hl,current_frame_ascii
 	ld (hl),a
 	
