@@ -827,16 +827,114 @@ dsl_aacf_loop2:
 	jp draw_sprite_loop
 
 ; delete last frame from animation
-dsl_delete_frame: ; TODO! delete the selected frame
+dsl_delete_frame:
 	call fn_wait_key_released
-	ld hl,current_frame
-	ld a,(hl)
-	cp 0
-	jp z,draw_sprite_loop
 	
+	; delete current selected frame
+	ld hl,spr_size
+	ld bc,$000000
+	ld c,(hl)
+	ld b,(hl)
+	mlt bc ; BC = sprsize²
+	ld hl,current_frame
+	ld a,(hl) ; A = current frame
+	ld hl,sprite_buffer ; HL = sprite buffer
+	push bc
+	cp 0
+	jr z,df_loop2
+
+df_loop1:
+	add hl,bc ; HL = sprite buffer + (current frame * sprsize²)
 	dec a
+	cp 0
+	jr nz,df_loop1
+
+; clear the current frame
+df_loop2:
+	xor a
 	ld (hl),a
+	inc hl
+	dec bc
+	ld a,b
+	or c
+	cp 0
+	jr nz,df_loop2
+	
+	; current frame + 1 = frames count ?
+	push hl
+	ld hl,current_frame
+	ld e,(hl)
+	inc e
+	ld hl,frames_count
+	ld a,(hl)
+	cp e
+	pop hl
+	pop bc
+	jp z,df_exit
+
+	ld de,frames_count
+	ld a,(de) ; A = frames count
+	push hl
+	ld hl,current_frame
+	ld e,(hl) ; E = current frame
+	pop hl
+	sub e
+	dec a ; A = number of frames to copy back
+	
+	ex de,hl ; DE = sprite buffer + ((current frame + 1) * sprsize²)
+	ld hl,$000000
+	cp 0 ; 0 frames to copy ?
+	jr z,df_exit_loop3
+
+df_loop3:
+	add hl,bc ; HL = length of a frame (sprsize²) * frames count
+	dec a
+	cp 0
+	jr nz,df_loop3
+
+df_exit_loop3:
+	push hl
+	pop bc ; BC = total length of area to copy
+	push de
+	pop hl ; HL = DE = start of area to copy
+	
+	push bc
+	push de
+	push hl
+	ld hl,spr_size
+	ld de,$000000
+	ld e,(hl)
+	ld d,(hl)
+	mlt de ; DE = one sprite frame length
+	pop hl
+	or a
+	sbc hl,de ; HL = target area to copy
+	pop de
+	ex de,hl ; DE = target, HL = start
+	pop bc
+	ldir
+
+	; decrement frames count
+	ld hl,frames_count
+	dec (hl)
+	
 	call fn_change_frame
+	call fn_change_frames_count
+	call fn_refresh_sprite
+	jp draw_sprite_loop
+
+df_exit:
+	ld hl,frames_count
+	ld a,(hl)
+	cp 1
+	jr z,df_exit_end
+	dec (hl)
+	ld hl,current_frame
+	dec (hl)
+
+df_exit_end:
+	call fn_change_frame
+	call fn_change_frames_count
 	call fn_refresh_sprite
 	jp draw_sprite_loop
 
