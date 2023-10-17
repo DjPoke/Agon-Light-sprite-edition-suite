@@ -1,5 +1,5 @@
 TODO:
 =====
-* create a help text file with keyboard shorcuts list
 * solve the bugs:
   'Copy frame' -> Must copy the current frame and insert a copy after
+  Loading a sprite resize it at a low size
