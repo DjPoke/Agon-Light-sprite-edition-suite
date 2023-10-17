@@ -759,13 +759,114 @@ dsl_save_sprite:
 ; add a frame to the animation
 dsl_add_frame:
 	call fn_wait_key_released
+	
+	; frames limit reached ? exit
 	ld hl,frames_count
 	ld a,(hl)
 	cp MAX_FRAMES
 	jp z,draw_sprite_loop
 	
+	; get the number of frames to copy
+	ld hl,frames_count
+	ld a,(hl)
+	ld hl,current_frame
+	ld b,(hl)
+	sub b
+	dec a
+	
+	; get sprsize² (length of a sprite, in bytes)
+	ld hl,spr_size
+	ld de,$000000
+	ld e,(hl)
+	ld d,(hl)
+	mlt de ; DE = sprsize²
+	
+	; prepare for the case we goto af_zap...
+	ld hl,sprite_buffer
+
+	push af
+	push hl
+	ld hl,current_frame
+	ld a,(hl)
 	inc a
-	ld (hl),a	
+	ld b,a
+	pop hl
+	pop af
+	
+af_loop0:	
+	add hl,de ; for if current frame = 0 (prepare to zap!)
+	djnz af_loop0
+	
+	push hl ; store HL = sprite buffer + sprsize²
+	cp 0
+	jp z,af_zap ; zap the copy, if the 'current frame' is at the last frame
+	pop hl ; HL unused in this case
+
+	ld hl,$000000 ; HL is 0 to store the result
+	ld b,a ; B = frames to copy
+
+; multiply number of frames to copy by sprsize²
+af_loop1:
+	add hl,de ; HL = length (in bytes) to copy (a few frames)
+	djnz af_loop1
+	
+	push hl
+	pop bc ; BC = HL = length (in bytes) to copy (a few frames)
+	
+	ld hl,current_frame
+	ld a,(hl)
+	inc a
+	ld hl,sprite_buffer
+	
+	push bc
+	ld b,a
+
+af_loop2:
+	add hl,de ; HL = sprite buffer + length to copy
+	djnz af_loop2
+	
+	pop bc
+	
+	push hl ; HL = sprite_buffer + (current frame * sprsize²)
+	
+	add hl,bc
+	dec hl ; HL = end address to copy to end target address
+	
+	push hl
+	add hl,de
+	ex de,hl ; DE = end target address
+	pop hl
+
+	lddr
+
+af_zap:
+	; multiply number of frames to copy by sprsize²
+	ld hl,spr_size
+	ld bc,$000000
+	ld c,(hl)
+	ld b,(hl)
+	mlt bc ; BC = sprsize²
+
+	pop hl ; HL = sprite_buffer + (current frame * sprsize²)
+	
+; fill frame with 0 color
+af_loop3:
+	xor a
+	ld (hl),a
+	inc hl
+	dec bc
+	ld a,b
+	or c
+	cp 0
+	jr nz,af_loop3	
+
+	; increment the frames count and the current frame values
+	ld hl,frames_count
+	inc (hl)
+	ld hl,current_frame
+	inc (hl)
+
+	call fn_change_frame
 	call fn_change_frames_count
 	call fn_refresh_sprite
 	jp draw_sprite_loop
