@@ -3,7 +3,7 @@
 ; by B.Vignoli
 ; MIT 2023-2024
 ;
-; Tested under firmware 1.0.4 RC1+
+; Tested under firmware 1.0.4 RC1
 ;
 
 .assume adl=1
@@ -1420,7 +1420,7 @@ fn_rectf:
 	ld iy,y1
 
 	vdu 25
-	vdu 5
+	vdu 4
 	ld a,(ix+0)
 	vdu_a
 	ld a,(ix+1)
@@ -1445,10 +1445,10 @@ fn_rectf:
 	vdu_a
 	
 	ld ix,x1
-	ld iy,y2
+	ld iy,y1
 	
 	vdu 25
-	vdu 5
+	vdu 4
 	ld a,(ix+0)
 	vdu_a
 	ld a,(ix+1)
@@ -1459,10 +1459,39 @@ fn_rectf:
 	vdu_a
 		
 	ld ix,x1
-	ld iy,y1
+	ld iy,y2
+	
+	vdu 25
+	vdu 4
+	ld a,(ix+0)
+	vdu_a
+	ld a,(ix+1)
+	vdu_a
+	ld a,(iy+0)
+	vdu_a
+	ld a,(iy+1)
+	vdu_a
+		
+	ld ix,x2
+	ld iy,y2
 	
 	vdu 25
 	vdu 80
+	ld a,(ix+0)
+	vdu_a
+	ld a,(ix+1)
+	vdu_a
+	ld a,(iy+0)
+	vdu_a
+	ld a,(iy+1)
+	vdu_a
+
+; for debug purpose:
+	ld ix,x1
+	ld iy,y1
+	
+	vdu 25
+	vdu 4
 	ld a,(ix+0)
 	vdu_a
 	ld a,(ix+1)
@@ -1476,7 +1505,7 @@ fn_rectf:
 	ld iy,y1
 	
 	vdu 25
-	vdu 4
+	vdu 5
 	ld a,(ix+0)
 	vdu_a
 	ld a,(ix+1)
