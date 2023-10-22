@@ -245,4 +245,5 @@ EndDataSection
 ; FirstLine = 79
 ; Folding = -
 ; EnableXP
+; UseIcon = png2spr.ico
 ; Executable = png2spr.exe

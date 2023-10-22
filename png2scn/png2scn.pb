@@ -223,4 +223,5 @@ EndDataSection
 ; FirstLine = 78
 ; Folding = -
 ; EnableXP
+; UseIcon = png2scn.ico
 ; Executable = png2scn.exe
