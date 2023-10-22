@@ -1,0 +1,4661 @@
+PC     Output            Line Source
+040000                   0001 ; SprEdit.asm
+040000                   0002 ;
+040000                   0003 ; by B.Vignoli
+040000                   0004 ; MIT 2023-2024
+040000                   0005 ;
+040000                   0006 ; Needs firmware 1.0.4 RC2
+040000                   0007 ;
+040000                   0008 
+040000                   0009 .assume adl=1
+040000                   0010 .org $040000
+040000                   0011 
+040000 C3 45 00 04       0012 	jp start
+040004                   0013 
+040004                   0014 ; MOS header
+040004 FF FF FF FF FF FF 0015 .align 64
+       FF FF FF FF FF FF 
+       FF FF FF FF FF FF 
+       FF FF FF FF FF FF 
+       FF FF FF FF FF FF 
+       FF FF FF FF FF FF 
+       FF FF FF FF FF FF 
+       FF FF FF FF FF FF 
+       FF FF FF FF FF FF 
+       FF FF FF FF FF FF 
+040040 4D 4F 53 00 01    0016 .db "MOS",0,1
+040045                   0017 
+040045                   0018 	include "mos_api.inc"
+040045                   0001 ;
+040045                   0002 ; Title:	AGON MOS - API for user projects
+040045                   0003 ; Author:	Dean Belfield
+040045                   0004 ; Created:	03/08/2022
+040045                   0005 ; Last Updated:	10/08/2023
+040045                   0006 ;
+040045                   0007 ; Modinfo:
+040045                   0008 ; 05/08/2022:	Added mos_feof
+040045                   0009 ; 09/08/2022:	Added system variables: cursorX, cursorY
+040045                   0010 ; 18/08/2022:	Added system variables: scrchar, scrpixel, audioChannel, audioSuccess, vpd_pflags
+040045                   0011 ; 05/09/2022:	Added mos_ren, vdp_pflag_mode
+040045                   0012 ; 24/09/2022:	Added mos_getError, mos_mkdir
+040045                   0013 ; 13/10/2022:	Added mos_oscli
+040045                   0014 ; 23/02/2023:	Added more sysvars, fixed typo in sysvar_audioSuccess, offsets for sysvar_scrCols, sysvar_scrRows
+040045                   0015 ; 04/03/2023:	Added sysvar_scrpixelIndex
+040045                   0016 ; 08/03/2023:	Renamed sysvar_keycode to sysvar_keyascii, added sysvar_vkeycode
+040045                   0017 ; 15/03/2023:	Added mos_copy, mos_getrtc, mos_setrtc, rtc, vdp_pflag_rtc
+040045                   0018 ; 21/03/2023:	Added mos_setintvector, sysvars for keyboard status, vdu codes for vdp
+040045                   0019 ; 22/03/2023:	The VDP commands are now indexed from 0x80
+040045                   0020 ; 29/03/2023:	Added mos_uopen, mos_uclose, mos_ugetc, mos_uputc
+040045                   0021 ; 13/04/2023:	Added FatFS file structures (FFOBJID, FIL, DIR, FILINFO)
+040045                   0022 ; 15/04/2023:	Added mos_getfil, mos_fread, mos_fwrite and mos_flseek
+040045                   0023 ; 19/05/2023:	Added sysvar_scrMode
+040045                   0024 ; 05/06/2023:	Added sysvar_rtcEnable
+040045                   0025 ; 03/08/2023:	Added mos_setkbvector
+040045                   0026 ; 10/08/2023:	Added mos_getkbmap
+040045                   0027 
+040045                   0028 ; VDP control (VDU 23, 0, n)
+040045                   0029 ;
+040045                   0030 vdp_gp:			EQU 	80h
+040045                   0031 vdp_keycode:		EQU 	81h
+040045                   0032 vdp_cursor:		EQU	82h
+040045                   0033 vdp_scrchar:		EQU	83h
+040045                   0034 vdp_scrpixel:		EQU	84h
+040045                   0035 vdp_audio:		EQU	85h
+040045                   0036 vdp_mode:		EQU	86h
+040045                   0037 vdp_rtc:		EQU	87h
+040045                   0038 vdp_keystate:		EQU	88h
+040045                   0039 vdp_logicalcoords:	EQU	C0h
+040045                   0040 vdp_terminalmode:	EQU	FFh
+040045                   0041 
+040045                   0042 ; MOS high level functions
+040045                   0043 ;
+040045                   0044 mos_getkey:		EQU	00h
+040045                   0045 mos_load:		EQU	01h
+040045                   0046 mos_save:		EQU	02h
+040045                   0047 mos_cd:			EQU	03h
+040045                   0048 mos_dir:		EQU	04h
+040045                   0049 mos_del:		EQU	05h
+040045                   0050 mos_ren:		EQU	06h
+040045                   0051 mos_mkdir:		EQU	07h
+040045                   0052 mos_sysvars:		EQU	08h
+040045                   0053 mos_editline:		EQU	09h
+040045                   0054 mos_fopen:		EQU	0Ah
+040045                   0055 mos_fclose:		EQU	0Bh
+040045                   0056 mos_fgetc:		EQU	0Ch
+040045                   0057 mos_fputc:		EQU	0Dh
+040045                   0058 mos_feof:		EQU	0Eh
+040045                   0059 mos_getError:		EQU	0Fh
+040045                   0060 mos_oscli:		EQU	10h
+040045                   0061 mos_copy:		EQU	11h
+040045                   0062 mos_getrtc:		EQU	12h
+040045                   0063 mos_setrtc:		EQU	13h
+040045                   0064 mos_setintvector:	EQU	14h
+040045                   0065 mos_uopen:		EQU	15h
+040045                   0066 mos_uclose:		EQU	16h
+040045                   0067 mos_ugetc:		EQU	17h
+040045                   0068 mos_uputc:		EQU 	18h
+040045                   0069 mos_getfil:		EQU	19h
+040045                   0070 mos_fread:		EQU	1Ah
+040045                   0071 mos_fwrite:		EQU	1Bh
+040045                   0072 mos_flseek:		EQU	1Ch
+040045                   0073 mos_setkbvector:	EQU	1Dh
+040045                   0074 mos_getkbmap:		EQU	1Eh
+040045                   0075 
+040045                   0076 ; FatFS file access functions
+040045                   0077 ;
+040045                   0078 ffs_fopen:		EQU	80h
+040045                   0079 ffs_fclose:		EQU	81h
+040045                   0080 ffs_fread:		EQU	82h
+040045                   0081 ffs_fwrite:		EQU	83h
+040045                   0082 ffs_flseek:		EQU	84h
+040045                   0083 ffs_ftruncate:		EQU	85h
+040045                   0084 ffs_fsync:		EQU	86h
+040045                   0085 ffs_fforward:		EQU	87h
+040045                   0086 ffs_fexpand:		EQU	88h
+040045                   0087 ffs_fgets:		EQU	89h
+040045                   0088 ffs_fputc:		EQU	8Ah
+040045                   0089 ffs_fputs:		EQU	8Bh
+040045                   0090 ffs_fprintf:		EQU	8Ch
+040045                   0091 ffs_ftell:		EQU	8Dh
+040045                   0092 ffs_feof:		EQU	8Eh
+040045                   0093 ffs_fsize:		EQU	8Fh
+040045                   0094 ffs_ferror:		EQU	90h
+040045                   0095 
+040045                   0096 ; FatFS directory access functions
+040045                   0097 ;
+040045                   0098 ffs_dopen:		EQU	91h
+040045                   0099 ffs_dclose:		EQU	92h
+040045                   0100 ffs_dread:		EQU	93h
+040045                   0101 ffs_dfindfirst:		EQU	94h
+040045                   0102 ffs_dfindnext:		EQU	95h
+040045                   0103 
+040045                   0104 ; FatFS file and directory management functions
+040045                   0105 ;
+040045                   0106 ffs_stat:		EQU	96h
+040045                   0107 ffs_unlink:		EQU	97h
+040045                   0108 ffs_rename:		EQU	98h
+040045                   0109 ffs_chmod:		EQU	99h
+040045                   0110 ffs_utime:		EQU	9Ah
+040045                   0111 ffs_mkdir:		EQU	9Bh
+040045                   0112 ffs_chdir:		EQU	9Ch
+040045                   0113 ffs_chdrive:		EQU	9Dh
+040045                   0114 ffs_getcwd:		EQU	9Eh
+040045                   0115 
+040045                   0116 ; FatFS volume management and system configuration functions
+040045                   0117 ;
+040045                   0118 ffs_mount:		EQU	9Fh
+040045                   0119 ffs_mkfs:		EQU	A0h
+040045                   0120 ffs_fdisk:		EQU	A1h
+040045                   0121 ffs_getfree:		EQU	A2h
+040045                   0122 ffs_getlabel:		EQU	A3h
+040045                   0123 ffs_setlabel:		EQU	A4h
+040045                   0124 ffs_setcp:		EQU	A5h
+040045                   0125 
+040045                   0126 ; File access modes
+040045                   0127 ;
+040045                   0128 fa_read:		EQU	01h
+040045                   0129 fa_write:		EQU	02h
+040045                   0130 fa_open_existing:	EQU	00h
+040045                   0131 fa_create_new:		EQU	04h
+040045                   0132 fa_create_always:	EQU	08h
+040045                   0133 fa_open_always:		EQU	10h
+040045                   0134 fa_open_append:		EQU	30h
+040045                   0135 
+040045                   0136 ; System variable indexes for api_sysvars
+040045                   0137 ; Index into _sysvars in globals.asm
+040045                   0138 ;
+040045                   0139 sysvar_time:		EQU	00h	; 4: Clock timer in centiseconds (incremented by 2 every VBLANK)
+040045                   0140 sysvar_vpd_pflags:	EQU	04h	; 1: Flags to indicate completion of VDP commands
+040045                   0141 sysvar_keyascii:	EQU	05h	; 1: ASCII keycode, or 0 if no key is pressed
+040045                   0142 sysvar_keymods:		EQU	06h	; 1: Keycode modifiers
+040045                   0143 sysvar_cursorX:		EQU	07h	; 1: Cursor X position
+040045                   0144 sysvar_cursorY:		EQU	08h	; 1: Cursor Y position
+040045                   0145 sysvar_scrchar:		EQU	09h	; 1: Character read from screen
+040045                   0146 sysvar_scrpixel:	EQU	0Ah	; 3: Pixel data read from screen (R,B,G)
+040045                   0147 sysvar_audioChannel:	EQU	0Dh	; 1: Audio channel
+040045                   0148 sysvar_audioSuccess:	EQU	0Eh	; 1: Audio channel note queued (0 = no, 1 = yes)
+040045                   0149 sysvar_scrWidth:	EQU	0Fh	; 2: Screen width in pixels
+040045                   0150 sysvar_scrHeight:	EQU	11h	; 2: Screen height in pixels
+040045                   0151 sysvar_scrCols:		EQU	13h	; 1: Screen columns in characters
+040045                   0152 sysvar_scrRows:		EQU	14h	; 1: Screen rows in characters
+040045                   0153 sysvar_scrColours:	EQU	15h	; 1: Number of colours displayed
+040045                   0154 sysvar_scrpixelIndex:	EQU	16h	; 1: Index of pixel data read from screen
+040045                   0155 sysvar_vkeycode:	EQU	17h	; 1: Virtual key code from FabGL
+040045                   0156 sysvar_vkeydown:	EQU	18h	; 1: Virtual key state from FabGL (0=up, 1=down)
+040045                   0157 sysvar_vkeycount:	EQU	19h	; 1: Incremented every time a key packet is received
+040045                   0158 sysvar_rtc:		EQU	1Ah	; 6: Real time clock data
+040045                   0159 sysvar_spare:		EQU	20h	; 2: Spare, previously used by rtc
+040045                   0160 sysvar_keydelay:	EQU	22h	; 2: Keyboard repeat delay
+040045                   0161 sysvar_keyrate:		EQU	24h	; 2: Keyboard repeat reat
+040045                   0162 sysvar_keyled:		EQU	26h	; 1: Keyboard LED status
+040045                   0163 sysvar_scrMode:		EQU	27h	; 1: Screen mode
+040045                   0164 sysvar_rtcEnable:	EQU	28h	; 1: RTC enable flag (0: disabled, 1: use ESP32 RTC)
+040045                   0165 
+040045                   0166 ; Flags for the VPD protocol
+040045                   0167 ;
+040045                   0168 vdp_pflag_cursor:	EQU	00000001b
+040045                   0169 vdp_pflag_scrchar:	EQU	00000010b
+040045                   0170 vdp_pflag_point:	EQU	00000100b
+040045                   0171 vdp_pflag_audio:	EQU	00001000b
+040045                   0172 vdp_pflag_mode:		EQU	00010000b
+040045                   0173 vdp_pflag_rtc:		EQU	00100000b
+040045                   0174 
+040045                   0175 ;======================================================================
+040045                   0176 
+040045                   0177 	macro moscall arg1
+040045                   0178 		ld a,arg1
+040045                   0179 		rst.lis $08
+040045                   0180     endmacro
+040045                   0181 
+040045                   0182 	macro vdu arg1
+040045                   0183 		ld a,arg1
+040045                   0184 		rst.lis $10
+040045                   0185     endmacro
+040045                   0186 
+040045                   0187 	macro vdu_a
+040045                   0188 		rst.lis $10
+040045                   0189     endmacro
+040045                   0190 
+040045                   0191 ;======================================================================
+040045                   0019 
+040045                   0020 MAX_COLORS:		 	equ 64
+040045                   0021 COLOR_MIN:	 		equ 0
+040045                   0022 COLOR_MAX:	 		equ 63
+040045                   0023 
+040045                   0024 MAX_FRAMES:			equ 8
+040045                   0025 
+040045                   0026 COLOR_WHITE:		equ 15
+040045                   0027 COLOR_GREY:			equ 7
+040045                   0028 COLOR_BLACK:		equ 0
+040045                   0029 
+040045                   0030 TITLE_X: 	equ 17
+040045                   0031 TITLE_Y: 	equ 2
+040045                   0032 MENU_X: 	equ 13
+040045                   0033 MENU1_Y: 	equ 8
+040045                   0034 MENU2_Y: 	equ 12
+040045                   0035 MENU3_Y: 	equ 16
+040045                   0036 MENU4_Y: 	equ 20
+040045                   0037 MENU5_Y: 	equ 24
+040045                   0038 FILENAME_X: equ 7
+040045                   0039 FILENAME_Y: equ 24
+040045                   0040 
+040045                   0041 SPR44: 		equ 4
+040045                   0042 SPR88: 		equ 8
+040045                   0043 SPR1616: 	equ 16
+040045                   0044 SPR3232: 	equ 32
+040045                   0045 
+040045                   0046 SPR44_width: 	equ 32
+040045                   0047 SPR88_width: 	equ 16
+040045                   0048 SPR1616_width: 	equ 8
+040045                   0049 SPR3232_width: 	equ 4
+040045                   0050 
+040045                   0051 BUFFER_SIZE:			equ 8192 ; 8 frames
+040045                   0052 ONE_FRAME_BUFFER_SIZE:	equ 1024
+040045                   0053 
+040045                   0054 SLOWDOWN_DELAY:	equ 20
+040045                   0055 
+040045                   0056 VK_ESCAPE: 		equ 125
+040045                   0057 VK_UP: 			equ 150
+040045                   0058 VK_DOWN: 		equ 152
+040045                   0059 VK_LEFT: 		equ 154
+040045                   0060 VK_RIGHT: 		equ 156
+040045                   0061 VK_SPACE: 		equ 1
+040045                   0062 VK_RETURN: 		equ 143
+040045                   0063 VK_TAB:			equ 142
+040045                   0064 VK_DELETE:		equ 130
+040045                   0065 VK_BACKSPACE:	equ 132
+040045                   0066 VK_PGUP:		equ 146
+040045                   0067 VK_PGDOWN:		equ 148
+040045                   0068 VK_1: 			equ 93
+040045                   0069 VK_2: 			equ 178
+040045                   0070 VK_3: 			equ 77
+040045                   0071 VK_4: 			equ 76
+040045                   0072 VK_5: 			equ 108
+040045                   0073 VK_6: 			equ 0
+040045                   0074 VK_7: 			equ 0
+040045                   0075 VK_8: 			equ 0
+040045                   0076 VK_9: 			equ 0
+040045                   0077 VK_0: 			equ 0
+040045                   0078 VK_NUMPAD_1: 	equ 0
+040045                   0079 VK_NUMPAD_2: 	equ 153
+040045                   0080 VK_NUMPAD_3: 	equ 0
+040045                   0081 VK_NUMPAD_4: 	equ 155
+040045                   0082 VK_NUMPAD_5: 	equ 0
+040045                   0083 VK_NUMPAD_6: 	equ 157
+040045                   0084 VK_NUMPAD_7: 	equ 0
+040045                   0085 VK_NUMPAD_8: 	equ 151
+040045                   0086 VK_NUMPAD_9: 	equ 0
+040045                   0087 VK_NUMPAD_0: 	equ 0
+040045                   0088 VK_a: 			equ 22
+040045                   0089 VK_b: 			equ 23
+040045                   0090 VK_c:			equ 24
+040045                   0091 VK_d: 			equ 25
+040045                   0092 VK_e: 			equ 26
+040045                   0093 VK_f: 			equ 27
+040045                   0094 VK_g: 			equ 28
+040045                   0095 VK_h: 			equ 29
+040045                   0096 VK_i: 			equ 30
+040045                   0097 VK_j: 			equ 31
+040045                   0098 VK_k: 			equ 32
+040045                   0099 VK_l: 			equ 33
+040045                   0100 VK_m: 			equ 34
+040045                   0101 VK_n: 			equ 35
+040045                   0102 VK_o: 			equ 36
+040045                   0103 VK_p: 			equ 37
+040045                   0104 VK_q: 			equ 38
+040045                   0105 VK_r: 			equ 39
+040045                   0106 VK_s: 			equ 40
+040045                   0107 VK_t: 			equ 41
+040045                   0108 VK_u: 			equ 42
+040045                   0109 VK_v: 			equ 43
+040045                   0110 VK_w: 			equ 44
+040045                   0111 VK_x: 			equ 45
+040045                   0112 VK_y: 			equ 46
+040045                   0113 VK_z: 			equ 47
+040045                   0114 VK_A: 			equ 48
+040045                   0115 VK_B: 			equ 49
+040045                   0116 VK_C:			equ 50
+040045                   0117 VK_D: 			equ 51
+040045                   0118 VK_E: 			equ 52
+040045                   0119 VK_F: 			equ 53
+040045                   0120 VK_G: 			equ 54
+040045                   0121 VK_H: 			equ 55
+040045                   0122 VK_I: 			equ 56
+040045                   0123 VK_J: 			equ 57
+040045                   0124 VK_K: 			equ 58
+040045                   0125 VK_L: 			equ 59
+040045                   0126 VK_M: 			equ 60
+040045                   0127 VK_N: 			equ 61
+040045                   0128 VK_O: 			equ 62
+040045                   0129 VK_P: 			equ 63
+040045                   0130 VK_Q: 			equ 64
+040045                   0131 VK_R: 			equ 65
+040045                   0132 VK_S: 			equ 66
+040045                   0133 VK_T: 			equ 67
+040045                   0134 VK_U: 			equ 68
+040045                   0135 VK_V: 			equ 69
+040045                   0136 VK_W: 			equ 70
+040045                   0137 VK_X: 			equ 71
+040045                   0138 VK_Y: 			equ 72
+040045                   0139 VK_Z: 			equ 73
+040045                   0140 
+040045                   0141 ;======================================================================
+040045                   0142 start:
+040045 F5                0143 	push af
+040046 C5                0144 	push bc
+040047 D5                0145 	push de
+040048 DD E5             0146 	push ix
+04004A FD E5             0147 	push iy
+04004C                   0148 
+04004C                   0149 	; set mode 8 (320x240x64)
+04004C                   0150 	vdu 22
+04004C 3E 16             0150 		ld a,arg1
+04004E 49 D7             0150 		rst.lis $10
+040050                   0151 	vdu 8
+040050 3E 08             0151 		ld a,arg1
+040052 49 D7             0151 		rst.lis $10
+040054                   0152 
+040054                   0153 	; set logical coordinates system
+040054                   0154 	vdu 23
+040054 3E 17             0154 		ld a,arg1
+040056 49 D7             0154 		rst.lis $10
+040058                   0155 	vdu 0
+040058 3E 00             0155 		ld a,arg1
+04005A 49 D7             0155 		rst.lis $10
+04005C                   0156 	vdu $c0
+04005C 3E C0             0156 		ld a,arg1
+04005E 49 D7             0156 		rst.lis $10
+040060                   0157 	vdu 0
+040060 3E 00             0157 		ld a,arg1
+040062 49 D7             0157 		rst.lis $10
+040064                   0158 
+040064                   0159 	; set text colors
+040064                   0160 	vdu 17
+040064 3E 11             0160 		ld a,arg1
+040066 49 D7             0160 		rst.lis $10
+040068                   0161 	vdu 128 ; black background
+040068 3E 80             0161 		ld a,arg1
+04006A 49 D7             0161 		rst.lis $10
+04006C                   0162 
+04006C                   0163 	vdu 17
+04006C 3E 11             0163 		ld a,arg1
+04006E 49 D7             0163 		rst.lis $10
+040070                   0164 	vdu COLOR_WHITE ; white pen
+040070 3E 0F             0164 		ld a,arg1
+040072 49 D7             0164 		rst.lis $10
+040074                   0165 
+040074                   0166 	; set graphics pen
+040074                   0167 	vdu 18
+040074 3E 12             0167 		ld a,arg1
+040076 49 D7             0167 		rst.lis $10
+040078                   0168 	vdu 0
+040078 3E 00             0168 		ld a,arg1
+04007A 49 D7             0168 		rst.lis $10
+04007C                   0169 	vdu COLOR_WHITE ; white pen
+04007C 3E 0F             0169 		ld a,arg1
+04007E 49 D7             0169 		rst.lis $10
+040080                   0170 
+040080                   0171 	; hide cursor
+040080                   0172 	vdu 23
+040080 3E 17             0172 		ld a,arg1
+040082 49 D7             0172 		rst.lis $10
+040084                   0173 	vdu 1
+040084 3E 01             0173 		ld a,arg1
+040086 49 D7             0173 		rst.lis $10
+040088                   0174 	vdu 0
+040088 3E 00             0174 		ld a,arg1
+04008A 49 D7             0174 		rst.lis $10
+04008C                   0175 
+04008C                   0176 	; store coordinates
+04008C DD 21 C7 10 04    0177 	ld ix,x1
+040091 21 00 00 00       0178 	ld hl,0
+040095 DD 75 00          0179 	ld (ix+0),l
+040098 DD 74 01          0180 	ld (ix+1),h
+04009B                   0181 
+04009B DD 21 C9 10 04    0182 	ld ix,y1
+0400A0 21 00 00 00       0183 	ld hl,0
+0400A4 DD 75 00          0184 	ld (ix+0),l
+0400A7 DD 74 01          0185 	ld (ix+1),h
+0400AA                   0186 
+0400AA DD 21 CB 10 04    0187 	ld ix,x2
+0400AF 21 3F 01 00       0188 	ld hl,319
+0400B3 DD 75 00          0189 	ld (ix+0),l
+0400B6 DD 74 01          0190 	ld (ix+1),h
+0400B9                   0191 
+0400B9 DD 21 CD 10 04    0192 	ld ix,y2
+0400BE 21 EF 00 00       0193 	ld hl,239
+0400C2 DD 75 00          0194 	ld (ix+0),l
+0400C5 DD 74 01          0195 	ld (ix+1),h
+0400C8                   0196 
+0400C8                   0197 	; draw the border rectangle
+0400C8 CD AC 08 04       0198 	call fn_rect
+0400CC                   0199 
+0400CC                   0200 	; locate x,y
+0400CC                   0201 	vdu 31
+0400CC 3E 1F             0201 		ld a,arg1
+0400CE 49 D7             0201 		rst.lis $10
+0400D0                   0202 	vdu TITLE_X
+0400D0 3E 11             0202 		ld a,arg1
+0400D2 49 D7             0202 		rst.lis $10
+0400D4                   0203 	vdu TITLE_Y
+0400D4 3E 02             0203 		ld a,arg1
+0400D6 49 D7             0203 		rst.lis $10
+0400D8                   0204 
+0400D8                   0205 	; print text
+0400D8 21 DC 10 04       0206 	ld hl,title
+0400DC 01 00 00 00       0207 	ld bc,0
+0400E0 AF                0208 	xor a
+0400E1 49 DF             0209 	rst.lis $18
+0400E3                   0210 
+0400E3                   0211 	; locate x,y
+0400E3                   0212 	vdu 31
+0400E3 3E 1F             0212 		ld a,arg1
+0400E5 49 D7             0212 		rst.lis $10
+0400E7                   0213 	vdu MENU_X
+0400E7 3E 0D             0213 		ld a,arg1
+0400E9 49 D7             0213 		rst.lis $10
+0400EB                   0214 	vdu MENU1_Y
+0400EB 3E 08             0214 		ld a,arg1
+0400ED 49 D7             0214 		rst.lis $10
+0400EF                   0215 
+0400EF                   0216 	; print text
+0400EF 21 E5 10 04       0217 	ld hl,menu1
+0400F3 01 00 00 00       0218 	ld bc,0
+0400F7 AF                0219 	xor a
+0400F8 49 DF             0220 	rst.lis $18
+0400FA                   0221 
+0400FA                   0222 	; locate x,y
+0400FA                   0223 	vdu 31
+0400FA 3E 1F             0223 		ld a,arg1
+0400FC 49 D7             0223 		rst.lis $10
+0400FE                   0224 	vdu MENU_X
+0400FE 3E 0D             0224 		ld a,arg1
+040100 49 D7             0224 		rst.lis $10
+040102                   0225 	vdu MENU2_Y
+040102 3E 0C             0225 		ld a,arg1
+040104 49 D7             0225 		rst.lis $10
+040106                   0226 
+040106                   0227 	; print text
+040106 21 F3 10 04       0228 	ld hl,menu2
+04010A 01 00 00 00       0229 	ld bc,0
+04010E AF                0230 	xor a
+04010F 49 DF             0231 	rst.lis $18
+040111                   0232 
+040111                   0233 	; locate x,y
+040111                   0234 	vdu 31
+040111 3E 1F             0234 		ld a,arg1
+040113 49 D7             0234 		rst.lis $10
+040115                   0235 	vdu MENU_X
+040115 3E 0D             0235 		ld a,arg1
+040117 49 D7             0235 		rst.lis $10
+040119                   0236 	vdu MENU3_Y
+040119 3E 10             0236 		ld a,arg1
+04011B 49 D7             0236 		rst.lis $10
+04011D                   0237 
+04011D                   0238 	; print text
+04011D 21 01 11 04       0239 	ld hl,menu3
+040121 01 00 00 00       0240 	ld bc,0
+040125 AF                0241 	xor a
+040126 49 DF             0242 	rst.lis $18
+040128                   0243 
+040128                   0244 	; locate x,y
+040128                   0245 	vdu 31
+040128 3E 1F             0245 		ld a,arg1
+04012A 49 D7             0245 		rst.lis $10
+04012C                   0246 	vdu MENU_X
+04012C 3E 0D             0246 		ld a,arg1
+04012E 49 D7             0246 		rst.lis $10
+040130                   0247 	vdu MENU4_Y
+040130 3E 14             0247 		ld a,arg1
+040132 49 D7             0247 		rst.lis $10
+040134                   0248 
+040134                   0249 	; print text
+040134 21 11 11 04       0250 	ld hl,menu4
+040138 01 00 00 00       0251 	ld bc,0
+04013C AF                0252 	xor a
+04013D 49 DF             0253 	rst.lis $18
+04013F                   0254 
+04013F                   0255 	; reset keycode
+04013F AF                0256 	xor a
+040140                   0257 
+040140                   0258 ; menu loop
+040140                   0259 menu_loop:
+040140                   0260 	; get a keycode
+040140 CD 57 0C 04       0261 	call fn_wait_key
+040144                   0262 
+040144                   0263 	; wait key to be released
+040144 F5                0264 	push af
+040145 E5                0265 	push hl
+040146 CD 75 0C 04       0266 	call fn_wait_key_released
+04014A E1                0267 	pop hl
+04014B F1                0268 	pop af
+04014C                   0269 
+04014C FE 7D             0270 	cp VK_ESCAPE
+04014E CA 88 08 04       0271 	jp z,exit_program
+040152                   0272 
+040152 FE 5D             0273 	cp VK_1
+040154 20 06             0274 	jr nz,not_menu1
+040156                   0275 
+040156 3E 04             0276 	ld a,SPR44
+040158 16 20             0277 	ld d,SPR44_width
+04015A 18 1C             0278 	jr exit_menu_loop
+04015C                   0279 
+04015C                   0280 not_menu1:
+04015C FE B2             0281 	cp VK_2
+04015E 20 06             0282 	jr nz,not_menu2
+040160                   0283 
+040160 3E 08             0284 	ld a,SPR88
+040162 16 10             0285 	ld d,SPR88_width
+040164 18 12             0286 	jr exit_menu_loop
+040166                   0287 
+040166                   0288 not_menu2:
+040166 FE 4D             0289 	cp VK_3
+040168 20 06             0290 	jr nz,not_menu3
+04016A                   0291 
+04016A 3E 10             0292 	ld a,SPR1616
+04016C 16 08             0293 	ld d,SPR1616_width
+04016E 18 08             0294 	jr exit_menu_loop
+040170                   0295 
+040170                   0296 not_menu3:
+040170 FE 4C             0297 	cp VK_4
+040172 20 CC             0298 	jr nz,menu_loop
+040174                   0299 
+040174 3E 20             0300 	ld a,SPR3232
+040176 16 04             0301 	ld d,SPR3232_width
+040178                   0302 
+040178                   0303 exit_menu_loop:
+040178                   0304 	; store edited sprite size
+040178 21 DA 10 04       0305 	ld hl,spr_size
+04017C 77                0306 	ld (hl),a
+04017D 21 D9 10 04       0307 	ld hl,pixel_width
+040181 72                0308 	ld (hl),d
+040182                   0309 
+040182                   0310 	; clear the text screen
+040182                   0311 	vdu 12
+040182 3E 0C             0311 		ld a,arg1
+040184 49 D7             0311 		rst.lis $10
+040186                   0312 
+040186                   0313 	; draw the palette
+040186 0E 00             0314 	ld c,0
+040188                   0315 
+040188                   0316 palette_loop:
+040188 C5                0317 	push bc
+040189                   0318 
+040189                   0319 	; choose palette color
+040189                   0320 	vdu 18
+040189 3E 12             0320 		ld a,arg1
+04018B 49 D7             0320 		rst.lis $10
+04018D                   0321 	vdu 0
+04018D 3E 00             0321 		ld a,arg1
+04018F 49 D7             0321 		rst.lis $10
+040191 C1                0322 	pop bc
+040192 C5                0323 	push bc
+040193 79                0324 	ld a,c
+040194                   0325 	vdu_a
+040194 49 D7             0325 		rst.lis $10
+040196                   0326 
+040196                   0327 	; store coordinates for a palette square
+040196 DD 21 C7 10 04    0328 	ld ix,x1
+04019B E1                0329 	pop hl
+04019C E5                0330 	push hl
+04019D 26 05             0331 	ld h,5
+04019F ED 6C             0332 	mlt hl
+0401A1 E5                0333 	push hl
+0401A2 DD 75 00          0334 	ld (ix+0),l
+0401A5 DD 74 01          0335 	ld (ix+1),h
+0401A8                   0336 
+0401A8 DD 21 C9 10 04    0337 	ld ix,y1
+0401AD 21 00 00 00       0338 	ld hl,0
+0401B1 DD 75 00          0339 	ld (ix+0),l
+0401B4 DD 74 01          0340 	ld (ix+1),h
+0401B7                   0341 
+0401B7 DD 21 CB 10 04    0342 	ld ix,x2
+0401BC E1                0343 	pop hl
+0401BD 11 04 00 00       0344 	ld de,4
+0401C1 19                0345 	add hl,de
+0401C2 DD 75 00          0346 	ld (ix+0),l
+0401C5 DD 74 01          0347 	ld (ix+1),h
+0401C8                   0348 
+0401C8 DD 21 CD 10 04    0349 	ld ix,y2
+0401CD 21 0A 00 00       0350 	ld hl,10
+0401D1 DD 75 00          0351 	ld (ix+0),l
+0401D4 DD 74 01          0352 	ld (ix+1),h
+0401D7                   0353 
+0401D7                   0354 	; draw the palette filled square
+0401D7 CD 6B 09 04       0355 	call fn_rectf
+0401DB                   0356 
+0401DB                   0357 	; next color ?
+0401DB C1                0358 	pop bc
+0401DC 0C                0359 	inc c
+0401DD 79                0360 	ld a,c
+0401DE FE 40             0361 	cp MAX_COLORS
+0401E0 C2 88 01 04       0362 	jp nz,palette_loop
+0401E4                   0363 
+0401E4                   0364 	; store coordinates
+0401E4 DD 21 C7 10 04    0365 	ld ix,x1
+0401E9 21 00 00 00       0366 	ld hl,0
+0401ED DD 75 00          0367 	ld (ix+0),l
+0401F0 DD 74 01          0368 	ld (ix+1),h
+0401F3                   0369 
+0401F3 DD 21 C9 10 04    0370 	ld ix,y1
+0401F8 21 0B 00 00       0371 	ld hl,11
+0401FC DD 75 00          0372 	ld (ix+0),l
+0401FF DD 74 01          0373 	ld (ix+1),h
+040202                   0374 
+040202 DD 21 CB 10 04    0375 	ld ix,x2
+040207 21 3F 01 00       0376 	ld hl,319
+04020B DD 75 00          0377 	ld (ix+0),l
+04020E DD 74 01          0378 	ld (ix+1),h
+040211                   0379 
+040211 DD 21 CD 10 04    0380 	ld ix,y2
+040216 21 EF 00 00       0381 	ld hl,239
+04021A DD 75 00          0382 	ld (ix+0),l
+04021D DD 74 01          0383 	ld (ix+1),h
+040220                   0384 
+040220                   0385 	; draw the border rectangle
+040220 CD AC 08 04       0386 	call fn_rect
+040224                   0387 
+040224                   0388 	; store edited sprite coordinates
+040224 DD 21 CF 10 04    0389 	ld ix,xs1
+040229 FD 21 C7 10 04    0390 	ld iy,x1
+04022E DD 6E 00          0391 	ld l,(ix+0)
+040231 DD 66 01          0392 	ld h,(ix+1)
+040234 FD 75 00          0393 	ld (iy+0),l
+040237 FD 74 01          0394 	ld (iy+1),h
+04023A                   0395 
+04023A DD 21 D1 10 04    0396 	ld ix,ys1
+04023F FD 21 C9 10 04    0397 	ld iy,y1
+040244 DD 6E 00          0398 	ld l,(ix+0)
+040247 DD 66 01          0399 	ld h,(ix+1)
+04024A FD 75 00          0400 	ld (iy+0),l
+04024D FD 74 01          0401 	ld (iy+1),h
+040250                   0402 
+040250 DD 21 D3 10 04    0403 	ld ix,xs2
+040255 FD 21 CB 10 04    0404 	ld iy,x2
+04025A DD 6E 00          0405 	ld l,(ix+0)
+04025D DD 66 01          0406 	ld h,(ix+1)
+040260 FD 75 00          0407 	ld (iy+0),l
+040263 FD 74 01          0408 	ld (iy+1),h
+040266                   0409 
+040266 DD 21 D5 10 04    0410 	ld ix,ys2
+04026B FD 21 CD 10 04    0411 	ld iy,y2
+040270 DD 6E 00          0412 	ld l,(ix+0)
+040273 DD 66 01          0413 	ld h,(ix+1)
+040276 FD 75 00          0414 	ld (iy+0),l
+040279 FD 74 01          0415 	ld (iy+1),h
+04027C                   0416 
+04027C                   0417 	; draw the sprite's border rectangle
+04027C CD AC 08 04       0418 	call fn_rect
+040280                   0419 
+040280                   0420 	; update sprite size descriptions
+040280 CD 63 10 04       0421 	call fn_show_spr_descr
+040284                   0422 
+040284                   0423 ; initialize sprite vars
+040284                   0424 init_sprite_vars:
+040284                   0425 	; initialize coordinates before drawing the sprite
+040284 DD 21 D7 10 04    0426 	ld ix,xpix
+040289 AF                0427 	xor a
+04028A DD 77 00          0428 	ld (ix+0),a ; xpix = 0
+04028D DD 77 01          0429 	ld (ix+1),a	; ypix = 0
+040290 DD 21 DB 10 04    0430 	ld ix,current_pen
+040295 3E 0F             0431 	ld a,COLOR_WHITE
+040297 DD 77 00          0432 	ld (ix+0),a ; current pen -> white
+04029A                   0433 
+04029A                   0434 	; set vars
+04029A 21 A7 11 04       0435 	ld hl,colors_count
+04029E 3E 40             0436 	ld a,MAX_COLORS
+0402A0 77                0437 	ld (hl),a
+0402A1 21 A8 11 04       0438 	ld hl,current_frame
+0402A5 AF                0439 	xor a
+0402A6 77                0440 	ld (hl),a
+0402A7 3C                0441 	inc a
+0402A8 21 A9 11 04       0442 	ld hl,frames_count
+0402AC 77                0443 	ld (hl),a
+0402AD                   0444 
+0402AD                   0445 	; fill buffers with zeros
+0402AD 01 00 20 00       0446 	ld bc,BUFFER_SIZE
+0402B1 21 B1 11 04       0447 	ld hl,sprite_buffer
+0402B5                   0448 
+0402B5                   0449 isv_fill_loop:
+0402B5 AF                0450 	xor a
+0402B6 77                0451 	ld (hl),a
+0402B7 0B                0452 	dec bc
+0402B8 23                0453 	inc hl
+0402B9 78                0454 	ld a,b
+0402BA B1                0455 	or c
+0402BB FE 00             0456 	cp 0
+0402BD 20 F6             0457 	jr nz,isv_fill_loop
+0402BF                   0458 
+0402BF                   0459 ; draw the pixel with a border
+0402BF CD D5 0A 04       0460 	call fn_draw_pixel_with_border
+0402C3                   0461 
+0402C3 CD 75 0C 04       0462 	call fn_wait_key_released
+0402C7                   0463 
+0402C7                   0464 ; draw sprite loop
+0402C7                   0465 draw_sprite_loop:
+0402C7                   0466 	; get a keycode
+0402C7 CD 57 0C 04       0467 	call fn_wait_key
+0402CB                   0468 
+0402CB                   0469 	; if not keydown, loop
+0402CB 57                0470 	ld d,a
+0402CC 7D                0471 	ld a,l
+0402CD E6 01             0472 	and 1
+0402CF FE 00             0473 	cp 0
+0402D1 7A                0474 	ld a,d
+0402D2 CA C7 02 04       0475 	jp z,draw_sprite_loop
+0402D6                   0476 
+0402D6 FE 00             0477 	cp 0 ; keycode = 0 ? loop
+0402D8 CA C7 02 04       0478 	jp z,draw_sprite_loop
+0402DC                   0479 
+0402DC FE 01             0480 	cp VK_SPACE ; on space key....
+0402DE CA 76 03 04       0481 	jp z,dsl_set_pen
+0402E2                   0482 
+0402E2 FE 82             0483 	cp VK_DELETE ; on delete key....
+0402E4 CA A4 03 04       0484 	jp z,dsl_reset_pen
+0402E8                   0485 
+0402E8 FE 96             0486 	cp VK_UP ; on up arrow...
+0402EA CA BB 03 04       0487 	jp z,dsl_up
+0402EE                   0488 
+0402EE FE 98             0489 	cp VK_DOWN ; on down arrow...
+0402F0 CA FA 03 04       0490 	jp z,dsl_down
+0402F4                   0491 
+0402F4 FE 9A             0492 	cp VK_LEFT ; on left arrow...
+0402F6 CA 3E 04 04       0493 	jp z,dsl_left
+0402FA                   0494 
+0402FA FE 9C             0495 	cp VK_RIGHT ; on right arrow...
+0402FC CA 7D 04 04       0496 	jp z,dsl_right
+040300                   0497 
+040300 FE 8E             0498 	cp VK_TAB ; on tab key...
+040302 CA 7F 07 04       0499 	jp z,dsl_palette_tool
+040306                   0500 
+040306 FE 23             0501 	cp VK_n ; on n key...
+040308 CA F1 04 04       0502 	jp z,dsl_add_frame
+04030C                   0503 
+04030C FE 3D             0504 	cp VK_N ; on N key...
+04030E CA F1 04 04       0505 	jp z,dsl_add_frame
+040312                   0506 
+040312 FE 18             0507 	cp VK_c ; on c key...
+040314 CA 86 05 04       0508 	jp z,dsl_add_and_copy_frame
+040318                   0509 
+040318 FE 32             0510 	cp VK_C ; on C key...
+04031A CA 86 05 04       0511 	jp z,dsl_add_and_copy_frame
+04031E                   0512 
+04031E FE 84             0513 	cp VK_BACKSPACE ; on backspace key...
+040320 CA EB 05 04       0514 	jp z,dsl_delete_frame
+040324                   0515 
+040324 FE 92             0516 	cp VK_PGUP ; on pageup key...
+040326 CA E0 06 04       0517 	jp z,dsl_next_frame
+04032A                   0518 
+04032A FE 94             0519 	cp VK_PGDOWN ; on pagedown key...
+04032C CA C3 06 04       0520 	jp z,dsl_previous_frame
+040330                   0521 
+040330 FE 21             0522 	cp VK_l ; on l key...
+040332 CA C1 04 04       0523 	jp z,dsl_load_sprite
+040336                   0524 
+040336 FE 3B             0525 	cp VK_L ; on L key...
+040338 CA C1 04 04       0526 	jp z,dsl_load_sprite
+04033C                   0527 
+04033C FE 28             0528 	cp VK_s ; on s key...
+04033E CA DD 04 04       0529 	jp z,dsl_save_sprite
+040342                   0530 
+040342 FE 42             0531 	cp VK_S ; on S key...
+040344 CA DD 04 04       0532 	jp z,dsl_save_sprite
+040348                   0533 
+040348 FE 27             0534 	cp VK_r ; on r key...
+04034A CA 04 07 04       0535 	jp z,dsl_rotate_frame
+04034E                   0536 
+04034E FE 41             0537 	cp VK_R ; on R key...
+040350 CA 04 07 04       0538 	jp z,dsl_rotate_frame
+040354                   0539 
+040354 FE 1B             0540 	cp VK_f ; on f key...
+040356 CA 10 07 04       0541 	jp z,dsl_flip_frame
+04035A                   0542 
+04035A FE 35             0543 	cp VK_F ; on F key...
+04035C CA 10 07 04       0544 	jp z,dsl_flip_frame
+040360                   0545 
+040360 FE 22             0546 	cp VK_m ; on m key...
+040362 CA 73 07 04       0547 	jp z,dsl_mirror_frame
+040366                   0548 
+040366 FE 3C             0549 	cp VK_M ; on M key...
+040368 CA 73 07 04       0550 	jp z,dsl_mirror_frame
+04036C                   0551 
+04036C FE 7D             0552 	cp VK_ESCAPE ; on escape key...
+04036E CA 88 08 04       0553 	jp z,exit_program
+040372                   0554 
+040372 C3 C7 02 04       0555 	jp draw_sprite_loop
+040376                   0556 
+040376                   0557 ; set the pen of the current pixel
+040376                   0558 dsl_set_pen:
+040376 CD FF 0A 04       0559 	call fn_get_pixel_color
+04037A 21 DB 10 04       0560 	ld hl,current_pen
+04037E BE                0561 	cp (hl)
+04037F CA C7 02 04       0562 	jp z,draw_sprite_loop
+040383 7E                0563 	ld a,(hl)
+040384 CD 41 0B 04       0564 	call fn_set_pixel_color
+040388 CD D5 0A 04       0565 	call fn_draw_pixel_with_border
+04038C C3 C7 02 04       0566 	jp draw_sprite_loop
+040390                   0567 
+040390                   0568 ; set the pen of the current pixel
+040390                   0569 dsl_set_pen2:
+040390 CD FF 0A 04       0570 	call fn_get_pixel_color
+040394 21 DB 10 04       0571 	ld hl,current_pen
+040398 BE                0572 	cp (hl)
+040399 C8                0573 	ret z
+04039A 7E                0574 	ld a,(hl)
+04039B CD 41 0B 04       0575 	call fn_set_pixel_color
+04039F CD D5 0A 04       0576 	call fn_draw_pixel_with_border
+0403A3 C9                0577 	ret
+0403A4                   0578 
+0403A4                   0579 ; reset the pen of the current pixel
+0403A4                   0580 dsl_reset_pen:
+0403A4 CD FF 0A 04       0581 	call fn_get_pixel_color
+0403A8 FE 00             0582 	cp 0
+0403AA CA C7 02 04       0583 	jp z,draw_sprite_loop
+0403AE AF                0584 	xor a
+0403AF CD 41 0B 04       0585 	call fn_set_pixel_color
+0403B3 CD D5 0A 04       0586 	call fn_draw_pixel_with_border
+0403B7 C3 C7 02 04       0587 	jp draw_sprite_loop
+0403BB                   0588 
+0403BB                   0589 ; move pixel up
+0403BB                   0590 dsl_up:
+0403BB 21 D8 10 04       0591 	ld hl,ypix
+0403BF 7E                0592 	ld a,(hl)
+0403C0 FE 00             0593 	cp 0
+0403C2 CA C7 02 04       0594 	jp z,draw_sprite_loop
+0403C6                   0595 
+0403C6                   0596 	; controlkey down ? draw
+0403C6 FD 21 AE 11 04    0597 	ld iy,keydata
+0403CB FD 7E 02          0598 	ld a,(iy+2)
+0403CE E6 01             0599 	and 1
+0403D0 FE 01             0600 	cp 1
+0403D2 CC 90 03 04       0601 	call z,dsl_set_pen2
+0403D6                   0602 
+0403D6 CD E9 0A 04       0603 	call fn_draw_pixel_without_border
+0403DA CD 85 0B 04       0604 	call fn_move_up
+0403DE CD D5 0A 04       0605 	call fn_draw_pixel_with_border
+0403E2                   0606 
+0403E2                   0607 	; controlkey down ? draw
+0403E2 FD 21 AE 11 04    0608 	ld iy,keydata
+0403E7 FD 7E 02          0609 	ld a,(iy+2)
+0403EA E6 01             0610 	and 1
+0403EC FE 01             0611 	cp 1
+0403EE CC 90 03 04       0612 	call z,dsl_set_pen2
+0403F2                   0613 
+0403F2 CD 42 10 04       0614 	call fn_slowdown
+0403F6 C3 C7 02 04       0615 	jp draw_sprite_loop
+0403FA                   0616 
+0403FA                   0617 ; move pixel down
+0403FA                   0618 dsl_down:
+0403FA 21 DA 10 04       0619 	ld hl,spr_size
+0403FE 56                0620 	ld d,(hl)
+0403FF 15                0621 	dec d
+040400                   0622 
+040400 21 D8 10 04       0623 	ld hl,ypix
+040404 7E                0624 	ld a,(hl)
+040405 BA                0625 	cp d
+040406 CA C7 02 04       0626 	jp z,draw_sprite_loop
+04040A                   0627 
+04040A                   0628 	; controlkey down ? draw
+04040A FD 21 AE 11 04    0629 	ld iy,keydata
+04040F FD 7E 02          0630 	ld a,(iy+2)
+040412 E6 01             0631 	and 1
+040414 FE 01             0632 	cp 1
+040416 CC 90 03 04       0633 	call z,dsl_set_pen2
+04041A                   0634 
+04041A CD E9 0A 04       0635 	call fn_draw_pixel_without_border
+04041E CD 8B 0B 04       0636 	call fn_move_down
+040422 CD D5 0A 04       0637 	call fn_draw_pixel_with_border
+040426                   0638 
+040426                   0639 	; controlkey down ? draw
+040426 FD 21 AE 11 04    0640 	ld iy,keydata
+04042B FD 7E 02          0641 	ld a,(iy+2)
+04042E E6 01             0642 	and 1
+040430 FE 01             0643 	cp 1
+040432 CC 90 03 04       0644 	call z,dsl_set_pen2
+040436                   0645 
+040436 CD 42 10 04       0646 	call fn_slowdown
+04043A C3 C7 02 04       0647 	jp draw_sprite_loop
+04043E                   0648 
+04043E                   0649 ; move pixel left
+04043E                   0650 dsl_left:
+04043E 21 D7 10 04       0651 	ld hl,xpix
+040442 7E                0652 	ld a,(hl)
+040443 FE 00             0653 	cp 0
+040445 CA C7 02 04       0654 	jp z,draw_sprite_loop
+040449                   0655 
+040449                   0656 	; controlkey down ? draw
+040449 FD 21 AE 11 04    0657 	ld iy,keydata
+04044E FD 7E 02          0658 	ld a,(iy+2)
+040451 E6 01             0659 	and 1
+040453 FE 01             0660 	cp 1
+040455 CC 90 03 04       0661 	call z,dsl_set_pen2
+040459                   0662 
+040459 CD E9 0A 04       0663 	call fn_draw_pixel_without_border
+04045D CD 91 0B 04       0664 	call fn_move_left
+040461 CD D5 0A 04       0665 	call fn_draw_pixel_with_border
+040465                   0666 
+040465                   0667 	; controlkey down ? draw
+040465 FD 21 AE 11 04    0668 	ld iy,keydata
+04046A FD 7E 02          0669 	ld a,(iy+2)
+04046D E6 01             0670 	and 1
+04046F FE 01             0671 	cp 1
+040471 CC 90 03 04       0672 	call z,dsl_set_pen2
+040475                   0673 
+040475 CD 42 10 04       0674 	call fn_slowdown
+040479 C3 C7 02 04       0675 	jp draw_sprite_loop
+04047D                   0676 
+04047D                   0677 ; move pixel right
+04047D                   0678 dsl_right:
+04047D 21 DA 10 04       0679 	ld hl,spr_size
+040481 56                0680 	ld d,(hl)
+040482 15                0681 	dec d
+040483                   0682 
+040483 21 D7 10 04       0683 	ld hl,xpix
+040487 7E                0684 	ld a,(hl)
+040488 BA                0685 	cp d
+040489 CA C7 02 04       0686 	jp z,draw_sprite_loop
+04048D                   0687 
+04048D                   0688 	; controlkey down ? draw
+04048D FD 21 AE 11 04    0689 	ld iy,keydata
+040492 FD 7E 02          0690 	ld a,(iy+2)
+040495 E6 01             0691 	and 1
+040497 FE 01             0692 	cp 1
+040499 CC 90 03 04       0693 	call z,dsl_set_pen2
+04049D                   0694 
+04049D CD E9 0A 04       0695 	call fn_draw_pixel_without_border
+0404A1 CD 97 0B 04       0696 	call fn_move_right
+0404A5 CD D5 0A 04       0697 	call fn_draw_pixel_with_border
+0404A9                   0698 
+0404A9                   0699 	; controlkey down ? draw
+0404A9 FD 21 AE 11 04    0700 	ld iy,keydata
+0404AE FD 7E 02          0701 	ld a,(iy+2)
+0404B1 E6 01             0702 	and 1
+0404B3 FE 01             0703 	cp 1
+0404B5 CC 90 03 04       0704 	call z,dsl_set_pen2
+0404B9                   0705 
+0404B9 CD 42 10 04       0706 	call fn_slowdown
+0404BD C3 C7 02 04       0707 	jp draw_sprite_loop
+0404C1                   0708 
+0404C1                   0709 ; load a sprite
+0404C1                   0710 dsl_load_sprite:
+0404C1 CD 75 0C 04       0711 	call fn_wait_key_released
+0404C5 CD E9 0A 04       0712 	call fn_draw_pixel_without_border
+0404C9 CD 89 0D 04       0713 	call fn_load_sprite
+0404CD CD B9 0F 04       0714 	call fn_refresh_sprite
+0404D1 CD D5 0A 04       0715 	call fn_draw_pixel_with_border
+0404D5 CD F9 0F 04       0716 	call fn_change_frame
+0404D9 C3 C7 02 04       0717 	jp draw_sprite_loop
+0404DD                   0718 
+0404DD                   0719 ; save a sprite
+0404DD                   0720 dsl_save_sprite:
+0404DD CD 75 0C 04       0721 	call fn_wait_key_released
+0404E1 CD E9 0A 04       0722 	call fn_draw_pixel_without_border
+0404E5 CD 84 0E 04       0723 	call fn_save_sprite
+0404E9 CD B9 0F 04       0724 	call fn_refresh_sprite
+0404ED C3 C7 02 04       0725 	jp draw_sprite_loop
+0404F1                   0726 
+0404F1                   0727 ; add a frame to the animation
+0404F1                   0728 dsl_add_frame:
+0404F1 CD 75 0C 04       0729 	call fn_wait_key_released
+0404F5                   0730 
+0404F5                   0731 	; frames limit reached ? exit
+0404F5 21 A9 11 04       0732 	ld hl,frames_count
+0404F9 7E                0733 	ld a,(hl)
+0404FA FE 08             0734 	cp MAX_FRAMES
+0404FC CA C7 02 04       0735 	jp z,draw_sprite_loop
+040500                   0736 
+040500                   0737 	; get the number of frames to copy
+040500 21 A9 11 04       0738 	ld hl,frames_count
+040504 7E                0739 	ld a,(hl)
+040505 21 A8 11 04       0740 	ld hl,current_frame
+040509 46                0741 	ld b,(hl)
+04050A 90                0742 	sub b
+04050B 3D                0743 	dec a
+04050C                   0744 
+04050C                   0745 	; get sprsize² (length of a sprite, in bytes)
+04050C 21 DA 10 04       0746 	ld hl,spr_size
+040510 11 00 00 00       0747 	ld de,$000000
+040514 5E                0748 	ld e,(hl)
+040515 56                0749 	ld d,(hl)
+040516 ED 5C             0750 	mlt de ; DE = sprsize²
+040518                   0751 
+040518                   0752 	; prepare for the case we goto af_zap...
+040518 21 B1 11 04       0753 	ld hl,sprite_buffer
+04051C                   0754 
+04051C F5                0755 	push af
+04051D E5                0756 	push hl
+04051E 21 A8 11 04       0757 	ld hl,current_frame
+040522 7E                0758 	ld a,(hl)
+040523 3C                0759 	inc a
+040524 47                0760 	ld b,a
+040525 E1                0761 	pop hl
+040526 F1                0762 	pop af
+040527                   0763 
+040527                   0764 af_loop0:
+040527 19                0765 	add hl,de ; for if current frame = 0 (prepare to zap!)
+040528 10 FD             0766 	djnz af_loop0
+04052A                   0767 
+04052A E5                0768 	push hl ; store HL = sprite buffer + sprsize²
+04052B FE 00             0769 	cp 0
+04052D CA 55 05 04       0770 	jp z,af_zap ; zap the copy, if the 'current frame' is at the last frame
+040531 E1                0771 	pop hl ; HL unused in this case
+040532                   0772 
+040532 21 00 00 00       0773 	ld hl,$000000 ; HL is 0 to store the result
+040536 47                0774 	ld b,a ; B = frames to copy
+040537                   0775 
+040537                   0776 ; multiply number of frames to copy by sprsize²
+040537                   0777 af_loop1:
+040537 19                0778 	add hl,de ; HL = length (in bytes) to copy (a few frames)
+040538 10 FD             0779 	djnz af_loop1
+04053A                   0780 
+04053A E5                0781 	push hl
+04053B C1                0782 	pop bc ; BC = HL = length (in bytes) to copy (a few frames)
+04053C                   0783 
+04053C 21 A8 11 04       0784 	ld hl,current_frame
+040540 7E                0785 	ld a,(hl)
+040541 3C                0786 	inc a
+040542 21 B1 11 04       0787 	ld hl,sprite_buffer
+040546                   0788 
+040546 C5                0789 	push bc
+040547 47                0790 	ld b,a
+040548                   0791 
+040548                   0792 af_loop2:
+040548 19                0793 	add hl,de ; HL = sprite buffer + length to copy
+040549 10 FD             0794 	djnz af_loop2
+04054B                   0795 
+04054B C1                0796 	pop bc
+04054C                   0797 
+04054C E5                0798 	push hl ; HL = sprite_buffer + (current frame * sprsize²)
+04054D                   0799 
+04054D 09                0800 	add hl,bc
+04054E 2B                0801 	dec hl ; HL = end address to copy to end target address
+04054F                   0802 
+04054F E5                0803 	push hl
+040550 19                0804 	add hl,de
+040551 EB                0805 	ex de,hl ; DE = end target address
+040552 E1                0806 	pop hl
+040553                   0807 
+040553 ED B8             0808 	lddr
+040555                   0809 
+040555                   0810 af_zap:
+040555                   0811 	; multiply number of frames to copy by sprsize²
+040555 21 DA 10 04       0812 	ld hl,spr_size
+040559 01 00 00 00       0813 	ld bc,$000000
+04055D 4E                0814 	ld c,(hl)
+04055E 46                0815 	ld b,(hl)
+04055F ED 4C             0816 	mlt bc ; BC = sprsize²
+040561                   0817 
+040561 E1                0818 	pop hl ; HL = sprite_buffer + (current frame * sprsize²)
+040562                   0819 
+040562                   0820 ; fill frame with 0 color
+040562                   0821 af_loop3:
+040562 AF                0822 	xor a
+040563 77                0823 	ld (hl),a
+040564 23                0824 	inc hl
+040565 0B                0825 	dec bc
+040566 78                0826 	ld a,b
+040567 B1                0827 	or c
+040568 FE 00             0828 	cp 0
+04056A 20 F6             0829 	jr nz,af_loop3
+04056C                   0830 
+04056C                   0831 	; increment the frames count and the current frame values
+04056C 21 A9 11 04       0832 	ld hl,frames_count
+040570 34                0833 	inc (hl)
+040571 21 A8 11 04       0834 	ld hl,current_frame
+040575 34                0835 	inc (hl)
+040576                   0836 
+040576 CD F9 0F 04       0837 	call fn_change_frame
+04057A CD 1E 10 04       0838 	call fn_change_frames_count
+04057E CD B9 0F 04       0839 	call fn_refresh_sprite
+040582 C3 C7 02 04       0840 	jp draw_sprite_loop
+040586                   0841 
+040586                   0842 ; add a copy of the current frame to the animation
+040586                   0843 dsl_add_and_copy_frame: ; TODO! debug me!
+040586 CD 75 0C 04       0844 	call fn_wait_key_released
+04058A                   0845 
+04058A                   0846 	; frames limit reached ? exit
+04058A 21 A9 11 04       0847 	ld hl,frames_count
+04058E 7E                0848 	ld a,(hl)
+04058F FE 08             0849 	cp MAX_FRAMES
+040591 CA C7 02 04       0850 	jp z,draw_sprite_loop
+040595                   0851 
+040595                   0852 	; get the number of frames to copy
+040595 21 A9 11 04       0853 	ld hl,frames_count
+040599 7E                0854 	ld a,(hl)
+04059A 21 A8 11 04       0855 	ld hl,current_frame
+04059E 46                0856 	ld b,(hl)
+04059F 90                0857 	sub b
+0405A0                   0858 
+0405A0                   0859 	; get sprsize² (length of a sprite, in bytes)
+0405A0 21 DA 10 04       0860 	ld hl,spr_size
+0405A4 11 00 00 00       0861 	ld de,$000000
+0405A8 5E                0862 	ld e,(hl)
+0405A9 56                0863 	ld d,(hl)
+0405AA ED 5C             0864 	mlt de ; DE = sprsize²
+0405AC                   0865 
+0405AC 21 00 00 00       0866 	ld hl,$000000 ; HL is 0 to store the result
+0405B0 47                0867 	ld b,a ; B = frames to copy
+0405B1                   0868 
+0405B1                   0869 ; multiply number of frames to copy by sprsize²
+0405B1                   0870 aacf_loop1:
+0405B1 19                0871 	add hl,de ; HL = length (in bytes) to copy (a few frames)
+0405B2 10 FD             0872 	djnz aacf_loop1
+0405B4                   0873 
+0405B4 E5                0874 	push hl
+0405B5 C1                0875 	pop bc ; BC = HL = length (in bytes) to copy (a few frames)
+0405B6                   0876 
+0405B6 21 A8 11 04       0877 	ld hl,current_frame
+0405BA 7E                0878 	ld a,(hl)
+0405BB 21 B1 11 04       0879 	ld hl,sprite_buffer
+0405BF FE 00             0880 	cp 0
+0405C1 28 06             0881 	jr z,aacf_loop_end2
+0405C3                   0882 
+0405C3 C5                0883 	push bc
+0405C4 47                0884 	ld b,a
+0405C5                   0885 
+0405C5                   0886 aacf_loop2:
+0405C5 19                0887 	add hl,de ; HL = sprite buffer + length to copy
+0405C6 10 FD             0888 	djnz aacf_loop2
+0405C8                   0889 
+0405C8 C1                0890 	pop bc
+0405C9                   0891 
+0405C9                   0892 aacf_loop_end2:
+0405C9 09                0893 	add hl,bc
+0405CA 2B                0894 	dec hl ; HL = end address to copy to end target address
+0405CB                   0895 
+0405CB E5                0896 	push hl
+0405CC 19                0897 	add hl,de
+0405CD EB                0898 	ex de,hl ; DE = end target address
+0405CE E1                0899 	pop hl
+0405CF                   0900 
+0405CF ED B8             0901 	lddr
+0405D1                   0902 
+0405D1                   0903 	; increment the frames count and the current frame values
+0405D1 21 A9 11 04       0904 	ld hl,frames_count
+0405D5 34                0905 	inc (hl)
+0405D6 21 A8 11 04       0906 	ld hl,current_frame
+0405DA 34                0907 	inc (hl)
+0405DB                   0908 
+0405DB CD F9 0F 04       0909 	call fn_change_frame
+0405DF CD 1E 10 04       0910 	call fn_change_frames_count
+0405E3 CD B9 0F 04       0911 	call fn_refresh_sprite
+0405E7 C3 C7 02 04       0912 	jp draw_sprite_loop
+0405EB                   0913 
+0405EB                   0914 ; delete last frame from animation
+0405EB                   0915 dsl_delete_frame:
+0405EB CD 75 0C 04       0916 	call fn_wait_key_released
+0405EF                   0917 
+0405EF                   0918 	; delete current selected frame
+0405EF 21 DA 10 04       0919 	ld hl,spr_size
+0405F3 01 00 00 00       0920 	ld bc,$000000
+0405F7 4E                0921 	ld c,(hl)
+0405F8 46                0922 	ld b,(hl)
+0405F9 ED 4C             0923 	mlt bc ; BC = sprsize²
+0405FB 21 A8 11 04       0924 	ld hl,current_frame
+0405FF 7E                0925 	ld a,(hl) ; A = current frame
+040600 21 B1 11 04       0926 	ld hl,sprite_buffer ; HL = sprite buffer
+040604 C5                0927 	push bc
+040605 FE 00             0928 	cp 0
+040607 28 06             0929 	jr z,df_loop2
+040609                   0930 
+040609                   0931 df_loop1:
+040609 09                0932 	add hl,bc ; HL = sprite buffer + (current frame * sprsize²)
+04060A 3D                0933 	dec a
+04060B FE 00             0934 	cp 0
+04060D 20 FA             0935 	jr nz,df_loop1
+04060F                   0936 
+04060F                   0937 ; clear the current frame
+04060F                   0938 df_loop2:
+04060F AF                0939 	xor a
+040610 77                0940 	ld (hl),a
+040611 23                0941 	inc hl
+040612 0B                0942 	dec bc
+040613 78                0943 	ld a,b
+040614 B1                0944 	or c
+040615 FE 00             0945 	cp 0
+040617 20 F6             0946 	jr nz,df_loop2
+040619                   0947 
+040619                   0948 	; current frame + 1 = frames count ?
+040619 E5                0949 	push hl
+04061A 21 A8 11 04       0950 	ld hl,current_frame
+04061E 5E                0951 	ld e,(hl)
+04061F 1C                0952 	inc e
+040620 21 A9 11 04       0953 	ld hl,frames_count
+040624 7E                0954 	ld a,(hl)
+040625 BB                0955 	cp e
+040626 E1                0956 	pop hl
+040627 C1                0957 	pop bc
+040628 CA A4 06 04       0958 	jp z,df_exit
+04062C                   0959 
+04062C 11 A9 11 04       0960 	ld de,frames_count
+040630 1A                0961 	ld a,(de) ; A = frames count
+040631 E5                0962 	push hl
+040632 21 A8 11 04       0963 	ld hl,current_frame
+040636 5E                0964 	ld e,(hl) ; E = current frame
+040637 E1                0965 	pop hl
+040638 93                0966 	sub e
+040639 3D                0967 	dec a ; A = number of frames to copy back
+04063A                   0968 
+04063A EB                0969 	ex de,hl ; DE = sprite buffer + ((current frame + 1) * sprsize²)
+04063B 21 00 00 00       0970 	ld hl,$000000
+04063F FE 00             0971 	cp 0 ; 0 frames to copy ?
+040641 28 06             0972 	jr z,df_exit_loop3
+040643                   0973 
+040643                   0974 df_loop3:
+040643 09                0975 	add hl,bc ; HL = length of a frame (sprsize²) * frames count
+040644 3D                0976 	dec a
+040645 FE 00             0977 	cp 0
+040647 20 FA             0978 	jr nz,df_loop3
+040649                   0979 
+040649                   0980 df_exit_loop3:
+040649 E5                0981 	push hl
+04064A C1                0982 	pop bc ; BC = total length of area to copy
+04064B D5                0983 	push de
+04064C E1                0984 	pop hl ; HL = DE = start of area to copy
+04064D                   0985 
+04064D C5                0986 	push bc
+04064E D5                0987 	push de
+04064F E5                0988 	push hl
+040650 21 DA 10 04       0989 	ld hl,spr_size
+040654 11 00 00 00       0990 	ld de,$000000
+040658 5E                0991 	ld e,(hl)
+040659 56                0992 	ld d,(hl)
+04065A ED 5C             0993 	mlt de ; DE = one sprite frame length
+04065C E1                0994 	pop hl
+04065D B7                0995 	or a
+04065E ED 52             0996 	sbc hl,de ; HL = target area to copy
+040660 D1                0997 	pop de
+040661 EB                0998 	ex de,hl ; DE = target, HL = start
+040662 C1                0999 	pop bc
+040663 ED B0             1000 	ldir
+040665                   1001 
+040665 21 DA 10 04       1002 	ld hl,spr_size
+040669 01 00 00 00       1003 	ld bc,$000000
+04066D 4E                1004 	ld c,(hl)
+04066E 46                1005 	ld b,(hl)
+04066F ED 4C             1006 	mlt bc ; DE = one sprite frame length
+040671                   1007 
+040671                   1008 	; delete last frame data
+040671 21 A9 11 04       1009 	ld hl,frames_count
+040675 7E                1010 	ld a,(hl) ; A =frames count
+040676 3D                1011 	dec a ; A = last frame
+040677 21 B1 11 04       1012 	ld hl,sprite_buffer ; HL = sprite buffer
+04067B FE 00             1013 	cp 0
+04067D 28 06             1014 	jr z,df_loop5
+04067F                   1015 
+04067F                   1016 df_loop4:
+04067F 09                1017 	add hl,bc ; HL = sprite buffer + (last frame * sprsize²)
+040680 3D                1018 	dec a
+040681 FE 00             1019 	cp 0
+040683 20 FA             1020 	jr nz,df_loop4
+040685                   1021 
+040685                   1022 ; clear the current frame
+040685                   1023 df_loop5:
+040685 AF                1024 	xor a
+040686 77                1025 	ld (hl),a
+040687 23                1026 	inc hl
+040688 0B                1027 	dec bc
+040689 78                1028 	ld a,b
+04068A B1                1029 	or c
+04068B FE 00             1030 	cp 0
+04068D 20 F6             1031 	jr nz,df_loop5
+04068F                   1032 
+04068F                   1033 	; decrement frames count
+04068F 21 A9 11 04       1034 	ld hl,frames_count
+040693 35                1035 	dec (hl)
+040694                   1036 
+040694 CD F9 0F 04       1037 	call fn_change_frame
+040698 CD 1E 10 04       1038 	call fn_change_frames_count
+04069C CD B9 0F 04       1039 	call fn_refresh_sprite
+0406A0 C3 C7 02 04       1040 	jp draw_sprite_loop
+0406A4                   1041 
+0406A4                   1042 df_exit:
+0406A4 21 A9 11 04       1043 	ld hl,frames_count
+0406A8 7E                1044 	ld a,(hl)
+0406A9 FE 01             1045 	cp 1
+0406AB 28 06             1046 	jr z,df_exit_end
+0406AD 35                1047 	dec (hl)
+0406AE 21 A8 11 04       1048 	ld hl,current_frame
+0406B2 35                1049 	dec (hl)
+0406B3                   1050 
+0406B3                   1051 df_exit_end:
+0406B3 CD F9 0F 04       1052 	call fn_change_frame
+0406B7 CD 1E 10 04       1053 	call fn_change_frames_count
+0406BB CD B9 0F 04       1054 	call fn_refresh_sprite
+0406BF C3 C7 02 04       1055 	jp draw_sprite_loop
+0406C3                   1056 
+0406C3                   1057 ; goto previous frame
+0406C3                   1058 dsl_previous_frame:
+0406C3 CD 75 0C 04       1059 	call fn_wait_key_released
+0406C7 21 A8 11 04       1060 	ld hl,current_frame
+0406CB 7E                1061 	ld a,(hl)
+0406CC FE 00             1062 	cp 0
+0406CE CA C7 02 04       1063 	jp z,draw_sprite_loop
+0406D2                   1064 
+0406D2 3D                1065 	dec a
+0406D3 77                1066 	ld (hl),a
+0406D4 CD F9 0F 04       1067 	call fn_change_frame
+0406D8 CD B9 0F 04       1068 	call fn_refresh_sprite
+0406DC C3 C7 02 04       1069 	jp draw_sprite_loop
+0406E0                   1070 
+0406E0                   1071 ; goto next frame
+0406E0                   1072 dsl_next_frame:
+0406E0 CD 75 0C 04       1073 	call fn_wait_key_released
+0406E4 21 A8 11 04       1074 	ld hl,current_frame
+0406E8 7E                1075 	ld a,(hl)
+0406E9 3C                1076 	inc a
+0406EA 21 A9 11 04       1077 	ld hl,frames_count
+0406EE BE                1078 	cp (hl)
+0406EF CA C7 02 04       1079 	jp z,draw_sprite_loop
+0406F3                   1080 
+0406F3 21 A8 11 04       1081 	ld hl,current_frame
+0406F7 77                1082 	ld (hl),a
+0406F8 CD F9 0F 04       1083 	call fn_change_frame
+0406FC CD B9 0F 04       1084 	call fn_refresh_sprite
+040700 C3 C7 02 04       1085 	jp draw_sprite_loop
+040704                   1086 
+040704                   1087 ; rotate a frame 90° clockwise
+040704                   1088 dsl_rotate_frame:
+040704 CD 75 0C 04       1089 	call fn_wait_key_released
+040708                   1090 
+040708 CD B9 0F 04       1091 	call fn_refresh_sprite
+04070C C3 C7 02 04       1092 	jp draw_sprite_loop
+040710                   1093 
+040710                   1094 ; flip frame horizontally
+040710                   1095 dsl_flip_frame:
+040710 CD 75 0C 04       1096 	call fn_wait_key_released
+040714                   1097 
+040714 21 DA 10 04       1098 	ld hl,spr_size
+040718 11 00 00 00       1099 	ld de,$000000
+04071C 5E                1100 	ld e,(hl)
+04071D 56                1101 	ld d,(hl)
+04071E 4B                1102 	ld c,e
+04071F ED 5C             1103 	mlt de ; DE = sprite length in bytes
+040721 21 A8 11 04       1104 	ld hl,current_frame
+040725 7E                1105 	ld a,(hl) ; A = current frame
+040726 21 B1 11 04       1106 	ld hl,sprite_buffer
+04072A FE 00             1107 	cp 0
+04072C 28 04             1108 	jr z,ff_noloop1
+04072E 47                1109 	ld b,a
+04072F                   1110 
+04072F                   1111 ff_loop1:
+04072F 19                1112 	add hl,de ; HL = sprite_buffer + (current frame * sprsize²)
+040730 10 FD             1113 	djnz ff_loop1
+040732                   1114 
+040732                   1115 ff_noloop1:
+040732 41                1116 	ld b,c ; B = sprite height
+040733 11 00 00 00       1117 	ld de,$000000
+040737 59                1118 	ld e,c ; DE = sprite width
+040738 79                1119 	ld a,c ; A = sprite width
+040739 0F                1120 	rrca
+04073A E6 7F             1121 	and 127 ; A = sprite width / 2
+04073C                   1122 
+04073C E5                1123 	push hl
+04073D DD E1             1124 	pop ix ; IX = frame address
+04073F 19                1125 	add hl,de ; HL = frame address + sprite width - 1
+040740 2B                1126 	dec hl
+040741 E5                1127 	push hl
+040742 FD E1             1128 	pop iy ; IY = YX + sprite width - 1
+040744                   1129 
+040744                   1130 ff_loop2:
+040744 F5                1131 	push af
+040745 D5                1132 	push de
+040746 DD E5             1133 	push ix
+040748 FD E5             1134 	push iy
+04074A                   1135 ff_loop3:
+04074A DD 5E 00          1136 	ld e,(ix+0)
+04074D FD 56 00          1137 	ld d,(iy+0)
+040750 DD 72 00          1138 	ld (ix+0),d
+040753 FD 73 00          1139 	ld (iy+0),e
+040756 DD 23             1140 	inc ix
+040758 FD 2B             1141 	dec iy
+04075A 3D                1142 	dec a
+04075B FE 00             1143 	cp 0
+04075D 20 EB             1144 	jr nz,ff_loop3
+04075F FD E1             1145 	pop iy
+040761 DD E1             1146 	pop ix
+040763 D1                1147 	pop de
+040764 F1                1148 	pop af
+040765 DD 19             1149 	add ix,de
+040767 FD 19             1150 	add iy,de
+040769 10 D9             1151 	djnz ff_loop2
+04076B                   1152 
+04076B CD B9 0F 04       1153 	call fn_refresh_sprite
+04076F C3 C7 02 04       1154 	jp draw_sprite_loop
+040773                   1155 
+040773                   1156 ; mirror frame vertically
+040773                   1157 dsl_mirror_frame:
+040773 CD 75 0C 04       1158 	call fn_wait_key_released
+040777                   1159 
+040777 CD B9 0F 04       1160 	call fn_refresh_sprite
+04077B C3 C7 02 04       1161 	jp draw_sprite_loop
+04077F                   1162 
+04077F                   1163 ; change current tool to palette
+04077F                   1164 dsl_palette_tool:
+04077F CD 75 0C 04       1165 	call fn_wait_key_released
+040783                   1166 
+040783                   1167 	; hide sprite drawing cursor
+040783 CD E9 0A 04       1168 	call fn_draw_pixel_without_border
+040787                   1169 
+040787                   1170 	; draw selected palette color
+040787 21 DB 10 04       1171 	ld hl,current_pen
+04078B 4E                1172 	ld c,(hl)
+04078C CD 9D 0B 04       1173 	call fn_draw_palette_with_border
+040790                   1174 
+040790                   1175 ; select palette color
+040790                   1176 dsl_palette_tool_loop:
+040790                   1177 	; get a char
+040790 CD 57 0C 04       1178 	call fn_wait_key
+040794                   1179 
+040794                   1180 	; if not keydown, loop
+040794 57                1181 	ld d,a
+040795 7D                1182 	ld a,l
+040796 E6 01             1183 	and 1
+040798 FE 00             1184 	cp 0
+04079A 7A                1185 	ld a,d
+04079B CA 90 07 04       1186 	jp z,dsl_palette_tool_loop
+04079F                   1187 
+04079F FE 00             1188 	cp 0 ; keycode = 0 ? loop
+0407A1 CA 90 07 04       1189 	jp z,dsl_palette_tool_loop
+0407A5                   1190 
+0407A5 FE 9A             1191 	cp VK_LEFT ; on left key...
+0407A7 CA 32 08 04       1192 	jp z,dsl_dec_pen
+0407AB                   1193 
+0407AB FE 9C             1194 	cp VK_RIGHT ; on right key...
+0407AD CA 5D 08 04       1195 	jp z,dsl_inc_pen
+0407B1                   1196 
+0407B1 FE 8E             1197 	cp VK_TAB ; on tab key...
+0407B3 CA 1D 08 04       1198 	jp z,dsl_draw_sprite_tool
+0407B7                   1199 
+0407B7 FE 21             1200 	cp VK_l ; on l key...
+0407B9 CA D9 07 04       1201 	jp z,dslp_load_sprite
+0407BD                   1202 
+0407BD FE 3B             1203 	cp VK_L ; on L key...
+0407BF CA D9 07 04       1204 	jp z,dslp_load_sprite
+0407C3                   1205 
+0407C3 FE 28             1206 	cp VK_s ; on s key...
+0407C5 CA FF 07 04       1207 	jp z,dslp_save_sprite
+0407C9                   1208 
+0407C9 FE 42             1209 	cp VK_S ; on S key...
+0407CB CA FF 07 04       1210 	jp z,dslp_save_sprite
+0407CF                   1211 
+0407CF FE 7D             1212 	cp VK_ESCAPE ; on escape key...
+0407D1 CA 88 08 04       1213 	jp z,exit_program
+0407D5                   1214 
+0407D5 C3 90 07 04       1215 	jp dsl_palette_tool_loop
+0407D9                   1216 
+0407D9                   1217 dslp_load_sprite:
+0407D9 CD 75 0C 04       1218 	call fn_wait_key_released
+0407DD 21 DB 10 04       1219 	ld hl,current_pen
+0407E1 4E                1220 	ld c,(hl)
+0407E2 CD 02 0C 04       1221 	call fn_draw_palette_without_border
+0407E6 CD 89 0D 04       1222 	call fn_load_sprite
+0407EA 21 DB 10 04       1223 	ld hl,current_pen
+0407EE 4E                1224 	ld c,(hl)
+0407EF CD B9 0F 04       1225 	call fn_refresh_sprite
+0407F3 CD 9D 0B 04       1226 	call fn_draw_palette_with_border
+0407F7 CD F9 0F 04       1227 	call fn_change_frame
+0407FB C3 90 07 04       1228 	jp dsl_palette_tool_loop
+0407FF                   1229 
+0407FF                   1230 dslp_save_sprite:
+0407FF CD 75 0C 04       1231 	call fn_wait_key_released
+040803 21 DB 10 04       1232 	ld hl,current_pen
+040807 4E                1233 	ld c,(hl)
+040808 CD 02 0C 04       1234 	call fn_draw_palette_without_border
+04080C CD 84 0E 04       1235 	call fn_save_sprite
+040810 21 DB 10 04       1236 	ld hl,current_pen
+040814 4E                1237 	ld c,(hl)
+040815 CD 9D 0B 04       1238 	call fn_draw_palette_with_border
+040819 C3 90 07 04       1239 	jp dsl_palette_tool_loop
+04081D                   1240 
+04081D                   1241 dsl_draw_sprite_tool:
+04081D CD 75 0C 04       1242 	call fn_wait_key_released
+040821                   1243 
+040821                   1244 	; unselect palette color
+040821 21 DB 10 04       1245 	ld hl,current_pen
+040825 4E                1246 	ld c,(hl)
+040826 CD 02 0C 04       1247 	call fn_draw_palette_without_border
+04082A                   1248 
+04082A                   1249 	; draw the pixel with a border
+04082A CD D5 0A 04       1250 	call fn_draw_pixel_with_border
+04082E                   1251 
+04082E C3 C7 02 04       1252 	jp draw_sprite_loop
+040832                   1253 
+040832                   1254 dsl_dec_pen:
+040832 21 DB 10 04       1255 	ld hl,current_pen
+040836 7E                1256 	ld a,(hl)
+040837 FE 00             1257 	cp COLOR_MIN
+040839 CA 90 07 04       1258 	jp z,dsl_palette_tool_loop
+04083D                   1259 
+04083D F5                1260 	push af
+04083E E5                1261 	push hl
+04083F                   1262 
+04083F                   1263 	; unselect palette color
+04083F 21 DB 10 04       1264 	ld hl,current_pen
+040843 4E                1265 	ld c,(hl)
+040844 CD 02 0C 04       1266 	call fn_draw_palette_without_border
+040848                   1267 
+040848 E1                1268 	pop hl
+040849 F1                1269 	pop af
+04084A                   1270 
+04084A                   1271 	; dec the pen
+04084A 3D                1272 	dec a
+04084B 77                1273 	ld (hl),a
+04084C                   1274 
+04084C                   1275 	; select palette color
+04084C 21 DB 10 04       1276 	ld hl,current_pen
+040850 4E                1277 	ld c,(hl)
+040851 CD 9D 0B 04       1278 	call fn_draw_palette_with_border
+040855 CD 42 10 04       1279 	call fn_slowdown
+040859 C3 90 07 04       1280 	jp dsl_palette_tool_loop
+04085D                   1281 
+04085D                   1282 dsl_inc_pen:
+04085D 21 DB 10 04       1283 	ld hl,current_pen
+040861 7E                1284 	ld a,(hl)
+040862 FE 3F             1285 	cp COLOR_MAX
+040864 CA 90 07 04       1286 	jp z,dsl_palette_tool_loop
+040868                   1287 
+040868 F5                1288 	push af
+040869 E5                1289 	push hl
+04086A                   1290 
+04086A                   1291 	; unselect palette color
+04086A 21 DB 10 04       1292 	ld hl,current_pen
+04086E 4E                1293 	ld c,(hl)
+04086F CD 02 0C 04       1294 	call fn_draw_palette_without_border
+040873                   1295 
+040873 E1                1296 	pop hl
+040874 F1                1297 	pop af
+040875                   1298 
+040875                   1299 	; inc the pen
+040875 3C                1300 	inc a
+040876 77                1301 	ld (hl),a
+040877                   1302 
+040877                   1303 	; select palette color
+040877 21 DB 10 04       1304 	ld hl,current_pen
+04087B 4E                1305 	ld c,(hl)
+04087C CD 9D 0B 04       1306 	call fn_draw_palette_with_border
+040880 CD 42 10 04       1307 	call fn_slowdown
+040884 C3 90 07 04       1308 	jp dsl_palette_tool_loop
+040888                   1309 
+040888                   1310 ; exit program
+040888                   1311 exit_program:
+040888                   1312 	; reset to mode 1
+040888                   1313 	vdu 22
+040888 3E 16             1313 		ld a,arg1
+04088A 49 D7             1313 		rst.lis $10
+04088C                   1314 	vdu 1
+04088C 3E 01             1314 		ld a,arg1
+04088E 49 D7             1314 		rst.lis $10
+040890                   1315 
+040890                   1316 	; position the texte cursor at home
+040890                   1317 	vdu 30
+040890 3E 1E             1317 		ld a,arg1
+040892 49 D7             1317 		rst.lis $10
+040894                   1318 
+040894                   1319 	; show cursor
+040894                   1320 	vdu 23
+040894 3E 17             1320 		ld a,arg1
+040896 49 D7             1320 		rst.lis $10
+040898                   1321 	vdu 1
+040898 3E 01             1321 		ld a,arg1
+04089A 49 D7             1321 		rst.lis $10
+04089C                   1322 	vdu 1
+04089C 3E 01             1322 		ld a,arg1
+04089E 49 D7             1322 		rst.lis $10
+0408A0                   1323 
+0408A0 FD E1             1324 	pop iy
+0408A2 DD E1             1325 	pop ix
+0408A4 D1                1326 	pop de
+0408A5 C1                1327 	pop bc
+0408A6 F1                1328 	pop af
+0408A7 21 00 00 00       1329 	ld hl,0
+0408AB                   1330 
+0408AB C9                1331 	ret
+0408AC                   1332 ;======================================================================
+0408AC                   1333 
+0408AC                   1334 ; draw a rectangle
+0408AC                   1335 fn_rect:
+0408AC                   1336 	vdu 25
+0408AC 3E 19             1336 		ld a,arg1
+0408AE 49 D7             1336 		rst.lis $10
+0408B0                   1337 	vdu 4
+0408B0 3E 04             1337 		ld a,arg1
+0408B2 49 D7             1337 		rst.lis $10
+0408B4 DD 21 C7 10 04    1338 	ld ix,x1
+0408B9 DD 7E 00          1339 	ld a,(ix + 0)
+0408BC                   1340 	vdu_a
+0408BC 49 D7             1340 		rst.lis $10
+0408BE DD 7E 01          1341 	ld a,(ix + 1)
+0408C1                   1342 	vdu_a
+0408C1 49 D7             1342 		rst.lis $10
+0408C3 FD 21 C9 10 04    1343 	ld iy,y1
+0408C8 FD 7E 00          1344 	ld a,(iy + 0)
+0408CB                   1345 	vdu_a
+0408CB 49 D7             1345 		rst.lis $10
+0408CD FD 7E 01          1346 	ld a,(iy + 1)
+0408D0                   1347 	vdu_a
+0408D0 49 D7             1347 		rst.lis $10
+0408D2                   1348 
+0408D2                   1349 	vdu 25
+0408D2 3E 19             1349 		ld a,arg1
+0408D4 49 D7             1349 		rst.lis $10
+0408D6                   1350 	vdu 5
+0408D6 3E 05             1350 		ld a,arg1
+0408D8 49 D7             1350 		rst.lis $10
+0408DA DD 21 CB 10 04    1351 	ld ix,x2
+0408DF DD 7E 00          1352 	ld a,(ix + 0)
+0408E2                   1353 	vdu_a
+0408E2 49 D7             1353 		rst.lis $10
+0408E4 DD 7E 01          1354 	ld a,(ix + 1)
+0408E7                   1355 	vdu_a
+0408E7 49 D7             1355 		rst.lis $10
+0408E9 FD 21 C9 10 04    1356 	ld iy,y1
+0408EE FD 7E 00          1357 	ld a,(iy + 0)
+0408F1                   1358 	vdu_a
+0408F1 49 D7             1358 		rst.lis $10
+0408F3 FD 7E 01          1359 	ld a,(iy + 1)
+0408F6                   1360 	vdu_a
+0408F6 49 D7             1360 		rst.lis $10
+0408F8                   1361 
+0408F8                   1362 	vdu 25
+0408F8 3E 19             1362 		ld a,arg1
+0408FA 49 D7             1362 		rst.lis $10
+0408FC                   1363 	vdu 5
+0408FC 3E 05             1363 		ld a,arg1
+0408FE 49 D7             1363 		rst.lis $10
+040900 DD 21 CB 10 04    1364 	ld ix,x2
+040905 DD 7E 00          1365 	ld a,(ix + 0)
+040908                   1366 	vdu_a
+040908 49 D7             1366 		rst.lis $10
+04090A DD 7E 01          1367 	ld a,(ix + 1)
+04090D                   1368 	vdu_a
+04090D 49 D7             1368 		rst.lis $10
+04090F FD 21 CD 10 04    1369 	ld iy,y2
+040914 FD 7E 00          1370 	ld a,(iy + 0)
+040917                   1371 	vdu_a
+040917 49 D7             1371 		rst.lis $10
+040919 FD 7E 01          1372 	ld a,(iy + 1)
+04091C                   1373 	vdu_a
+04091C 49 D7             1373 		rst.lis $10
+04091E                   1374 
+04091E                   1375 	vdu 25
+04091E 3E 19             1375 		ld a,arg1
+040920 49 D7             1375 		rst.lis $10
+040922                   1376 	vdu 5
+040922 3E 05             1376 		ld a,arg1
+040924 49 D7             1376 		rst.lis $10
+040926 DD 21 C7 10 04    1377 	ld ix,x1
+04092B DD 7E 00          1378 	ld a,(ix + 0)
+04092E                   1379 	vdu_a
+04092E 49 D7             1379 		rst.lis $10
+040930 DD 7E 01          1380 	ld a,(ix + 1)
+040933                   1381 	vdu_a
+040933 49 D7             1381 		rst.lis $10
+040935 FD 21 CD 10 04    1382 	ld iy,y2
+04093A FD 7E 00          1383 	ld a,(iy + 0)
+04093D                   1384 	vdu_a
+04093D 49 D7             1384 		rst.lis $10
+04093F FD 7E 01          1385 	ld a,(iy + 1)
+040942                   1386 	vdu_a
+040942 49 D7             1386 		rst.lis $10
+040944                   1387 
+040944                   1388 	vdu 25
+040944 3E 19             1388 		ld a,arg1
+040946 49 D7             1388 		rst.lis $10
+040948                   1389 	vdu 5
+040948 3E 05             1389 		ld a,arg1
+04094A 49 D7             1389 		rst.lis $10
+04094C DD 21 C7 10 04    1390 	ld ix,x1
+040951 DD 7E 00          1391 	ld a,(ix + 0)
+040954                   1392 	vdu_a
+040954 49 D7             1392 		rst.lis $10
+040956 DD 7E 01          1393 	ld a,(ix + 1)
+040959                   1394 	vdu_a
+040959 49 D7             1394 		rst.lis $10
+04095B FD 21 C9 10 04    1395 	ld iy,y1
+040960 FD 7E 00          1396 	ld a,(iy + 0)
+040963                   1397 	vdu_a
+040963 49 D7             1397 		rst.lis $10
+040965 FD 7E 01          1398 	ld a,(iy + 1)
+040968                   1399 	vdu_a
+040968 49 D7             1399 		rst.lis $10
+04096A                   1400 
+04096A C9                1401 	ret
+04096B                   1402 
+04096B                   1403 ; draw a filled rectangle
+04096B                   1404 fn_rectf:
+04096B DD 21 C7 10 04    1405 	ld ix,x1
+040970 FD 21 C9 10 04    1406 	ld iy,y1
+040975                   1407 
+040975                   1408 	vdu 25
+040975 3E 19             1408 		ld a,arg1
+040977 49 D7             1408 		rst.lis $10
+040979                   1409 	vdu 4
+040979 3E 04             1409 		ld a,arg1
+04097B 49 D7             1409 		rst.lis $10
+04097D DD 7E 00          1410 	ld a,(ix+0)
+040980                   1411 	vdu_a
+040980 49 D7             1411 		rst.lis $10
+040982 DD 7E 01          1412 	ld a,(ix+1)
+040985                   1413 	vdu_a
+040985 49 D7             1413 		rst.lis $10
+040987 FD 7E 00          1414 	ld a,(iy+0)
+04098A                   1415 	vdu_a
+04098A 49 D7             1415 		rst.lis $10
+04098C FD 7E 01          1416 	ld a,(iy+1)
+04098F                   1417 	vdu_a
+04098F 49 D7             1417 		rst.lis $10
+040991                   1418 
+040991 DD 21 CB 10 04    1419 	ld ix,x2
+040996 FD 21 C9 10 04    1420 	ld iy,y1
+04099B                   1421 
+04099B                   1422 	vdu 25
+04099B 3E 19             1422 		ld a,arg1
+04099D 49 D7             1422 		rst.lis $10
+04099F                   1423 	vdu 4
+04099F 3E 04             1423 		ld a,arg1
+0409A1 49 D7             1423 		rst.lis $10
+0409A3 DD 7E 00          1424 	ld a,(ix+0)
+0409A6                   1425 	vdu_a
+0409A6 49 D7             1425 		rst.lis $10
+0409A8 DD 7E 01          1426 	ld a,(ix+1)
+0409AB                   1427 	vdu_a
+0409AB 49 D7             1427 		rst.lis $10
+0409AD FD 7E 00          1428 	ld a,(iy+0)
+0409B0                   1429 	vdu_a
+0409B0 49 D7             1429 		rst.lis $10
+0409B2 FD 7E 01          1430 	ld a,(iy+1)
+0409B5                   1431 	vdu_a
+0409B5 49 D7             1431 		rst.lis $10
+0409B7                   1432 
+0409B7 DD 21 CB 10 04    1433 	ld ix,x2
+0409BC FD 21 CD 10 04    1434 	ld iy,y2
+0409C1                   1435 
+0409C1                   1436 	vdu 25
+0409C1 3E 19             1436 		ld a,arg1
+0409C3 49 D7             1436 		rst.lis $10
+0409C5                   1437 	vdu 85
+0409C5 3E 55             1437 		ld a,arg1
+0409C7 49 D7             1437 		rst.lis $10
+0409C9 DD 7E 00          1438 	ld a,(ix+0)
+0409CC                   1439 	vdu_a
+0409CC 49 D7             1439 		rst.lis $10
+0409CE DD 7E 01          1440 	ld a,(ix+1)
+0409D1                   1441 	vdu_a
+0409D1 49 D7             1441 		rst.lis $10
+0409D3 FD 7E 00          1442 	ld a,(iy+0)
+0409D6                   1443 	vdu_a
+0409D6 49 D7             1443 		rst.lis $10
+0409D8 FD 7E 01          1444 	ld a,(iy+1)
+0409DB                   1445 	vdu_a
+0409DB 49 D7             1445 		rst.lis $10
+0409DD                   1446 
+0409DD DD 21 C7 10 04    1447 	ld ix,x1
+0409E2 FD 21 C9 10 04    1448 	ld iy,y1
+0409E7                   1449 
+0409E7                   1450 	vdu 25
+0409E7 3E 19             1450 		ld a,arg1
+0409E9 49 D7             1450 		rst.lis $10
+0409EB                   1451 	vdu 4
+0409EB 3E 04             1451 		ld a,arg1
+0409ED 49 D7             1451 		rst.lis $10
+0409EF DD 7E 00          1452 	ld a,(ix+0)
+0409F2                   1453 	vdu_a
+0409F2 49 D7             1453 		rst.lis $10
+0409F4 DD 7E 01          1454 	ld a,(ix+1)
+0409F7                   1455 	vdu_a
+0409F7 49 D7             1455 		rst.lis $10
+0409F9 FD 7E 00          1456 	ld a,(iy+0)
+0409FC                   1457 	vdu_a
+0409FC 49 D7             1457 		rst.lis $10
+0409FE FD 7E 01          1458 	ld a,(iy+1)
+040A01                   1459 	vdu_a
+040A01 49 D7             1459 		rst.lis $10
+040A03                   1460 
+040A03 DD 21 C7 10 04    1461 	ld ix,x1
+040A08 FD 21 CD 10 04    1462 	ld iy,y2
+040A0D                   1463 
+040A0D                   1464 	vdu 25
+040A0D 3E 19             1464 		ld a,arg1
+040A0F 49 D7             1464 		rst.lis $10
+040A11                   1465 	vdu 4
+040A11 3E 04             1465 		ld a,arg1
+040A13 49 D7             1465 		rst.lis $10
+040A15 DD 7E 00          1466 	ld a,(ix+0)
+040A18                   1467 	vdu_a
+040A18 49 D7             1467 		rst.lis $10
+040A1A DD 7E 01          1468 	ld a,(ix+1)
+040A1D                   1469 	vdu_a
+040A1D 49 D7             1469 		rst.lis $10
+040A1F FD 7E 00          1470 	ld a,(iy+0)
+040A22                   1471 	vdu_a
+040A22 49 D7             1471 		rst.lis $10
+040A24 FD 7E 01          1472 	ld a,(iy+1)
+040A27                   1473 	vdu_a
+040A27 49 D7             1473 		rst.lis $10
+040A29                   1474 
+040A29 DD 21 CB 10 04    1475 	ld ix,x2
+040A2E FD 21 CD 10 04    1476 	ld iy,y2
+040A33                   1477 
+040A33                   1478 	vdu 25
+040A33 3E 19             1478 		ld a,arg1
+040A35 49 D7             1478 		rst.lis $10
+040A37                   1479 	vdu 85
+040A37 3E 55             1479 		ld a,arg1
+040A39 49 D7             1479 		rst.lis $10
+040A3B DD 7E 00          1480 	ld a,(ix+0)
+040A3E                   1481 	vdu_a
+040A3E 49 D7             1481 		rst.lis $10
+040A40 DD 7E 01          1482 	ld a,(ix+1)
+040A43                   1483 	vdu_a
+040A43 49 D7             1483 		rst.lis $10
+040A45 FD 7E 00          1484 	ld a,(iy+0)
+040A48                   1485 	vdu_a
+040A48 49 D7             1485 		rst.lis $10
+040A4A FD 7E 01          1486 	ld a,(iy+1)
+040A4D                   1487 	vdu_a
+040A4D 49 D7             1487 		rst.lis $10
+040A4F                   1488 
+040A4F                   1489 ; avoid the VDU bug of triangles
+040A4F                   1490 ; not drawn exactly at the right
+040A4F                   1491 ; coordinates :
+040A4F CD AC 08 04       1492 	CALL fn_rect
+040A53                   1493 
+040A53 C9                1494 	ret
+040A54                   1495 
+040A54                   1496 fn_calc_pixel_coords:
+040A54 11 00 00 00       1497 	ld de,$000000 ; reset deu
+040A58                   1498 
+040A58                   1499 	; calculate coordinates x of the resized pixel
+040A58 21 D7 10 04       1500 	ld hl,xpix
+040A5C 5E                1501 	ld e,(hl) ; E = xpix
+040A5D 21 D9 10 04       1502 	ld hl,pixel_width
+040A61 56                1503 	ld d,(hl) ; D = pixel_width
+040A62 D5                1504 	push de
+040A63 E1                1505 	pop hl ; HL = DE
+040A64 ED 6C             1506 	mlt hl ; HL = xpix * pixel_width
+040A66 DD 21 CF 10 04    1507 	ld ix,xs1
+040A6B DD 5E 00          1508 	ld e,(ix+0)
+040A6E DD 56 01          1509 	ld d,(ix+1)
+040A71 13                1510 	inc de ; DE = xs1 + 1
+040A72 19                1511 	add hl,de ; HL = (xpix * pixel_width) + xs1 + 1
+040A73 FD 21 C7 10 04    1512 	ld iy,x1
+040A78 FD 75 00          1513 	ld (iy+0),l
+040A7B FD 74 01          1514 	ld (iy+1),h ; x1 = (xpix * pixel_width) + xs1 + 1
+040A7E E5                1515 	push hl
+040A7F 21 D9 10 04       1516 	ld hl,pixel_width
+040A83 16 00             1517 	ld d,0
+040A85 5E                1518 	ld e,(hl)
+040A86 E1                1519 	pop hl
+040A87 19                1520 	add hl,de
+040A88 2B                1521 	dec hl
+040A89 FD 21 CB 10 04    1522 	ld iy,x2
+040A8E FD 75 00          1523 	ld (iy+0),l
+040A91 FD 74 01          1524 	ld (iy+1),h ; x2 = x1 + pixel_width - 1
+040A94                   1525 
+040A94 11 00 00 00       1526 	ld de,$000000 ; reset deu
+040A98                   1527 
+040A98                   1528 	; calculate coordinates y of the resized pixel
+040A98 21 D8 10 04       1529 	ld hl,ypix
+040A9C 5E                1530 	ld e,(hl) ; E = ypix
+040A9D 21 D9 10 04       1531 	ld hl,pixel_width
+040AA1 56                1532 	ld d,(hl) ; D = pixel_width
+040AA2 D5                1533 	push de
+040AA3 E1                1534 	pop hl ; HL = DE
+040AA4 ED 6C             1535 	mlt hl ; HL = ypix * pixel_width
+040AA6 DD 21 D1 10 04    1536 	ld ix,ys1
+040AAB DD 5E 00          1537 	ld e,(ix+0)
+040AAE DD 56 01          1538 	ld d,(ix+1) ; ys1 = ypix * pixel_width
+040AB1 13                1539 	inc de ; DE = ys1 + 1
+040AB2 19                1540 	add hl,de ; HL = (ypix * pixel_width) + ys1 + 1
+040AB3 FD 21 C9 10 04    1541 	ld iy,y1
+040AB8 FD 75 00          1542 	ld (iy+0),l
+040ABB FD 74 01          1543 	ld (iy+1),h ; y1 = (ypix * pixel_width) + ys1 + 1
+040ABE E5                1544 	push hl
+040ABF 21 D9 10 04       1545 	ld hl,pixel_width
+040AC3 16 00             1546 	ld d,0
+040AC5 5E                1547 	ld e,(hl)
+040AC6 E1                1548 	pop hl
+040AC7 19                1549 	add hl,de
+040AC8 2B                1550 	dec hl
+040AC9 FD 21 CD 10 04    1551 	ld iy,y2
+040ACE FD 75 00          1552 	ld (iy+0),l
+040AD1 FD 74 01          1553 	ld (iy+1),h ; y2 = y1 + pixel_width - 1
+040AD4                   1554 
+040AD4 C9                1555 	ret
+040AD5                   1556 
+040AD5                   1557 ; draw the resized pixel border, with its color
+040AD5                   1558 fn_draw_pixel_with_border:
+040AD5 CD E9 0A 04       1559 	call fn_draw_pixel_without_border
+040AD9                   1560 
+040AD9                   1561 	; set graphics pen
+040AD9                   1562 	vdu 18
+040AD9 3E 12             1562 		ld a,arg1
+040ADB 49 D7             1562 		rst.lis $10
+040ADD                   1563 	vdu 0
+040ADD 3E 00             1563 		ld a,arg1
+040ADF 49 D7             1563 		rst.lis $10
+040AE1                   1564 	vdu COLOR_GREY ; grey pen
+040AE1 3E 07             1564 		ld a,arg1
+040AE3 49 D7             1564 		rst.lis $10
+040AE5                   1565 
+040AE5                   1566 	; draw the sprite's border rectangle
+040AE5 C3 AC 08 04       1567 	jp fn_rect
+040AE9                   1568 
+040AE9                   1569 ; draw the resized pixel color
+040AE9                   1570 fn_draw_pixel_without_border:
+040AE9 CD 54 0A 04       1571 	call fn_calc_pixel_coords
+040AED                   1572 
+040AED                   1573 	; set graphics pen
+040AED                   1574 	vdu 18
+040AED 3E 12             1574 		ld a,arg1
+040AEF 49 D7             1574 		rst.lis $10
+040AF1                   1575 	vdu 0
+040AF1 3E 00             1575 		ld a,arg1
+040AF3 49 D7             1575 		rst.lis $10
+040AF5 CD FF 0A 04       1576 	call fn_get_pixel_color
+040AF9                   1577 	vdu_a
+040AF9 49 D7             1577 		rst.lis $10
+040AFB                   1578 
+040AFB                   1579 	; draw the sprite's color rectangle
+040AFB C3 6B 09 04       1580 	jp fn_rectf
+040AFF                   1581 
+040AFF                   1582 ; get pixel color value in the sprite buffer
+040AFF                   1583 ; returns A: pixel color (0-63)
+040AFF                   1584 fn_get_pixel_color:
+040AFF 11 00 00 00       1585 	ld de,$000000 ; reset deu
+040B03                   1586 
+040B03                   1587 	; calculate the offset to add to the address
+040B03 21 D8 10 04       1588 	ld hl,ypix
+040B07 5E                1589 	ld e,(hl) ; E = ypix
+040B08 21 DA 10 04       1590 	ld hl,spr_size
+040B0C 56                1591 	ld d,(hl) ; D = sprsize
+040B0D D5                1592 	push de
+040B0E E1                1593 	pop hl
+040B0F ED 6C             1594 	mlt hl ; HL = ypix * sprsize
+040B11 E5                1595 	push hl
+040B12 21 D7 10 04       1596 	ld hl,xpix
+040B16 5E                1597 	ld e,(hl)
+040B17 16 00             1598 	ld d,0
+040B19 E1                1599 	pop hl
+040B1A 19                1600 	add hl,de ; HL = (ypix * sprsize) + xpix
+040B1B                   1601 
+040B1B 11 A8 11 04       1602 	ld de,current_frame
+040B1F 1A                1603 	ld a,(de)
+040B20 FE 00             1604 	cp 0
+040B22 28 16             1605 	jr z,gpc_end_loop
+040B24                   1606 
+040B24 47                1607 	ld b,a
+040B25 E5                1608 	push hl
+040B26 11 00 00 00       1609 	ld de,$000000
+040B2A 21 DA 10 04       1610 	ld hl,spr_size
+040B2E 5E                1611 	ld e,(hl)
+040B2F 56                1612 	ld d,(hl)
+040B30 D5                1613 	push de
+040B31 E1                1614 	pop hl
+040B32 ED 6C             1615 	mlt hl
+040B34 E5                1616 	push hl
+040B35 D1                1617 	pop de ; DE = sprsize²
+040B36 E1                1618 	pop hl
+040B37                   1619 
+040B37                   1620 gpc_loop:
+040B37 19                1621 	add hl,de
+040B38 10 FD             1622 	djnz gpc_loop
+040B3A                   1623 
+040B3A                   1624 gpc_end_loop:
+040B3A                   1625 	; add the offset to the address
+040B3A 11 B1 11 04       1626 	ld de,sprite_buffer
+040B3E 19                1627 	add hl,de ; HL = sprite_buffer + ((ypix * sprsize) + xpix)
+040B3F                   1628 
+040B3F                   1629 	; get pixel color value
+040B3F 7E                1630 	ld a,(hl)
+040B40                   1631 
+040B40 C9                1632 	ret
+040B41                   1633 
+040B41                   1634 ; get pixel color value in the sprite buffer
+040B41                   1635 ; A: pixel color (0-63)
+040B41                   1636 fn_set_pixel_color:
+040B41 11 00 00 00       1637 	ld de,$000000 ; reset deu
+040B45                   1638 
+040B45                   1639 	; calculate the offset to add to the address
+040B45 21 D8 10 04       1640 	ld hl,ypix
+040B49 5E                1641 	ld e,(hl) ; E = ypix
+040B4A 21 DA 10 04       1642 	ld hl,spr_size
+040B4E 56                1643 	ld d,(hl) ; D = sprsize
+040B4F D5                1644 	push de
+040B50 E1                1645 	pop hl
+040B51 ED 6C             1646 	mlt hl ; HL = ypix * sprsize
+040B53 E5                1647 	push hl
+040B54 21 D7 10 04       1648 	ld hl,xpix
+040B58 5E                1649 	ld e,(hl)
+040B59 16 00             1650 	ld d,0
+040B5B E1                1651 	pop hl
+040B5C 19                1652 	add hl,de ; HL = (ypix * sprsize) + xpix
+040B5D F5                1653 	push af
+040B5E                   1654 
+040B5E 11 A8 11 04       1655 	ld de,current_frame
+040B62 1A                1656 	ld a,(de)
+040B63 FE 00             1657 	cp 0
+040B65 28 16             1658 	jr z,spc_end_loop
+040B67                   1659 
+040B67 47                1660 	ld b,a
+040B68 E5                1661 	push hl
+040B69 11 00 00 00       1662 	ld de,$000000
+040B6D 21 DA 10 04       1663 	ld hl,spr_size
+040B71 5E                1664 	ld e,(hl)
+040B72 56                1665 	ld d,(hl)
+040B73 D5                1666 	push de
+040B74 E1                1667 	pop hl
+040B75 ED 6C             1668 	mlt hl
+040B77 E5                1669 	push hl
+040B78 D1                1670 	pop de ; DE = sprsize²
+040B79 E1                1671 	pop hl
+040B7A                   1672 
+040B7A                   1673 spc_loop:
+040B7A 19                1674 	add hl,de
+040B7B 10 FD             1675 	djnz spc_loop
+040B7D                   1676 
+040B7D                   1677 spc_end_loop:
+040B7D                   1678 
+040B7D                   1679 	; add the offset to the address
+040B7D 11 B1 11 04       1680 	ld de,sprite_buffer
+040B81 19                1681 	add hl,de ; HL = sprite_buffer + ((ypix * sprsize) + xpix)
+040B82                   1682 
+040B82                   1683 	; set pixel color value
+040B82 F1                1684 	pop af
+040B83 77                1685 	ld (hl),a
+040B84                   1686 
+040B84 C9                1687 	ret
+040B85                   1688 
+040B85                   1689 fn_move_up:
+040B85 21 D8 10 04       1690 	ld hl,ypix
+040B89 35                1691 	dec (hl)
+040B8A C9                1692 	ret
+040B8B                   1693 
+040B8B                   1694 fn_move_down:
+040B8B 21 D8 10 04       1695 	ld hl,ypix
+040B8F 34                1696 	inc (hl)
+040B90 C9                1697 	ret
+040B91                   1698 
+040B91                   1699 fn_move_left:
+040B91 21 D7 10 04       1700 	ld hl,xpix
+040B95 35                1701 	dec (hl)
+040B96 C9                1702 	ret
+040B97                   1703 
+040B97                   1704 fn_move_right:
+040B97 21 D7 10 04       1705 	ld hl,xpix
+040B9B 34                1706 	inc (hl)
+040B9C C9                1707 	ret
+040B9D                   1708 
+040B9D                   1709 ; draw palette color whit border and selection
+040B9D                   1710 ; C = color number (0-63)
+040B9D                   1711 fn_draw_palette_with_border:
+040B9D C5                1712 	push bc
+040B9E                   1713 
+040B9E                   1714 	; choose palette color
+040B9E                   1715 	vdu 18
+040B9E 3E 12             1715 		ld a,arg1
+040BA0 49 D7             1715 		rst.lis $10
+040BA2                   1716 	vdu 0
+040BA2 3E 00             1716 		ld a,arg1
+040BA4 49 D7             1716 		rst.lis $10
+040BA6 C1                1717 	pop bc
+040BA7 C5                1718 	push bc
+040BA8 79                1719 	ld a,c
+040BA9                   1720 	vdu_a
+040BA9 49 D7             1720 		rst.lis $10
+040BAB                   1721 
+040BAB                   1722 	; store coordinates for a palette square
+040BAB DD 21 C7 10 04    1723 	ld ix,x1
+040BB0 E1                1724 	pop hl
+040BB1 E5                1725 	push hl
+040BB2 26 05             1726 	ld h,5
+040BB4 ED 6C             1727 	mlt hl
+040BB6 E5                1728 	push hl
+040BB7 DD 75 00          1729 	ld (ix+0),l
+040BBA DD 74 01          1730 	ld (ix+1),h
+040BBD                   1731 
+040BBD DD 21 C9 10 04    1732 	ld ix,y1
+040BC2 21 00 00 00       1733 	ld hl,0
+040BC6 DD 75 00          1734 	ld (ix+0),l
+040BC9 DD 74 01          1735 	ld (ix+1),h
+040BCC                   1736 
+040BCC DD 21 CB 10 04    1737 	ld ix,x2
+040BD1 E1                1738 	pop hl
+040BD2 11 04 00 00       1739 	ld de,4
+040BD6 19                1740 	add hl,de
+040BD7 DD 75 00          1741 	ld (ix+0),l
+040BDA DD 74 01          1742 	ld (ix+1),h
+040BDD                   1743 
+040BDD DD 21 CD 10 04    1744 	ld ix,y2
+040BE2 21 0A 00 00       1745 	ld hl,10
+040BE6 DD 75 00          1746 	ld (ix+0),l
+040BE9 DD 74 01          1747 	ld (ix+1),h
+040BEC                   1748 
+040BEC                   1749 	; draw the palette filled square
+040BEC CD 6B 09 04       1750 	call fn_rectf
+040BF0                   1751 
+040BF0                   1752 	; choose grey color
+040BF0                   1753 	vdu 18
+040BF0 3E 12             1753 		ld a,arg1
+040BF2 49 D7             1753 		rst.lis $10
+040BF4                   1754 	vdu 0
+040BF4 3E 00             1754 		ld a,arg1
+040BF6 49 D7             1754 		rst.lis $10
+040BF8 3E 07             1755 	ld a,COLOR_GREY
+040BFA                   1756 	vdu_a
+040BFA 49 D7             1756 		rst.lis $10
+040BFC                   1757 
+040BFC                   1758 	; draw the palette square border
+040BFC CD AC 08 04       1759 	call fn_rect
+040C00                   1760 
+040C00                   1761 	; next color ?
+040C00 C1                1762 	pop bc
+040C01                   1763 
+040C01 C9                1764 	ret
+040C02                   1765 
+040C02                   1766 ; draw palette color whitout border and selection
+040C02                   1767 ; C = color number (0-63)
+040C02                   1768 fn_draw_palette_without_border:
+040C02 C5                1769 	push bc
+040C03                   1770 
+040C03                   1771 	; choose palette color
+040C03                   1772 	vdu 18
+040C03 3E 12             1772 		ld a,arg1
+040C05 49 D7             1772 		rst.lis $10
+040C07                   1773 	vdu 0
+040C07 3E 00             1773 		ld a,arg1
+040C09 49 D7             1773 		rst.lis $10
+040C0B C1                1774 	pop bc
+040C0C C5                1775 	push bc
+040C0D 79                1776 	ld a,c
+040C0E                   1777 	vdu_a
+040C0E 49 D7             1777 		rst.lis $10
+040C10                   1778 
+040C10                   1779 	; store coordinates for a palette square
+040C10 DD 21 C7 10 04    1780 	ld ix,x1
+040C15 E1                1781 	pop hl
+040C16 E5                1782 	push hl
+040C17 26 05             1783 	ld h,5
+040C19 ED 6C             1784 	mlt hl
+040C1B E5                1785 	push hl
+040C1C DD 75 00          1786 	ld (ix+0),l
+040C1F DD 74 01          1787 	ld (ix+1),h
+040C22                   1788 
+040C22 DD 21 C9 10 04    1789 	ld ix,y1
+040C27 21 00 00 00       1790 	ld hl,0
+040C2B DD 75 00          1791 	ld (ix+0),l
+040C2E DD 74 01          1792 	ld (ix+1),h
+040C31                   1793 
+040C31 DD 21 CB 10 04    1794 	ld ix,x2
+040C36 E1                1795 	pop hl
+040C37 11 04 00 00       1796 	ld de,4
+040C3B 19                1797 	add hl,de
+040C3C DD 75 00          1798 	ld (ix+0),l
+040C3F DD 74 01          1799 	ld (ix+1),h
+040C42                   1800 
+040C42 DD 21 CD 10 04    1801 	ld ix,y2
+040C47 21 0A 00 00       1802 	ld hl,10
+040C4B DD 75 00          1803 	ld (ix+0),l
+040C4E DD 74 01          1804 	ld (ix+1),h
+040C51                   1805 
+040C51                   1806 	; draw the palette filled square
+040C51 CD 6B 09 04       1807 	call fn_rectf
+040C55                   1808 
+040C55 C1                1809 	pop bc
+040C56                   1810 
+040C56 C9                1811 	ret
+040C57                   1812 
+040C57                   1813 ; return the keyascii of the key pressed
+040C57                   1814 ; returns:
+040C57                   1815 ; A: keycode
+040C57                   1816 ; L: keydown
+040C57                   1817 ; h: keymods
+040C57                   1818 fn_wait_key:
+040C57                   1819 	moscall mos_sysvars
+040C57 3E 08             1819 		ld a,arg1
+040C59 49 CF             1819 		rst.lis $08
+040C5B                   1820 
+040C5B FD 21 AE 11 04    1821 	ld iy,keydata
+040C60 DD 7E 18          1822 	ld a,(ix+sysvar_vkeydown)
+040C63 FD 77 01          1823 	ld (iy+1),a
+040C66 6F                1824 	ld l,a
+040C67 DD 7E 06          1825 	ld a,(ix+sysvar_keymods)
+040C6A FD 77 02          1826 	ld (iy+2),a
+040C6D 67                1827 	ld h,a
+040C6E DD 7E 17          1828 	ld a,(ix+sysvar_vkeycode)
+040C71 FD 77 00          1829 	ld (iy+0),a
+040C74 C9                1830 	ret
+040C75                   1831 
+040C75                   1832 ; wait a key to be released
+040C75                   1833 fn_wait_key_released:
+040C75                   1834 	moscall mos_sysvars
+040C75 3E 08             1834 		ld a,arg1
+040C77 49 CF             1834 		rst.lis $08
+040C79                   1835 
+040C79 DD 7E 18          1836 	ld a,(ix+sysvar_vkeydown)
+040C7C FE 00             1837 	cp 0
+040C7E 20 F5             1838 	jr nz,fn_wait_key_released
+040C80 C9                1839 	ret
+040C81                   1840 
+040C81                   1841 ; get an ascii key value
+040C81                   1842 fn_input_key:
+040C81 C5                1843 	push bc
+040C82                   1844 	moscall mos_getkey
+040C82 3E 00             1844 		ld a,arg1
+040C84 49 CF             1844 		rst.lis $08
+040C86 C1                1845 	pop bc
+040C87 C9                1846 	ret
+040C88                   1847 
+040C88                   1848 ; input a text of 8 chars
+040C88                   1849 fn_input_text8:
+040C88                   1850 	; locate x,y
+040C88                   1851 	vdu 31
+040C88 3E 1F             1851 		ld a,arg1
+040C8A 49 D7             1851 		rst.lis $10
+040C8C                   1852 	vdu FILENAME_X
+040C8C 3E 07             1852 		ld a,arg1
+040C8E 49 D7             1852 		rst.lis $10
+040C90                   1853 	vdu FILENAME_Y
+040C90 3E 18             1853 		ld a,arg1
+040C92 49 D7             1853 		rst.lis $10
+040C94                   1854 
+040C94                   1855 	; print text
+040C94 21 43 11 04       1856 	ld hl,filename_label
+040C98 01 00 00 00       1857 	ld bc,0
+040C9C AF                1858 	xor a
+040C9D 49 DF             1859 	rst.lis $18
+040C9F                   1860 
+040C9F                   1861 	; show cursor
+040C9F                   1862 	vdu 23
+040C9F 3E 17             1862 		ld a,arg1
+040CA1 49 D7             1862 		rst.lis $10
+040CA3                   1863 	vdu 1
+040CA3 3E 01             1863 		ld a,arg1
+040CA5 49 D7             1863 		rst.lis $10
+040CA7                   1864 	vdu 1
+040CA7 3E 01             1864 		ld a,arg1
+040CA9 49 D7             1864 		rst.lis $10
+040CAB                   1865 
+040CAB 0E 00             1866 	ld c,0
+040CAD                   1867 
+040CAD                   1868 it8_loop:
+040CAD                   1869 	; get ascii key
+040CAD CD 81 0C 04       1870 	call fn_input_key
+040CB1 B7                1871 	or a
+040CB2 CA AD 0C 04       1872 	jp z,it8_loop
+040CB6                   1873 
+040CB6 FE 2E             1874 	cp '.'
+040CB8 CA 02 0D 04       1875 	jp z,it8l_add_char
+040CBC                   1876 
+040CBC FE 2D             1877 	cp '-'
+040CBE CA 02 0D 04       1878 	jp z,it8l_add_char
+040CC2                   1879 
+040CC2 FE 5F             1880 	cp '_'
+040CC4 CA 02 0D 04       1881 	jp z,it8l_add_char
+040CC8                   1882 
+040CC8 FE 7F             1883 	cp 127
+040CCA CA 36 0D 04       1884 	jp z,it8l_backspace
+040CCE                   1885 
+040CCE FE 0D             1886 	cp 13
+040CD0 CA 65 0D 04       1887 	jp z,it8l_return
+040CD4                   1888 
+040CD4 FE 30             1889 	cp '0'
+040CD6 DA AD 0C 04       1890 	jp c,it8_loop
+040CDA                   1891 
+040CDA 16 39             1892 	ld d,'9'
+040CDC 14                1893 	inc d
+040CDD BA                1894 	cp d
+040CDE DA 02 0D 04       1895 	jp c,it8l_add_char
+040CE2                   1896 
+040CE2 FE 41             1897 	cp 'A'
+040CE4 DA AD 0C 04       1898 	jp c,it8_loop
+040CE8                   1899 
+040CE8 16 5A             1900 	ld d,'Z'
+040CEA 14                1901 	inc d
+040CEB BA                1902 	cp d
+040CEC DA 02 0D 04       1903 	jp c,it8l_add_char
+040CF0                   1904 
+040CF0 FE 61             1905 	cp 'a'
+040CF2 DA AD 0C 04       1906 	jp c,it8_loop
+040CF6                   1907 
+040CF6 16 7A             1908 	ld d,'z'
+040CF8 14                1909 	inc d
+040CF9 BA                1910 	cp d
+040CFA DA 02 0D 04       1911 	jp c,it8l_add_char
+040CFE                   1912 
+040CFE C3 AD 0C 04       1913 	jp it8_loop
+040D02                   1914 
+040D02                   1915 it8l_add_char:
+040D02 F5                1916 	push af
+040D03 79                1917 	ld a,c
+040D04 FE 0C             1918 	cp 12
+040D06 38 05             1919 	jr c,it8l_poke_char
+040D08 F1                1920 	pop af
+040D09 C3 AD 0C 04       1921 	jp it8_loop
+040D0D                   1922 
+040D0D                   1923 it8l_poke_char:
+040D0D F1                1924 	pop af
+040D0E 21 4D 11 04       1925 	ld hl,filename
+040D12 06 00             1926 	ld b,0
+040D14 09                1927 	add hl,bc
+040D15 77                1928 	ld (hl),a
+040D16 0C                1929 	inc c
+040D17 F5                1930 	push af
+040D18 C5                1931 	push bc
+040D19                   1932 
+040D19                   1933 	; locate x,y
+040D19                   1934 	vdu 31
+040D19 3E 1F             1934 		ld a,arg1
+040D1B 49 D7             1934 		rst.lis $10
+040D1D                   1935 	vdu FILENAME_X+10
+040D1D 3E 11             1935 		ld a,arg1
+040D1F 49 D7             1935 		rst.lis $10
+040D21                   1936 	vdu FILENAME_Y
+040D21 3E 18             1936 		ld a,arg1
+040D23 49 D7             1936 		rst.lis $10
+040D25                   1937 
+040D25                   1938 	; print text
+040D25 21 4D 11 04       1939 	ld hl,filename
+040D29 01 00 00 00       1940 	ld bc,0
+040D2D AF                1941 	xor a
+040D2E 49 DF             1942 	rst.lis $18
+040D30                   1943 
+040D30 C1                1944 	pop bc
+040D31 F1                1945 	pop af
+040D32                   1946 
+040D32 C3 AD 0C 04       1947 	jp it8_loop
+040D36                   1948 
+040D36                   1949 it8l_backspace:
+040D36 79                1950 	ld a,c
+040D37 FE 00             1951 	cp 0
+040D39 CA AD 0C 04       1952 	jp z,it8_loop
+040D3D                   1953 
+040D3D                   1954 	; delete a character of the filename
+040D3D 21 4D 11 04       1955 	ld hl,filename
+040D41 06 00             1956 	ld b,0
+040D43 09                1957 	add hl,bc
+040D44 AF                1958 	xor a
+040D45 77                1959 	ld (hl),a
+040D46 0D                1960 	dec c
+040D47 C5                1961 	push bc
+040D48                   1962 
+040D48                   1963 	; locate x,y
+040D48                   1964 	vdu 31
+040D48 3E 1F             1964 		ld a,arg1
+040D4A 49 D7             1964 		rst.lis $10
+040D4C 3E 11             1965 	ld a,FILENAME_X+10
+040D4E 81                1966 	add a,c
+040D4F                   1967 	vdu_a
+040D4F 49 D7             1967 		rst.lis $10
+040D51                   1968 	vdu FILENAME_Y
+040D51 3E 18             1968 		ld a,arg1
+040D53 49 D7             1968 		rst.lis $10
+040D55                   1969 
+040D55                   1970 	; print text
+040D55 21 60 11 04       1971 	ld hl,spacechar
+040D59 01 00 00 00       1972 	ld bc,0
+040D5D AF                1973 	xor a
+040D5E 49 DF             1974 	rst.lis $18
+040D60                   1975 
+040D60 C1                1976 	pop bc
+040D61 C3 AD 0C 04       1977 	jp it8_loop
+040D65                   1978 
+040D65                   1979 it8l_return:
+040D65                   1980 	; locate x,y
+040D65                   1981 	vdu 31
+040D65 3E 1F             1981 		ld a,arg1
+040D67 49 D7             1981 		rst.lis $10
+040D69                   1982 	vdu FILENAME_X
+040D69 3E 07             1982 		ld a,arg1
+040D6B 49 D7             1982 		rst.lis $10
+040D6D                   1983 	vdu FILENAME_Y
+040D6D 3E 18             1983 		ld a,arg1
+040D6F 49 D7             1983 		rst.lis $10
+040D71                   1984 
+040D71                   1985 	; print text
+040D71 21 62 11 04       1986 	ld hl,void_filename
+040D75 01 00 00 00       1987 	ld bc,0
+040D79 AF                1988 	xor a
+040D7A 49 DF             1989 	rst.lis $18
+040D7C                   1990 
+040D7C                   1991 	; hide cursor
+040D7C                   1992 	vdu 23
+040D7C 3E 17             1992 		ld a,arg1
+040D7E 49 D7             1992 		rst.lis $10
+040D80                   1993 	vdu 1
+040D80 3E 01             1993 		ld a,arg1
+040D82 49 D7             1993 		rst.lis $10
+040D84                   1994 	vdu 0
+040D84 3E 00             1994 		ld a,arg1
+040D86 49 D7             1994 		rst.lis $10
+040D88                   1995 
+040D88 C9                1996 	ret
+040D89                   1997 
+040D89                   1998 ; load a sprite, giving its name (must be on spredit folder)
+040D89                   1999 fn_load_sprite:
+040D89                   2000 	; clear filename
+040D89 21 4D 11 04       2001 	ld hl,filename
+040D8D 06 0C             2002 	ld b,12
+040D8F AF                2003 	xor a
+040D90                   2004 
+040D90                   2005 ls_clear_filename:
+040D90 77                2006 	ld (hl),a
+040D91 23                2007 	inc hl
+040D92 10 FC             2008 	djnz ls_clear_filename
+040D94                   2009 
+040D94                   2010 	; get filename
+040D94 CD 88 0C 04       2011 	call fn_input_text8
+040D98                   2012 
+040D98                   2013 	; set path to home
+040D98 21 5A 11 04       2014 	ld hl,home_path
+040D9C                   2015 	moscall mos_cd
+040D9C 3E 03             2015 		ld a,arg1
+040D9E 49 CF             2015 		rst.lis $08
+040DA0                   2016 
+040DA0                   2017 	; exit on error
+040DA0 FE 00             2018 	cp 0
+040DA2 C2 5F 0E 04       2019 	jp nz,ls_folder_error
+040DA6                   2020 
+040DA6                   2021 	; open the file for read
+040DA6 21 4D 11 04       2022 	ld hl,filename
+040DAA 0E 01             2023 	ld c,fa_open_existing|fa_read
+040DAC                   2024 	moscall mos_fopen
+040DAC 3E 0A             2024 		ld a,arg1
+040DAE 49 CF             2024 		rst.lis $08
+040DB0                   2025 
+040DB0                   2026 	; exit on error
+040DB0 FE 00             2027 	cp 0
+040DB2 CA 7F 0E 04       2028 	jp z,ls_file_error
+040DB6                   2029 
+040DB6                   2030 	; filehandle -> C
+040DB6 4F                2031 	ld c,a
+040DB7                   2032 
+040DB7                   2033 	; get colors count
+040DB7                   2034 	moscall mos_fgetc
+040DB7 3E 0C             2034 		ld a,arg1
+040DB9 49 CF             2034 		rst.lis $08
+040DBB DA 48 0E 04       2035 	jp c,ls_close_error
+040DBF                   2036 
+040DBF FE 40             2037 	cp MAX_COLORS
+040DC1 C2 48 0E 04       2038 	jp nz,ls_close_error
+040DC5                   2039 
+040DC5                   2040 	; store colors count
+040DC5 21 A7 11 04       2041 	ld hl,colors_count
+040DC9 77                2042 	ld (hl),a
+040DCA                   2043 
+040DCA                   2044 	; get frames count
+040DCA                   2045 	moscall mos_fgetc
+040DCA 3E 0C             2045 		ld a,arg1
+040DCC 49 CF             2045 		rst.lis $08
+040DCE DA 48 0E 04       2046 	jp c,ls_close_error
+040DD2                   2047 
+040DD2                   2048 	; store frames count
+040DD2 21 A9 11 04       2049 	ld hl,frames_count
+040DD6 77                2050 	ld (hl),a
+040DD7 21 A8 11 04       2051 	ld hl,current_frame
+040DDB 3D                2052 	dec a
+040DDC 77                2053 	ld (hl),a
+040DDD                   2054 
+040DDD                   2055 	; get sprite size
+040DDD                   2056 	moscall mos_fgetc
+040DDD 3E 0C             2056 		ld a,arg1
+040DDF 49 CF             2056 		rst.lis $08
+040DE1 DA 48 0E 04       2057 	jp c,ls_close_error
+040DE5                   2058 
+040DE5                   2059 	; store sprite size
+040DE5 21 DA 10 04       2060 	ld hl,spr_size
+040DE9 77                2061 	ld (hl),a
+040DEA                   2062 
+040DEA                   2063 	; set 4x4 pixel width
+040DEA FE 04             2064 	cp SPR44
+040DEC 20 09             2065 	jr nz,ls_next1
+040DEE                   2066 
+040DEE 21 D9 10 04       2067 	ld hl,pixel_width
+040DF2 06 20             2068 	ld b,SPR44_width
+040DF4 70                2069 	ld (hl),b
+040DF5 18 21             2070 	jr ls_next4
+040DF7                   2071 
+040DF7                   2072 ls_next1:
+040DF7                   2073 	; set 8x8 pixel width
+040DF7 FE 08             2074 	cp SPR88
+040DF9 20 09             2075 	jr nz,ls_next2
+040DFB                   2076 
+040DFB 21 D9 10 04       2077 	ld hl,pixel_width
+040DFF 06 10             2078 	ld b,SPR88_width
+040E01 70                2079 	ld (hl),b
+040E02 18 14             2080 	jr ls_next4
+040E04                   2081 
+040E04                   2082 ls_next2:
+040E04                   2083 
+040E04                   2084 	; set 16x16 pixel width
+040E04 FE 10             2085 	cp SPR1616
+040E06 20 09             2086 	jr nz,ls_next3
+040E08                   2087 
+040E08 21 D9 10 04       2088 	ld hl,pixel_width
+040E0C 06 08             2089 	ld b,SPR1616_width
+040E0E 70                2090 	ld (hl),b
+040E0F 18 07             2091 	jr ls_next4
+040E11                   2092 
+040E11                   2093 ls_next3:
+040E11                   2094 
+040E11 21 D9 10 04       2095 	ld hl,pixel_width
+040E15 06 04             2096 	ld b,SPR3232_width
+040E17 70                2097 	ld (hl),b
+040E18                   2098 
+040E18                   2099 ls_next4:
+040E18                   2100 
+040E18 6F                2101 	ld l,a
+040E19 67                2102 	ld h,a
+040E1A ED 6C             2103 	mlt hl ; HL = sprite length
+040E1C E5                2104 	push hl
+040E1D                   2105 
+040E1D                   2106 	; get frames count
+040E1D 21 A8 11 04       2107 	ld hl,current_frame
+040E21 46                2108 	ld b,(hl)
+040E22                   2109 
+040E22 E1                2110 	pop hl
+040E23                   2111 
+040E23 78                2112 	ld a,b
+040E24 FE 00             2113 	cp 0
+040E26 28 07             2114 	jr z,ls_read_data
+040E28                   2115 
+040E28                   2116 	; de = size²
+040E28 11 00 04 00       2117 	ld de,ONE_FRAME_BUFFER_SIZE
+040E2C                   2118 ls_add_length:
+040E2C 19                2119 	add hl,de
+040E2D 10 FD             2120 	djnz ls_add_length
+040E2F                   2121 
+040E2F                   2122 ls_read_data:
+040E2F E5                2123 	push hl
+040E30 E5                2124 	push hl
+040E31 D1                2125 	pop de
+040E32 7B                2126 	ld a,e
+040E33 21 B1 11 04       2127 	ld hl,sprite_buffer
+040E37                   2128 	moscall mos_fread
+040E37 3E 1A             2128 		ld a,arg1
+040E39 49 CF             2128 		rst.lis $08
+040E3B E1                2129 	pop hl
+040E3C 7C                2130 	ld a,h
+040E3D BA                2131 	cp d
+040E3E 20 08             2132 	jr nz,ls_close_error
+040E40 7D                2133 	ld a,l
+040E41 BB                2134 	cp e
+040E42 20 04             2135 	jr nz,ls_close_error
+040E44 C3 67 0E 04       2136 	jp ls_close
+040E48                   2137 
+040E48                   2138 ls_close_error:
+040E48 C5                2139 	push bc
+040E49                   2140 
+040E49                   2141 	; read error
+040E49 CD 43 0F 04       2142 	call fn_print_file_error
+040E4D                   2143 
+040E4D C1                2144 	pop bc
+040E4E                   2145 
+040E4E                   2146 	; close the file
+040E4E                   2147 	moscall mos_fclose
+040E4E 3E 0B             2147 		ld a,arg1
+040E50 49 CF             2147 		rst.lis $08
+040E52                   2148 
+040E52                   2149 	; reset current frame and coordinates of the drawing pixel
+040E52 21 D7 10 04       2150 	ld hl,xpix
+040E56 AF                2151 	xor a
+040E57 77                2152 	ld (hl),a
+040E58 21 D8 10 04       2153 	ld hl,ypix
+040E5C 77                2154 	ld (hl),a
+040E5D 18 17             2155 	jr ls_exit
+040E5F                   2156 
+040E5F                   2157 ls_folder_error:
+040E5F                   2158 	; write error
+040E5F CD 7E 0F 04       2159 	call fn_print_folder_error
+040E63 C3 76 0E 04       2160 	jp ls_exit
+040E67                   2161 
+040E67                   2162 ls_close:
+040E67                   2163 	; close the file
+040E67                   2164 	moscall mos_fclose
+040E67 3E 0B             2164 		ld a,arg1
+040E69 49 CF             2164 		rst.lis $08
+040E6B                   2165 
+040E6B                   2166 	; reset current frame and coordinates of the drawing pixel
+040E6B 21 D7 10 04       2167 	ld hl,xpix
+040E6F AF                2168 	xor a
+040E70 77                2169 	ld (hl),a
+040E71 21 D8 10 04       2170 	ld hl,ypix
+040E75 77                2171 	ld (hl),a
+040E76                   2172 
+040E76                   2173 ls_exit:
+040E76 CD 63 10 04       2174 	call fn_show_spr_descr
+040E7A CD 1E 10 04       2175 	call fn_change_frames_count
+040E7E C9                2176 	ret
+040E7F                   2177 
+040E7F                   2178 ls_file_error:
+040E7F CD 43 0F 04       2179 	call fn_print_file_error
+040E83 C9                2180 	ret
+040E84                   2181 
+040E84                   2182 ; save a sprite, giving its name (must be on spredit folder)
+040E84                   2183 fn_save_sprite:
+040E84                   2184 	; clear filename
+040E84 21 4D 11 04       2185 	ld hl,filename
+040E88 06 0C             2186 	ld b,12
+040E8A AF                2187 	xor a
+040E8B                   2188 
+040E8B                   2189 ss_clear_filename:
+040E8B 77                2190 	ld (hl),a
+040E8C 23                2191 	inc hl
+040E8D 10 FC             2192 	djnz ss_clear_filename
+040E8F                   2193 
+040E8F                   2194 	; get filename
+040E8F CD 88 0C 04       2195 	call fn_input_text8
+040E93                   2196 
+040E93                   2197 	; set path to home
+040E93 21 5A 11 04       2198 	ld hl,home_path
+040E97                   2199 	moscall mos_cd
+040E97 3E 03             2199 		ld a,arg1
+040E99 49 CF             2199 		rst.lis $08
+040E9B                   2200 
+040E9B                   2201 	; exit on error
+040E9B FE 00             2202 	cp 0
+040E9D C2 1B 0F 04       2203 	jp nz,ss_folder_error
+040EA1                   2204 
+040EA1                   2205 	; open the file for write
+040EA1 21 4D 11 04       2206 	ld hl,filename
+040EA5 0E 06             2207 	ld c,fa_create_new|fa_write
+040EA7                   2208 	moscall mos_fopen
+040EA7 3E 0A             2208 		ld a,arg1
+040EA9 49 CF             2208 		rst.lis $08
+040EAB                   2209 
+040EAB                   2210 	; exit on error
+040EAB FE 00             2211 	cp 0
+040EAD CA 3E 0F 04       2212 	jp z,ss_file_error
+040EB1                   2213 
+040EB1                   2214 	; filehandle -> C
+040EB1 4F                2215 	ld c,a
+040EB2                   2216 
+040EB2                   2217 	; store colors count in the file
+040EB2 06 40             2218 	ld b,MAX_COLORS
+040EB4                   2219 	moscall mos_fputc
+040EB4 3E 0D             2219 		ld a,arg1
+040EB6 49 CF             2219 		rst.lis $08
+040EB8                   2220 
+040EB8                   2221 	; store frames count in the file
+040EB8 21 A9 11 04       2222 	ld hl,frames_count
+040EBC 46                2223 	ld b,(hl)
+040EBD                   2224 	moscall mos_fputc
+040EBD 3E 0D             2224 		ld a,arg1
+040EBF 49 CF             2224 		rst.lis $08
+040EC1                   2225 
+040EC1                   2226 	; store sprite size in the file
+040EC1 21 DA 10 04       2227 	ld hl,spr_size
+040EC5 46                2228 	ld b,(hl)
+040EC6                   2229 	moscall mos_fputc
+040EC6 3E 0D             2229 		ld a,arg1
+040EC8 49 CF             2229 		rst.lis $08
+040ECA                   2230 
+040ECA                   2231 	; de = size²
+040ECA 68                2232 	ld l,b
+040ECB 60                2233 	ld h,b
+040ECC ED 6C             2234 	mlt hl ; HL = sprite length
+040ECE E5                2235 	push hl
+040ECF                   2236 
+040ECF                   2237 	; get frames count
+040ECF 21 A8 11 04       2238 	ld hl,current_frame
+040ED3 46                2239 	ld b,(hl)
+040ED4                   2240 
+040ED4 E1                2241 	pop hl
+040ED5                   2242 
+040ED5 78                2243 	ld a,b
+040ED6 FE 00             2244 	cp 0
+040ED8 28 07             2245 	jr z,ss_write_data
+040EDA                   2246 
+040EDA 11 00 04 00       2247 	ld de,ONE_FRAME_BUFFER_SIZE
+040EDE                   2248 ss_add_length:
+040EDE 19                2249 	add hl,de
+040EDF 10 FD             2250 	djnz ss_add_length
+040EE1                   2251 
+040EE1                   2252 ss_write_data:
+040EE1 E5                2253 	push hl
+040EE2 E5                2254 	push hl
+040EE3 D1                2255 	pop de
+040EE4 21 B1 11 04       2256 	ld hl,sprite_buffer
+040EE8                   2257 	moscall mos_fwrite
+040EE8 3E 1B             2257 		ld a,arg1
+040EEA 49 CF             2257 		rst.lis $08
+040EEC E1                2258 	pop hl
+040EED 7C                2259 	ld a,h
+040EEE BA                2260 	cp d
+040EEF 20 08             2261 	jr nz,ss_close_error
+040EF1 7D                2262 	ld a,l
+040EF2 BB                2263 	cp e
+040EF3 20 04             2264 	jr nz,ss_close_error
+040EF5 C3 23 0F 04       2265 	jp ss_close
+040EF9                   2266 
+040EF9                   2267 ss_close_error:
+040EF9 C5                2268 	push bc
+040EFA                   2269 
+040EFA                   2270 	; write error
+040EFA CD 43 0F 04       2271 	call fn_print_file_error
+040EFE                   2272 
+040EFE C1                2273 	pop bc
+040EFF                   2274 
+040EFF                   2275 	; close the file
+040EFF                   2276 	moscall mos_fclose
+040EFF 3E 0B             2276 		ld a,arg1
+040F01 49 CF             2276 		rst.lis $08
+040F03                   2277 
+040F03                   2278 	; reset current frame and coordinates of the drawing pixel
+040F03 21 A9 11 04       2279 	ld hl,frames_count
+040F07 7E                2280 	ld a,(hl)
+040F08 3D                2281 	dec a
+040F09 21 A8 11 04       2282 	ld hl,current_frame
+040F0D 77                2283 	ld (hl),a
+040F0E 21 D7 10 04       2284 	ld hl,xpix
+040F12 AF                2285 	xor a
+040F13 77                2286 	ld (hl),a
+040F14 21 D8 10 04       2287 	ld hl,ypix
+040F18 77                2288 	ld (hl),a
+040F19 18 22             2289 	jr ss_exit
+040F1B                   2290 
+040F1B                   2291 ss_folder_error:
+040F1B                   2292 	; write error
+040F1B CD 7E 0F 04       2293 	call fn_print_folder_error
+040F1F C3 3D 0F 04       2294 	jp ss_exit
+040F23                   2295 
+040F23                   2296 ss_close:
+040F23                   2297 	; close the file
+040F23                   2298 	moscall mos_fclose
+040F23 3E 0B             2298 		ld a,arg1
+040F25 49 CF             2298 		rst.lis $08
+040F27                   2299 
+040F27                   2300 	; reset current frame and coordinates of the drawing pixel
+040F27 21 A9 11 04       2301 	ld hl,frames_count
+040F2B 7E                2302 	ld a,(hl)
+040F2C 3D                2303 	dec a
+040F2D 21 A8 11 04       2304 	ld hl,current_frame
+040F31 77                2305 	ld (hl),a
+040F32 21 D7 10 04       2306 	ld hl,xpix
+040F36 AF                2307 	xor a
+040F37 77                2308 	ld (hl),a
+040F38 21 D8 10 04       2309 	ld hl,ypix
+040F3C 77                2310 	ld (hl),a
+040F3D                   2311 
+040F3D                   2312 ss_exit:
+040F3D C9                2313 	ret
+040F3E                   2314 
+040F3E                   2315 ss_file_error:
+040F3E CD 43 0F 04       2316 	call fn_print_file_error
+040F42 C9                2317 	ret
+040F43                   2318 
+040F43                   2319 ; print 'file error'
+040F43                   2320 fn_print_file_error:
+040F43                   2321 	vdu 7
+040F43 3E 07             2321 		ld a,arg1
+040F45 49 D7             2321 		rst.lis $10
+040F47 CD 75 0C 04       2322 	call fn_wait_key_released
+040F4B                   2323 
+040F4B                   2324 	; locate x,y
+040F4B                   2325 	vdu 31
+040F4B 3E 1F             2325 		ld a,arg1
+040F4D 49 D7             2325 		rst.lis $10
+040F4F                   2326 	vdu FILENAME_X
+040F4F 3E 07             2326 		ld a,arg1
+040F51 49 D7             2326 		rst.lis $10
+040F53                   2327 	vdu FILENAME_Y
+040F53 3E 18             2327 		ld a,arg1
+040F55 49 D7             2327 		rst.lis $10
+040F57                   2328 
+040F57                   2329 	; print text
+040F57 21 79 11 04       2330 	ld hl,file_error
+040F5B 01 00 00 00       2331 	ld bc,0
+040F5F AF                2332 	xor a
+040F60 49 DF             2333 	rst.lis $18
+040F62                   2334 
+040F62 CD 81 0C 04       2335 	call fn_input_key
+040F66                   2336 
+040F66                   2337 	; locate x,y
+040F66                   2338 	vdu 31
+040F66 3E 1F             2338 		ld a,arg1
+040F68 49 D7             2338 		rst.lis $10
+040F6A                   2339 	vdu FILENAME_X
+040F6A 3E 07             2339 		ld a,arg1
+040F6C 49 D7             2339 		rst.lis $10
+040F6E                   2340 	vdu FILENAME_Y
+040F6E 3E 18             2340 		ld a,arg1
+040F70 49 D7             2340 		rst.lis $10
+040F72                   2341 
+040F72                   2342 	; print text
+040F72 21 62 11 04       2343 	ld hl,void_filename
+040F76 01 00 00 00       2344 	ld bc,0
+040F7A AF                2345 	xor a
+040F7B 49 DF             2346 	rst.lis $18
+040F7D                   2347 
+040F7D C9                2348 	ret
+040F7E                   2349 
+040F7E                   2350 ; print 'folder error'
+040F7E                   2351 fn_print_folder_error:
+040F7E                   2352 	vdu 7
+040F7E 3E 07             2352 		ld a,arg1
+040F80 49 D7             2352 		rst.lis $10
+040F82 CD 75 0C 04       2353 	call fn_wait_key_released
+040F86                   2354 
+040F86                   2355 	; locate x,y
+040F86                   2356 	vdu 31
+040F86 3E 1F             2356 		ld a,arg1
+040F88 49 D7             2356 		rst.lis $10
+040F8A                   2357 	vdu FILENAME_X
+040F8A 3E 07             2357 		ld a,arg1
+040F8C 49 D7             2357 		rst.lis $10
+040F8E                   2358 	vdu FILENAME_Y
+040F8E 3E 18             2358 		ld a,arg1
+040F90 49 D7             2358 		rst.lis $10
+040F92                   2359 
+040F92                   2360 	; print text
+040F92 21 90 11 04       2361 	ld hl,folder_error
+040F96 01 00 00 00       2362 	ld bc,0
+040F9A AF                2363 	xor a
+040F9B 49 DF             2364 	rst.lis $18
+040F9D                   2365 
+040F9D CD 81 0C 04       2366 	call fn_input_key
+040FA1                   2367 
+040FA1                   2368 	; locate x,y
+040FA1                   2369 	vdu 31
+040FA1 3E 1F             2369 		ld a,arg1
+040FA3 49 D7             2369 		rst.lis $10
+040FA5                   2370 	vdu FILENAME_X
+040FA5 3E 07             2370 		ld a,arg1
+040FA7 49 D7             2370 		rst.lis $10
+040FA9                   2371 	vdu FILENAME_Y
+040FA9 3E 18             2371 		ld a,arg1
+040FAB 49 D7             2371 		rst.lis $10
+040FAD                   2372 
+040FAD                   2373 	; print text
+040FAD 21 62 11 04       2374 	ld hl,void_filename
+040FB1 01 00 00 00       2375 	ld bc,0
+040FB5 AF                2376 	xor a
+040FB6 49 DF             2377 	rst.lis $18
+040FB8                   2378 
+040FB8 C9                2379 	ret
+040FB9                   2380 
+040FB9                   2381 ; refresh all the current sprite frame
+040FB9                   2382 fn_refresh_sprite:
+040FB9 06 00             2383 	ld b,0 ; B -> x cordinate
+040FBB 0E 00             2384 	ld c,0 ; C -> y cordinate
+040FBD                   2385 
+040FBD                   2386 rs_loop:
+040FBD C5                2387 	push bc
+040FBE                   2388 
+040FBE 21 D7 10 04       2389 	ld hl,xpix
+040FC2 70                2390 	ld (hl),b
+040FC3 21 D8 10 04       2391 	ld hl,ypix
+040FC7 71                2392 	ld (hl),c
+040FC8 CD E9 0A 04       2393 	call fn_draw_pixel_without_border
+040FCC                   2394 
+040FCC C1                2395 	pop bc
+040FCD                   2396 
+040FCD 04                2397 	inc b
+040FCE 21 DA 10 04       2398 	ld hl,spr_size
+040FD2 7E                2399 	ld a,(hl)
+040FD3 B8                2400 	cp b
+040FD4 28 04             2401 	jr z,rs_next_line
+040FD6 C3 BD 0F 04       2402 	jp rs_loop
+040FDA                   2403 
+040FDA                   2404 rs_next_line:
+040FDA 06 00             2405 	ld b,0
+040FDC 0C                2406 	inc c
+040FDD 21 DA 10 04       2407 	ld hl,spr_size
+040FE1 7E                2408 	ld a,(hl)
+040FE2 B9                2409 	cp c
+040FE3 28 04             2410 	jr z,rs_end
+040FE5 C3 BD 0F 04       2411 	jp rs_loop
+040FE9                   2412 
+040FE9                   2413 rs_end:
+040FE9 AF                2414 	xor a
+040FEA 21 D7 10 04       2415 	ld hl,xpix
+040FEE 77                2416 	ld (hl),a
+040FEF 21 D8 10 04       2417 	ld hl,ypix
+040FF3 77                2418 	ld (hl),a
+040FF4 CD D5 0A 04       2419 	call fn_draw_pixel_with_border
+040FF8                   2420 
+040FF8 C9                2421 	ret
+040FF9                   2422 
+040FF9                   2423 fn_change_frame:
+040FF9 21 A8 11 04       2424 	ld hl,current_frame
+040FFD 7E                2425 	ld a,(hl)
+040FFE 3C                2426 	inc a
+040FFF C6 30             2427 	add a,48
+041001 21 AA 11 04       2428 	ld hl,current_frame_ascii
+041005 77                2429 	ld (hl),a
+041006                   2430 
+041006                   2431 	; locate 21,3
+041006                   2432 	vdu 31
+041006 3E 1F             2432 		ld a,arg1
+041008 49 D7             2432 		rst.lis $10
+04100A                   2433 	vdu 21
+04100A 3E 15             2433 		ld a,arg1
+04100C 49 D7             2433 		rst.lis $10
+04100E                   2434 	vdu 3
+04100E 3E 03             2434 		ld a,arg1
+041010 49 D7             2434 		rst.lis $10
+041012                   2435 
+041012                   2436 	; print text
+041012 21 AA 11 04       2437 	ld hl,current_frame_ascii
+041016 01 00 00 00       2438 	ld bc,0
+04101A AF                2439 	xor a
+04101B 49 DF             2440 	rst.lis $18
+04101D                   2441 
+04101D C9                2442 	ret
+04101E                   2443 
+04101E                   2444 fn_change_frames_count:
+04101E 21 A9 11 04       2445 	ld hl,frames_count
+041022 7E                2446 	ld a,(hl)
+041023 C6 30             2447 	add a,48
+041025 21 AC 11 04       2448 	ld hl,frames_count_ascii
+041029 77                2449 	ld (hl),a
+04102A                   2450 
+04102A                   2451 	; locate 23,3
+04102A                   2452 	vdu 31
+04102A 3E 1F             2452 		ld a,arg1
+04102C 49 D7             2452 		rst.lis $10
+04102E                   2453 	vdu 23
+04102E 3E 17             2453 		ld a,arg1
+041030 49 D7             2453 		rst.lis $10
+041032                   2454 	vdu 3
+041032 3E 03             2454 		ld a,arg1
+041034 49 D7             2454 		rst.lis $10
+041036                   2455 
+041036                   2456 	; print text
+041036 21 AC 11 04       2457 	ld hl,frames_count_ascii
+04103A 01 00 00 00       2458 	ld bc,0
+04103E AF                2459 	xor a
+04103F 49 DF             2460 	rst.lis $18
+041041                   2461 
+041041 C9                2462 	ret
+041042                   2463 
+041042                   2464 ; slowdown (wait delay)
+041042                   2465 fn_slowdown:
+041042 DD 21 AE 11 04    2466 	ld ix,keydata
+041047 DD 7E 02          2467 	ld a,(ix+2)
+04104A E6 02             2468 	and 2
+04104C FE 02             2469 	cp 2 ; shift key to disable delay
+04104E C8                2470 	ret z
+04104F                   2471 
+04104F                   2472 	moscall mos_sysvars
+04104F 3E 08             2472 		ld a,arg1
+041051 49 CF             2472 		rst.lis $08
+041053 DD 4E 00          2473 	ld c,(ix+sysvar_time)
+041056                   2474 
+041056                   2475 sd_loop:
+041056                   2476 	moscall mos_sysvars
+041056 3E 08             2476 		ld a,arg1
+041058 49 CF             2476 		rst.lis $08
+04105A DD 7E 00          2477 	ld a,(ix+sysvar_time)
+04105D 91                2478 	sub c
+04105E FE 14             2479 	cp SLOWDOWN_DELAY
+041060 20 F4             2480 	jr nz,sd_loop
+041062 C9                2481 	ret
+041063                   2482 
+041063                   2483 fn_show_spr_descr:
+041063                   2484 	; locate 15,3
+041063                   2485 	vdu 31
+041063 3E 1F             2485 		ld a,arg1
+041065 49 D7             2485 		rst.lis $10
+041067                   2486 	vdu 15
+041067 3E 0F             2486 		ld a,arg1
+041069 49 D7             2486 		rst.lis $10
+04106B                   2487 	vdu 3
+04106B 3E 03             2487 		ld a,arg1
+04106D 49 D7             2487 		rst.lis $10
+04106F                   2488 
+04106F                   2489 	; print text
+04106F 21 21 11 04       2490 	ld hl,spr_descr
+041073 01 00 00 00       2491 	ld bc,0
+041077 AF                2492 	xor a
+041078 49 DF             2493 	rst.lis $18
+04107A                   2494 
+04107A                   2495 	; locate 15,5
+04107A                   2496 	vdu 31
+04107A 3E 1F             2496 		ld a,arg1
+04107C 49 D7             2496 		rst.lis $10
+04107E                   2497 	vdu 15
+04107E 3E 0F             2497 		ld a,arg1
+041080 49 D7             2497 		rst.lis $10
+041082                   2498 	vdu 5
+041082 3E 05             2498 		ld a,arg1
+041084 49 D7             2498 		rst.lis $10
+041086                   2499 
+041086                   2500 	; check for sprite size...
+041086 21 DA 10 04       2501 	ld hl,spr_size
+04108A 7E                2502 	ld a,(hl)
+04108B                   2503 
+04108B FE 04             2504 	cp 4
+04108D 20 0C             2505 	jr nz,ssd_8x8
+04108F                   2506 
+04108F                   2507 	; print text 4x4
+04108F 21 2B 11 04       2508 	ld hl,spr_descr1
+041093 01 00 00 00       2509 	ld bc,0
+041097 AF                2510 	xor a
+041098 49 DF             2511 	rst.lis $18
+04109A C9                2512 	ret
+04109B                   2513 
+04109B                   2514 ssd_8x8:
+04109B FE 08             2515 	cp 8
+04109D 20 0C             2516 	jr nz,ssd_16x16
+04109F                   2517 
+04109F                   2518 	; print text 8x8
+04109F 21 31 11 04       2519 	ld hl,spr_descr2
+0410A3 01 00 00 00       2520 	ld bc,0
+0410A7 AF                2521 	xor a
+0410A8 49 DF             2522 	rst.lis $18
+0410AA C9                2523 	ret
+0410AB                   2524 
+0410AB                   2525 ssd_16x16:
+0410AB FE 10             2526 	cp 16
+0410AD 20 0C             2527 	jr nz,ssd_32x32
+0410AF                   2528 
+0410AF                   2529 	; print text 16x16
+0410AF 21 37 11 04       2530 	ld hl,spr_descr3
+0410B3 01 00 00 00       2531 	ld bc,0
+0410B7 AF                2532 	xor a
+0410B8 49 DF             2533 	rst.lis $18
+0410BA C9                2534 	ret
+0410BB                   2535 
+0410BB                   2536 ssd_32x32:
+0410BB                   2537 	; print text 32x32
+0410BB 21 3D 11 04       2538 	ld hl,spr_descr4
+0410BF 01 00 00 00       2539 	ld bc,0
+0410C3 AF                2540 	xor a
+0410C4 49 DF             2541 	rst.lis $18
+0410C6                   2542 
+0410C6 C9                2543 	ret
+0410C7                   2544 ;======================================================================
+0410C7                   2545 
+0410C7                   2546 ; coordinates for rectangles
+0410C7                   2547 x1:
+0410C7 00 00             2548 	dw $0000
+0410C9                   2549 y1:
+0410C9 00 00             2550 	dw $0000
+0410CB                   2551 x2:
+0410CB 00 00             2552 	dw $0000
+0410CD                   2553 y2:
+0410CD 00 00             2554 	dw $0000
+0410CF                   2555 
+0410CF                   2556 ; coordinates of the edited sprite
+0410CF                   2557 xs1:
+0410CF 5F 00             2558 	dw 95
+0410D1                   2559 ys1:
+0410D1 37 00             2560 	dw 55
+0410D3                   2561 xs2:
+0410D3 E0 00             2562 	dw 224
+0410D5                   2563 ys2:
+0410D5 B8 00             2564 	dw 184
+0410D7                   2565 
+0410D7                   2566 ; coordinates of active pixels to draw
+0410D7                   2567 xpix:
+0410D7 00                2568 	db 0
+0410D8                   2569 ypix:
+0410D8 00                2570 	db 0
+0410D9                   2571 
+0410D9                   2572 ; width of a pixel in the sprite
+0410D9                   2573 pixel_width:
+0410D9 00                2574 	db 0
+0410DA                   2575 
+0410DA                   2576 ; sprite size, in resized pixels
+0410DA                   2577 spr_size:
+0410DA 00                2578 	db 0
+0410DB                   2579 
+0410DB                   2580 ; pen color (0-63)
+0410DB                   2581 current_pen:
+0410DB 00                2582 	db 0
+0410DC                   2583 
+0410DC                   2584 ; texts for 1st menu
+0410DC                   2585 title:
+0410DC 53 50 52 2D 45 44 2586 	db "SPR-EDIT",0
+       49 54 00          
+0410E5                   2587 
+0410E5                   2588 menu1:
+0410E5 31 29 20 34 78 34 2589 	db "1) 4x4 Sprite",0
+       20 53 70 72 69 74 
+       65 00             
+0410F3                   2590 menu2:
+0410F3 32 29 20 38 78 38 2591 	db "2) 8x8 Sprite",0
+       20 53 70 72 69 74 
+       65 00             
+041101                   2592 menu3:
+041101 33 29 20 31 36 78 2593 	db "3) 16x16 Sprite",0
+       31 36 20 53 70 72 
+       69 74 65 00       
+041111                   2594 menu4:
+041111 34 29 20 33 32 78 2595 	db "4) 32x32 Sprite",0
+       33 32 20 53 70 72 
+       69 74 65 00       
+041121                   2596 
+041121                   2597 ; descriptions of sprites
+041121                   2598 spr_descr:
+041121 46 72 61 6D 65 3A 2599 	db "Frame:1/1",0
+       31 2F 31 00       
+04112B                   2600 spr_descr1:
+04112B 34 78 34 20 20 00 2601 	db "4x4  ",0
+041131                   2602 spr_descr2:
+041131 38 78 38 20 20 00 2603 	db "8x8  ",0
+041137                   2604 spr_descr3:
+041137 31 36 78 31 36 00 2605 	db "16x16",0
+04113D                   2606 spr_descr4:
+04113D 33 32 78 33 32 00 2607 	db "32x32",0
+041143                   2608 
+041143                   2609 ; label before filename
+041143                   2610 filename_label:
+041143 46 69 6C 65 6E 61 2611 	db "Filename:",0
+       6D 65 3A 00       
+04114D                   2612 
+04114D                   2613 ; filename without extension
+04114D                   2614 filename:
+04114D 00 00 00 00 00 00 2615 	ds 13,0
+       00 00 00 00 00 00 
+       00                
+04115A                   2616 
+04115A                   2617 home_path:
+04115A 2F 68 6F 6D 65 00 2618 	db "/home",0
+041160                   2619 
+041160                   2620 ; single space char to print
+041160                   2621 spacechar:
+041160 20 00             2622 	db " ",0
+041162                   2623 
+041162                   2624 ; spaces to remove filename label
+041162                   2625 void_filename:
+041162 20 20 20 20 20 20 2626 	db "                      ",0
+       20 20 20 20 20 20 
+       20 20 20 20 20 20 
+       20 20 20 20 00    
+041179                   2627 
+041179                   2628 ; file error message
+041179                   2629 file_error:
+041179 46 69 6C 65 20 65 2630 	db "File error !          ",0
+       72 72 6F 72 20 21 
+       20 20 20 20 20 20 
+       20 20 20 20 00    
+041190                   2631 
+041190                   2632 ; folder error message
+041190                   2633 folder_error:
+041190 46 6F 6C 64 65 72 2634 	db "Folder error !        ",0
+       20 65 72 72 6F 72 
+       20 21 20 20 20 20 
+       20 20 20 20 00    
+0411A7                   2635 
+0411A7                   2636 ; number of colors
+0411A7                   2637 colors_count:
+0411A7 00                2638 	db 0
+0411A8                   2639 
+0411A8                   2640 ; current frame
+0411A8                   2641 current_frame:
+0411A8 00                2642 	db 0
+0411A9                   2643 
+0411A9                   2644 ; frames count
+0411A9                   2645 frames_count:
+0411A9 00                2646 	db 0
+0411AA                   2647 
+0411AA                   2648 current_frame_ascii:
+0411AA 30 00             2649 	db '0',0
+0411AC                   2650 
+0411AC                   2651 frames_count_ascii:
+0411AC 30 00             2652 	db '0',0
+0411AE                   2653 
+0411AE                   2654 ; keycode, keydown & keymods are stored here
+0411AE                   2655 keydata:
+0411AE 00 00 00          2656 	db 0,0,0
+0411B1                   2657 
+0411B1                   2658 ; buffer for the current sprite
+0411B1                   2659 sprite_buffer:
+0411B1 00 00 00 00 00 00 2660 	ds BUFFER_SIZE,0
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+0411B1 00 00 00 00 00 00 2660 	ds BUFFER_SIZE,0
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+0411B1 00 00 00 00 00 00 2660 	ds BUFFER_SIZE,0
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+0411B1 00 00 00 00 00 00 2660 	ds BUFFER_SIZE,0
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+0411B1 00 00 00 00 00 00 2660 	ds BUFFER_SIZE,0
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+0411B1 00 00 00 00 00 00 2660 	ds BUFFER_SIZE,0
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00 00 00 00 00 
+       00 00             
+0431B1                   2661 
+0431B1                   2662 rgb_palette:
+0431B1 00 00 00          2663 	db $00,$00,$00
+0431B4 AA 00 00          2664 	db $AA,$00,$00
+0431B7 00 AA 00          2665 	db $00,$AA,$00
+0431BA AA AA 00          2666 	db $AA,$AA,$00
+0431BD 00 00 AA          2667 	db $00,$00,$AA
+0431C0 AA 00 AA          2668 	db $AA,$00,$AA
+0431C3 00 AA AA          2669 	db $00,$AA,$AA
+0431C6 AA AA AA          2670 	db $AA,$AA,$AA
+0431C9                   2671 
+0431C9 55 55 55          2672 	db $55,$55,$55
+0431CC FF 00 00          2673 	db $FF,$00,$00
+0431CF 00 FF 00          2674 	db $00,$FF,$00
+0431D2 FF FF 00          2675 	db $FF,$FF,$00
+0431D5 00 00 FF          2676 	db $00,$00,$FF
+0431D8 FF 00 FF          2677 	db $FF,$00,$FF
+0431DB 00 FF FF          2678 	db $00,$FF,$FF
+0431DE FF FF FF          2679 	db $FF,$FF,$FF
+0431E1                   2680 
+0431E1 00 00 55          2681 	db $00,$00,$55
+0431E4 00 55 00          2682 	db $00,$55,$00
+0431E7 00 55 55          2683 	db $00,$55,$55
+0431EA 00 55 AA          2684 	db $00,$55,$AA
+0431ED 00 55 FF          2685 	db $00,$55,$FF
+0431F0 00 AA 55          2686 	db $00,$AA,$55
+0431F3 00 AA FF          2687 	db $00,$AA,$FF
+0431F6 00 FF 55          2688 	db $00,$FF,$55
+0431F9                   2689 
+0431F9 00 FF AA          2690 	db $00,$FF,$AA
+0431FC 55 00 00          2691 	db $55,$00,$00
+0431FF 55 00 55          2692 	db $55,$00,$55
+043202 55 00 AA          2693 	db $55,$00,$AA
+043205 55 00 FF          2694 	db $55,$00,$FF
+043208 55 55 00          2695 	db $55,$55,$00
+04320B 55 55 AA          2696 	db $55,$55,$AA
+04320E 55 55 FF          2697 	db $55,$55,$FF
+043211                   2698 
+043211 55 AA 00          2699 	db $55,$AA,$00
+043214 55 AA 55          2700 	db $55,$AA,$55
+043217 55 AA AA          2701 	db $55,$AA,$AA
+04321A 55 AA FF          2702 	db $55,$AA,$FF
+04321D 55 FF 00          2703 	db $55,$FF,$00
+043220 55 FF 55          2704 	db $55,$FF,$55
+043223 55 FF AA          2705 	db $55,$FF,$AA
+043226 55 FF FF          2706 	db $55,$FF,$FF
+043229                   2707 
+043229 AA 00 55          2708 	db $AA,$00,$55
+04322C AA 00 FF          2709 	db $AA,$00,$FF
+04322F AA 55 00          2710 	db $AA,$55,$00
+043232 AA 55 55          2711 	db $AA,$55,$55
+043235 AA 55 AA          2712 	db $AA,$55,$AA
+043238 AA 55 FF          2713 	db $AA,$55,$FF
+04323B AA AA 55          2714 	db $AA,$AA,$55
+04323E AA AA FF          2715 	db $AA,$AA,$FF
+043241                   2716 
+043241 AA FF 00          2717 	db $AA,$FF,$00
+043244 AA FF 55          2718 	db $AA,$FF,$55
+043247 AA FF AA          2719 	db $AA,$FF,$AA
+04324A AA FF FF          2720 	db $AA,$FF,$FF
+04324D FF 00 55          2721 	db $FF,$00,$55
+043250 FF 00 AA          2722 	db $FF,$00,$AA
+043253 FF 55 00          2723 	db $FF,$55,$00
+043256 FF 55 55          2724 	db $FF,$55,$55
+043259                   2725 
+043259 FF 55 AA          2726 	db $FF,$55,$AA
+04325C FF 55 FF          2727 	db $FF,$55,$FF
+04325F FF AA 00          2728 	db $FF,$AA,$00
+043262 FF AA 55          2729 	db $FF,$AA,$55
+043265 FF AA AA          2730 	db $FF,$AA,$AA
+043268 FF AA FF          2731 	db $FF,$AA,$FF
+04326B FF FF 55          2732 	db $FF,$FF,$55
+04326E FF FF AA          2733 	db $FF,$FF,$AA
+043271                   2734 
+043271                   2735 ; sprite structure:
+043271                   2736 ; =================
+043271                   2737 ; colors_count  :   byte
+043271                   2738 ; frames count	:	byte
+043271                   2739 ; spr size		:	byte
+043271                   2740 ; data			:   width x height bytes of colors
+043271                   2741 
+043271                   2742 
+043271                   2743 ; TODO:
+043271                   2744 ;---------
+043271                   2745 ; add/remove frames must be done correctly
+043271                   2746 ; read animations with 'p' key
+043271                   2747 ; create a help text file with keyboard shorcuts list
+043271                   2748 ; solve the 'copy frame' bug
+043271                   2749 ; solve the bug of frames in fn_load/save sprite

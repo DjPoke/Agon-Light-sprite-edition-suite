@@ -1486,6 +1486,11 @@ fn_rectf:
 	ld a,(iy+1)
 	vdu_a
 
+; avoid the VDU bug of triangles
+; not drawn exactly at the right
+; coordinates :
+	CALL fn_rect
+
 	ret
 
 fn_calc_pixel_coords:
