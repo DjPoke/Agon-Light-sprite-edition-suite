@@ -1417,10 +1417,10 @@ fn_rectf:
 	vdu_a
 	
 	ld ix,x2
-	ld iy,y1
+	ld iy,y2
 
 	vdu 25
-	vdu 4
+	vdu 101
 	ld a,(ix+0)
 	vdu_a
 	ld a,(ix+1)
@@ -1429,67 +1429,6 @@ fn_rectf:
 	vdu_a
 	ld a,(iy+1)
 	vdu_a
-		
-	ld ix,x2
-	ld iy,y2
-	
-	vdu 25
-	vdu 85
-	ld a,(ix+0)
-	vdu_a
-	ld a,(ix+1)
-	vdu_a
-	ld a,(iy+0)
-	vdu_a
-	ld a,(iy+1)
-	vdu_a
-	
-	ld ix,x1
-	ld iy,y1
-	
-	vdu 25
-	vdu 4
-	ld a,(ix+0)
-	vdu_a
-	ld a,(ix+1)
-	vdu_a
-	ld a,(iy+0)
-	vdu_a
-	ld a,(iy+1)
-	vdu_a
-		
-	ld ix,x1
-	ld iy,y2
-	
-	vdu 25
-	vdu 4
-	ld a,(ix+0)
-	vdu_a
-	ld a,(ix+1)
-	vdu_a
-	ld a,(iy+0)
-	vdu_a
-	ld a,(iy+1)
-	vdu_a
-		
-	ld ix,x2
-	ld iy,y2
-	
-	vdu 25
-	vdu 85
-	ld a,(ix+0)
-	vdu_a
-	ld a,(ix+1)
-	vdu_a
-	ld a,(iy+0)
-	vdu_a
-	ld a,(iy+1)
-	vdu_a
-
-; avoid the VDU bug of triangles
-; not drawn exactly at the right
-; coordinates :
-	CALL fn_rect
 
 	ret
 
