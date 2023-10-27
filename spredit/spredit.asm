@@ -1,9 +1,7 @@
-; SprEdit.asm
+; spredit.asm
 ;
 ; by B.Vignoli
-; MIT 2023-2024
-;
-; Needs firmware 1.0.4 RC2
+; MIT 2023
 ;
 
 .assume adl=1
@@ -53,90 +51,32 @@ ONE_FRAME_BUFFER_SIZE:	equ 1024
 
 SLOWDOWN_DELAY:	equ 20
 
-VK_ESCAPE: 		equ 125
-VK_UP: 			equ 150
-VK_DOWN: 		equ 152
-VK_LEFT: 		equ 154
-VK_RIGHT: 		equ 156
-VK_SPACE: 		equ 1
-VK_RETURN: 		equ 143
-VK_TAB:			equ 142
-VK_DELETE:		equ 130
-VK_BACKSPACE:	equ 132
-VK_PGUP:		equ 146
-VK_PGDOWN:		equ 148
-VK_1: 			equ 93
-VK_2: 			equ 178
-VK_3: 			equ 77
-VK_4: 			equ 76
-VK_5: 			equ 108
-VK_6: 			equ 0
-VK_7: 			equ 0
-VK_8: 			equ 0
-VK_9: 			equ 0
-VK_0: 			equ 0
-VK_NUMPAD_1: 	equ 0
-VK_NUMPAD_2: 	equ 153
-VK_NUMPAD_3: 	equ 0
-VK_NUMPAD_4: 	equ 155
-VK_NUMPAD_5: 	equ 0
-VK_NUMPAD_6: 	equ 157
-VK_NUMPAD_7: 	equ 0
-VK_NUMPAD_8: 	equ 151
-VK_NUMPAD_9: 	equ 0
-VK_NUMPAD_0: 	equ 0
-VK_a: 			equ 22
-VK_b: 			equ 23
-VK_c:			equ 24
-VK_d: 			equ 25
-VK_e: 			equ 26
-VK_f: 			equ 27
-VK_g: 			equ 28
-VK_h: 			equ 29
-VK_i: 			equ 30
-VK_j: 			equ 31
-VK_k: 			equ 32
-VK_l: 			equ 33
-VK_m: 			equ 34
-VK_n: 			equ 35
-VK_o: 			equ 36
-VK_p: 			equ 37
-VK_q: 			equ 38
-VK_r: 			equ 39
-VK_s: 			equ 40
-VK_t: 			equ 41
-VK_u: 			equ 42
-VK_v: 			equ 43
-VK_w: 			equ 44
-VK_x: 			equ 45
-VK_y: 			equ 46
-VK_z: 			equ 47
-VK_A: 			equ 48
-VK_B: 			equ 49
-VK_C:			equ 50
-VK_D: 			equ 51
-VK_E: 			equ 52
-VK_F: 			equ 53
-VK_G: 			equ 54
-VK_H: 			equ 55
-VK_I: 			equ 56
-VK_J: 			equ 57
-VK_K: 			equ 58
-VK_L: 			equ 59
-VK_M: 			equ 60
-VK_N: 			equ 61
-VK_O: 			equ 62
-VK_P: 			equ 63
-VK_Q: 			equ 64
-VK_R: 			equ 65
-VK_S: 			equ 66
-VK_T: 			equ 67
-VK_U: 			equ 68
-VK_V: 			equ 69
-VK_W: 			equ 70
-VK_X: 			equ 71
-VK_Y: 			equ 72
-VK_Z: 			equ 73
+KEY_SPACE: equ -99
+KEY_UP: equ -58
+KEY_DOWN: equ -42
+KEY_LEFT: equ -26
+KEY_RIGHT: equ -122
+KEY_DELETE: equ -90
+KEY_TAB: equ -97
+KEY_N: equ -86
+KEY_C: equ -83
+KEY_BACKSPACE: equ -48
+KEY_PGUP: equ -64
+KEY_PGDOWN: equ -79
+KEY_L: equ -87
+KEY_S: equ -82
+KEY_R: equ -52
+KEY_F: equ -68
+KEY_M: equ -102
+KEY_ESCAPE: equ -113
+KEY_F1: equ -114
+KEY_F2: equ -115
+KEY_F3: equ -116
+KEY_F4: equ -21
+
+BITLOOKUP:
+	DB 01h,02h,04h,08h
+	DB 10h,20h,40h,80h
 
 ;======================================================================
 start:
@@ -252,51 +192,51 @@ start:
 	xor a
 	rst.lis $18
 
-	; reset keycode
-	xor a
-
 ; menu loop
 menu_loop:
-	; get a keycode
-	call fn_wait_key
-	
-	; wait key to be released
-	push af
-	push hl
-	call fn_wait_key_released
-	pop hl
-	pop af
-
-	cp VK_ESCAPE
+	ld hl,KEY_ESCAPE
+	call fn_inkey
+	CP 1
 	jp z,exit_program
 
-	cp VK_1
-	jr nz,not_menu1
+	ld hl,KEY_F1
+	call fn_inkey
+	CP 1
+	jp z,ml_menu1
 
+	ld hl,KEY_F2
+	call fn_inkey
+	CP 1
+	jp z,ml_menu2
+
+	ld hl,KEY_F3
+	call fn_inkey
+	CP 1
+	jp z,ml_menu3
+
+	ld hl,KEY_F4
+	call fn_inkey
+	CP 1
+	jp z,ml_menu4
+	
+	jp menu_loop
+
+ml_menu1:	
 	ld a,SPR44
 	ld d,SPR44_width
 	jr exit_menu_loop
-	
-not_menu1:
-	cp VK_2
-	jr nz,not_menu2
-	
+
+ml_menu2:	
 	ld a,SPR88
 	ld d,SPR88_width
 	jr exit_menu_loop
 
-not_menu2:
-	cp VK_3
-	jr nz,not_menu3
-	
+ml_menu3:
 	ld a,SPR1616
 	ld d,SPR1616_width
 	jr exit_menu_loop
 
-not_menu3:
-	cp VK_4
-	jr nz,menu_loop
-
+ml_menu4:
 	ld a,SPR3232
 	ld d,SPR3232_width
 
@@ -459,114 +399,102 @@ isv_fill_loop:
 ; draw the pixel with a border
 	call fn_draw_pixel_with_border
 
-	call fn_wait_key_released
-
 ; draw sprite loop	
 draw_sprite_loop:
-	; get a keycode
-	call fn_wait_key
+	ld hl,KEY_SPACE
+	call fn_inkey
+	cp 1
+	call z,dsl_set_pen
 
-	; if not keydown, loop
-	ld d,a
-	ld a,l
-	and 1
-	cp 0
-	ld a,d
-	jp z,draw_sprite_loop
-	
-	cp 0 ; keycode = 0 ? loop
-	jp z,draw_sprite_loop
-	
-	cp VK_SPACE ; on space key....
-	jp z,dsl_set_pen
+	ld hl,KEY_UP
+	call fn_inkey
+	cp 1
+	call z,dsl_up
 
-	cp VK_DELETE ; on delete key....
-	jp z,dsl_reset_pen
+	ld hl,KEY_DOWN
+	call fn_inkey
+	cp 1
+	call z,dsl_down
+
+	ld hl,KEY_LEFT
+	call fn_inkey
+	cp 1
+	call z,dsl_left
+
+	ld hl,KEY_RIGHT
+	call fn_inkey
+	cp 1
+	call z,dsl_right
 	
-	cp VK_UP ; on up arrow...
-	jp z,dsl_up
-	
-	cp VK_DOWN ; on down arrow...
-	jp z,dsl_down
-	
-	cp VK_LEFT ; on left arrow...
-	jp z,dsl_left
-	
-	cp VK_RIGHT ; on right arrow...
-	jp z,dsl_right
-	
-	cp VK_TAB ; on tab key...
+	ld hl,KEY_DELETE
+	call fn_inkey
+	cp 1
+	call z,dsl_reset_pen
+
+	ld hl,KEY_TAB
+	call fn_inkey
+	cp 1
 	jp z,dsl_palette_tool
 
-	cp VK_n ; on n key...
-	jp z,dsl_add_frame
+	ld hl,KEY_N
+	call fn_inkey
+	cp 1
+	call z,dsl_add_frame
 
-	cp VK_N ; on N key...
-	jp z,dsl_add_frame
+	ld hl,KEY_C
+	call fn_inkey
+	cp 1
+	call z,dsl_add_and_copy_frame
 
-	cp VK_c ; on c key...
-	jp z,dsl_add_and_copy_frame
-
-	cp VK_C ; on C key...
-	jp z,dsl_add_and_copy_frame
-
-	cp VK_BACKSPACE ; on backspace key...
-	jp z,dsl_delete_frame
+	ld hl,KEY_BACKSPACE
+	call fn_inkey
+	cp 1
+	call z,dsl_delete_frame
 	
-	cp VK_PGUP ; on pageup key...
-	jp z,dsl_next_frame
+	ld hl,KEY_PGUP
+	call fn_inkey
+	cp 1
+	call z,dsl_next_frame
 
-	cp VK_PGDOWN ; on pagedown key...
-	jp z,dsl_previous_frame
+	ld hl,KEY_PGDOWN
+	call fn_inkey
+	cp 1
+	call z,dsl_previous_frame
 
-	cp VK_l ; on l key...
-	jp z,dsl_load_sprite
+	ld hl,KEY_L
+	call fn_inkey
+	cp 1
+	call z,dsl_load_sprite
 
-	cp VK_L ; on L key...
-	jp z,dsl_load_sprite
+	ld hl,KEY_S
+	call fn_inkey
+	cp 1
+	call z,dsl_save_sprite
 
-	cp VK_s ; on s key...
-	jp z,dsl_save_sprite
+	ld hl,KEY_R
+	call fn_inkey
+	cp 1
+	call z,dsl_rotate_frame
 
-	cp VK_S ; on S key...
-	jp z,dsl_save_sprite
+	ld hl,KEY_F
+	call fn_inkey
+	cp 1
+	call z,dsl_flip_frame
 
-	cp VK_r ; on r key...
-	jp z,dsl_rotate_frame
+	ld hl,KEY_M
+	call fn_inkey
+	cp 1
+	call z,dsl_mirror_frame
 
-	cp VK_R ; on R key...
-	jp z,dsl_rotate_frame
-
-	cp VK_f ; on f key...
-	jp z,dsl_flip_frame
-
-	cp VK_F ; on F key...
-	jp z,dsl_flip_frame
-
-	cp VK_m ; on m key...
-	jp z,dsl_mirror_frame
-
-	cp VK_M ; on M key...
-	jp z,dsl_mirror_frame
-
-	cp VK_ESCAPE ; on escape key...
+	ld hl,KEY_ESCAPE
+	call fn_inkey
+	cp 1
 	jp z,exit_program
 
 	jp draw_sprite_loop
 
 ; set the pen of the current pixel
 dsl_set_pen:
-	call fn_get_pixel_color
-	ld hl,current_pen
-	cp (hl)
-	jp z,draw_sprite_loop
-	ld a,(hl)
-	call fn_set_pixel_color
-	call fn_draw_pixel_with_border
-	jp draw_sprite_loop
-
-; set the pen of the current pixel
-dsl_set_pen2:
 	call fn_get_pixel_color
 	ld hl,current_pen
 	cp (hl)
@@ -580,39 +508,29 @@ dsl_set_pen2:
 dsl_reset_pen:
 	call fn_get_pixel_color
 	cp 0
-	jp z,draw_sprite_loop
+	ret z
 	xor a
 	call fn_set_pixel_color
 	call fn_draw_pixel_with_border
-	jp draw_sprite_loop
+	ret
 
 ; move pixel up
 dsl_up:
 	ld hl,ypix
 	ld a,(hl)
 	cp 0
-	jp z,draw_sprite_loop
-	
-	; controlkey down ? draw
-	ld iy,keydata
-	ld a,(iy+2)
-	and 1
-	cp 1
-	call z,dsl_set_pen2
+	ret z
 
+	ld hl,KEY_SPACE
+	call fn_inkey
+	cp 1
+	call z,dsl_set_pen
+	
 	call fn_draw_pixel_without_border
 	call fn_move_up
 	call fn_draw_pixel_with_border
-
-	; controlkey down ? draw
-	ld iy,keydata
-	ld a,(iy+2)
-	and 1
-	cp 1
-	call z,dsl_set_pen2
-
 	call fn_slowdown
-	jp draw_sprite_loop
+	ret
 
 ; move pixel down
 dsl_down:
@@ -623,56 +541,36 @@ dsl_down:
 	ld hl,ypix
 	ld a,(hl)
 	cp d
-	jp z,draw_sprite_loop
+	ret z
 
-	; controlkey down ? draw
-	ld iy,keydata
-	ld a,(iy+2)
-	and 1
+	ld hl,KEY_SPACE
+	call fn_inkey
 	cp 1
-	call z,dsl_set_pen2
+	call z,dsl_set_pen
 
 	call fn_draw_pixel_without_border
 	call fn_move_down
 	call fn_draw_pixel_with_border
-
-	; controlkey down ? draw
-	ld iy,keydata
-	ld a,(iy+2)
-	and 1
-	cp 1
-	call z,dsl_set_pen2
-
 	call fn_slowdown
-	jp draw_sprite_loop
+	ret
 
 ; move pixel left
 dsl_left:
 	ld hl,xpix
 	ld a,(hl)
 	cp 0
-	jp z,draw_sprite_loop
+	ret z
 
-	; controlkey down ? draw
-	ld iy,keydata
-	ld a,(iy+2)
-	and 1
+	ld hl,KEY_SPACE
+	call fn_inkey
 	cp 1
-	call z,dsl_set_pen2
+	call z,dsl_set_pen
 
 	call fn_draw_pixel_without_border
 	call fn_move_left
 	call fn_draw_pixel_with_border
-
-	; controlkey down ? draw
-	ld iy,keydata
-	ld a,(iy+2)
-	and 1
-	cp 1
-	call z,dsl_set_pen2
-
 	call fn_slowdown
-	jp draw_sprite_loop
+	ret
 		
 ; move pixel right
 dsl_right:
@@ -683,56 +581,57 @@ dsl_right:
 	ld hl,xpix
 	ld a,(hl)
 	cp d
-	jp z,draw_sprite_loop
+	ret z
 
-	; controlkey down ? draw
-	ld iy,keydata
-	ld a,(iy+2)
-	and 1
+	ld hl,KEY_SPACE
+	call fn_inkey
 	cp 1
-	call z,dsl_set_pen2
+	call z,dsl_set_pen
 	
 	call fn_draw_pixel_without_border
 	call fn_move_right
 	call fn_draw_pixel_with_border
-
-	; controlkey down ? draw
-	ld iy,keydata
-	ld a,(iy+2)
-	and 1
-	cp 1
-	call z,dsl_set_pen2
-
 	call fn_slowdown
-	jp draw_sprite_loop
+	ret
 
 ; load a sprite
 dsl_load_sprite:
-	call fn_wait_key_released
+	ld hl,KEY_L
+	call fn_inkey
+	cp 0
+	jr nz,dsl_load_sprite
+
 	call fn_draw_pixel_without_border
 	call fn_load_sprite
 	call fn_refresh_sprite
 	call fn_draw_pixel_with_border
 	call fn_change_frame
-	jp draw_sprite_loop
+	ret
 
 ; save a sprite
 dsl_save_sprite:
-	call fn_wait_key_released
+	ld hl,KEY_S
+	call fn_inkey
+	cp 0
+	jr nz,dsl_save_sprite
+	
 	call fn_draw_pixel_without_border
 	call fn_save_sprite
 	call fn_refresh_sprite
-	jp draw_sprite_loop
+	ret
 
 ; add a frame to the animation
 dsl_add_frame:
-	call fn_wait_key_released
+	ld hl,KEY_N
+	call fn_inkey
+	cp 0
+	jr nz,dsl_add_frame
 	
 	; frames limit reached ? exit
 	ld hl,frames_count
 	ld a,(hl)
 	cp MAX_FRAMES
-	jp z,draw_sprite_loop
+	ret z
 	
 	; get the number of frames to copy
 	ld hl,frames_count
@@ -837,17 +736,20 @@ af_loop3:
 	call fn_change_frame
 	call fn_change_frames_count
 	call fn_refresh_sprite
-	jp draw_sprite_loop
+	ret
 
 ; add a copy of the current frame to the animation
 dsl_add_and_copy_frame: ; TODO! debug me!
-	call fn_wait_key_released
+	ld hl,KEY_C
+	call fn_inkey
+	cp 0
+	jr nz,dsl_add_and_copy_frame
 	
 	; frames limit reached ? exit
 	ld hl,frames_count
 	ld a,(hl)
 	cp MAX_FRAMES
-	jp z,draw_sprite_loop
+	ret z
 	
 	; get the number of frames to copy
 	ld hl,frames_count
@@ -909,11 +811,14 @@ aacf_loop_end2:
 	call fn_change_frame
 	call fn_change_frames_count
 	call fn_refresh_sprite
-	jp draw_sprite_loop
+	ret
 
 ; delete last frame from animation
 dsl_delete_frame:
-	call fn_wait_key_released
+	ld hl,KEY_BACKSPACE
+	call fn_inkey
+	cp 0
+	jr nz,dsl_delete_frame
 	
 	; delete current selected frame
 	ld hl,spr_size
@@ -1037,7 +942,7 @@ df_loop5:
 	call fn_change_frame
 	call fn_change_frames_count
 	call fn_refresh_sprite
-	jp draw_sprite_loop
+	ret
 
 df_exit:
 	ld hl,frames_count
@@ -1052,48 +957,62 @@ df_exit_end:
 	call fn_change_frame
 	call fn_change_frames_count
 	call fn_refresh_sprite
-	jp draw_sprite_loop
+	ret
 
 ; goto previous frame
 dsl_previous_frame:
-	call fn_wait_key_released
+	ld hl,KEY_PGDOWN
+	call fn_inkey
+	cp 0
+	jr nz,dsl_previous_frame
+
 	ld hl,current_frame
 	ld a,(hl)
 	cp 0
-	jp z,draw_sprite_loop
+	ret z
 	
 	dec a
 	ld (hl),a
 	call fn_change_frame
 	call fn_refresh_sprite
-	jp draw_sprite_loop
+	ret
 
 ; goto next frame
 dsl_next_frame:
-	call fn_wait_key_released
+	ld hl,KEY_PGUP
+	call fn_inkey
+	cp 0
+	jr nz,dsl_next_frame
+
 	ld hl,current_frame
 	ld a,(hl)
 	inc a
 	ld hl,frames_count
 	cp (hl)
-	jp z,draw_sprite_loop
+	ret z
 
 	ld hl,current_frame
 	ld (hl),a
 	call fn_change_frame
 	call fn_refresh_sprite
-	jp draw_sprite_loop
+	ret
 
 ; rotate a frame 90° clockwise
 dsl_rotate_frame:
-	call fn_wait_key_released
+	ld hl,KEY_R
+	call fn_inkey
+	cp 0
+	jr nz,dsl_rotate_frame
 
 	call fn_refresh_sprite
-	jp draw_sprite_loop
+	ret
 
 ; flip frame horizontally
 dsl_flip_frame:
-	call fn_wait_key_released
+	ld hl,KEY_F
+	call fn_inkey
+	cp 0
+	jr nz,dsl_flip_frame
 
 	ld hl,spr_size
 	ld de,$000000
@@ -1151,18 +1070,24 @@ ff_loop3:
 	djnz ff_loop2
 
 	call fn_refresh_sprite
-	jp draw_sprite_loop
+	ret
 
 ; mirror frame vertically
 dsl_mirror_frame:
-	call fn_wait_key_released
-
+	ld hl,KEY_M
+	call fn_inkey
+	cp 0
+	jr nz,dsl_mirror_frame
+	
 	call fn_refresh_sprite
-	jp draw_sprite_loop
+	ret
 
 ; change current tool to palette
 dsl_palette_tool:
-	call fn_wait_key_released
+	ld hl,KEY_TAB
+	call fn_inkey
+	cp 0
+	jr nz,dsl_palette_tool
 
 	; hide sprite drawing cursor
 	call fn_draw_pixel_without_border
@@ -1174,48 +1099,44 @@ dsl_palette_tool:
 	
 ; select palette color	
 dsl_palette_tool_loop:
-	; get a char
-	call fn_wait_key
-
-	; if not keydown, loop
-	ld d,a
-	ld a,l
-	and 1
-	cp 0
-	ld a,d
-	jp z,dsl_palette_tool_loop
+	ld hl,KEY_LEFT
+	call fn_inkey
+	cp 1
+	call z,dsl_dec_pen
 	
-	cp 0 ; keycode = 0 ? loop
-	jp z,dsl_palette_tool_loop
+	ld hl,KEY_RIGHT
+	call fn_inkey
+	cp 1
+	call z,dsl_inc_pen
 	
-	cp VK_LEFT ; on left key...
-	jp z,dsl_dec_pen
-	
-	cp VK_RIGHT ; on right key...
-	jp z,dsl_inc_pen
-
-	cp VK_TAB ; on tab key...
+	ld hl,KEY_TAB
+	call fn_inkey
+	cp 1
 	jp z,dsl_draw_sprite_tool
 	
-	cp VK_l ; on l key...
-	jp z,dslp_load_sprite
+	ld hl,KEY_L
+	call fn_inkey
+	cp 1
+	call z,dslp_load_sprite
+	
+	ld hl,KEY_S
+	call fn_inkey
+	cp 1
+	call z,dslp_save_sprite
 
-	cp VK_L ; on L key...
-	jp z,dslp_load_sprite
-
-	cp VK_s ; on s key...
-	jp z,dslp_save_sprite
-
-	cp VK_S ; on S key...
-	jp z,dslp_save_sprite
-
-	cp VK_ESCAPE ; on escape key...
+	ld hl,KEY_ESCAPE
+	call fn_inkey
+	cp 1
 	jp z,exit_program
 	
 	jp dsl_palette_tool_loop
 
 dslp_load_sprite:
-	call fn_wait_key_released
+	ld hl,KEY_L
+	call fn_inkey
+	cp 0
+	jr nz,dslp_load_sprite
+
 	ld hl,current_pen
 	ld c,(hl)
 	call fn_draw_palette_without_border
@@ -1228,7 +1149,11 @@ dslp_load_sprite:
 	jp dsl_palette_tool_loop
 	
 dslp_save_sprite:
-	call fn_wait_key_released
+	ld hl,KEY_S
+	call fn_inkey
+	cp 0
+	jr nz,dslp_save_sprite
+
 	ld hl,current_pen
 	ld c,(hl)
 	call fn_draw_palette_without_border
@@ -1239,7 +1164,10 @@ dslp_save_sprite:
 	jp dsl_palette_tool_loop
 
 dsl_draw_sprite_tool:
-	call fn_wait_key_released
+	ld hl,KEY_TAB
+	call fn_inkey
+	cp 0
+	jr nz,dsl_draw_sprite_tool
 
 	; unselect palette color
 	ld hl,current_pen
@@ -1749,34 +1677,6 @@ fn_draw_palette_without_border:
 	
 	ret
 
-; return the keyascii of the key pressed
-; returns:
-; A: keycode
-; L: keydown
-; h: keymods
-fn_wait_key:
-	moscall mos_sysvars
-	
-	ld iy,keydata
-	ld a,(ix+sysvar_vkeydown)
-	ld (iy+1),a
-	ld l,a
-	ld a,(ix+sysvar_keymods)
-	ld (iy+2),a
-	ld h,a
-	ld a,(ix+sysvar_vkeycode)
-	ld (iy+0),a
-	ret
-
-; wait a key to be released
-fn_wait_key_released:
-	moscall mos_sysvars
-	
-	ld a,(ix+sysvar_vkeydown)
-	cp 0
-	jr nz,fn_wait_key_released
-	ret
-
 ; get an ascii key value
 fn_input_key:
 	push bc
@@ -2258,7 +2158,6 @@ ss_file_error:
 ; print 'file error'
 fn_print_file_error:
 	vdu 7	
-	call fn_wait_key_released
 	
 	; locate x,y
 	vdu 31
@@ -2289,7 +2188,6 @@ fn_print_file_error:
 ; print 'folder error'
 fn_print_folder_error:
 	vdu 7	
-	call fn_wait_key_released
 	
 	; locate x,y
 	vdu 31
@@ -2480,6 +2378,41 @@ ssd_32x32:
 	rst.lis $18
 
 	ret
+
+; input: HL = negative key to check
+fn_inkey:
+	moscall mos_getkbmap
+	INC	HL
+	LD	A, L
+	NEG
+	LD	C, A
+	LD	A, 1
+	JP	M,i_false ; < -128 ?
+
+	LD	HL,BITLOOKUP
+	LD	DE,0
+	LD	A,C
+	AND	00000111b
+	LD	E,A
+	ADD	HL,DE
+	LD	B,(HL)
+
+	LD	A,C
+	AND	01111000b
+	RRCA
+	RRCA
+	RRCA
+	LD	E, A
+	ADD	IX,DE
+	LD	A,(IX+0)
+	AND	B
+	JR Z,i_false
+	LD A,1
+	RET
+i_false:
+	XOR A
+	RET
+
 ;======================================================================
 
 ; coordinates for rectangles
@@ -2525,13 +2458,13 @@ title:
 	db "SPR-EDIT",0
 
 menu1:
-	db "1) 4x4 Sprite",0
+	db "F1. 4x4 Sprite",0
 menu2:
-	db "2) 8x8 Sprite",0
+	db "F2. 8x8 Sprite",0
 menu3:
-	db "3) 16x16 Sprite",0
+	db "F3. 16x16 Sprite",0
 menu4:
-	db "4) 32x32 Sprite",0
+	db "F4. 32x32 Sprite",0
 
 ; descriptions of sprites
 spr_descr:

@@ -172,20 +172,21 @@ vdp_pflag_audio:	EQU	00001000b
 vdp_pflag_mode:		EQU	00010000b
 vdp_pflag_rtc:		EQU	00100000b
 
-;======================================================================
+;
+; Macro for calling the API
+; Parameters:
+; - function: One of the function numbers listed above
+;
+	MACRO moscall function
+		LD	A, function
+		RST.LIS	08h
+	ENDMACRO
 
-	macro moscall arg1
-		ld a,arg1
-		rst.lis $08
-    endmacro
+	MACRO vdu function
+		LD	A, function
+		RST.LIS	10h
+	ENDMACRO
 
-	macro vdu arg1
-		ld a,arg1
-		rst.lis $10
-    endmacro
-
-	macro vdu_a
-		rst.lis $10
-    endmacro
-
-;======================================================================
+	MACRO vdu_a
+		RST.LIS	10h
+	ENDMACRO
