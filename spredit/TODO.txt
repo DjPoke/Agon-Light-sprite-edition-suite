@@ -3,4 +3,3 @@ TODO:
 * Add r/R key to rotate frame
 * Add m/M key to mirror vertically a frame
 * Add Return key to fill an area with the current color
-* Add e/E to export assembly data file

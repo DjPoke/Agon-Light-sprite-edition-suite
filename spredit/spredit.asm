@@ -65,6 +65,7 @@ KEY_PGUP: equ -64
 KEY_PGDOWN: equ -79
 KEY_L: equ -87
 KEY_S: equ -82
+KEY_E: equ -35
 KEY_R: equ -52
 KEY_F: equ -68
 KEY_M: equ -102
@@ -471,6 +472,11 @@ draw_sprite_loop:
 	cp 1
 	call z,dsl_save_sprite
 
+	ld hl,KEY_E
+	call fn_inkey
+	cp 1
+	call z,dsl_export_sprite
+
 	ld hl,KEY_R
 	call fn_inkey
 	cp 1
@@ -619,6 +625,18 @@ dsl_save_sprite:
 	call fn_save_sprite
 	call fn_refresh_sprite
 	ret
+
+dsl_export_sprite:
+	ld hl,KEY_E
+	call fn_inkey
+	cp 0
+	jr nz,dsl_export_sprite
+	
+	call fn_draw_pixel_without_border
+	call fn_export_sprite
+	call fn_refresh_sprite
+	ret
+	
 
 ; add a frame to the animation
 dsl_add_frame:
@@ -1834,7 +1852,7 @@ it8l_return:
 
 	ret
 
-; load a sprite, giving its name (must be on spredit folder)
+; load a sprite, giving its name
 fn_load_sprite:
 	; clear filename
 	ld hl,filename
@@ -1850,7 +1868,7 @@ ls_clear_filename:
 	call fn_input_text8
 	
 	; set path to home
-	ld hl,home_path
+	ld hl,sprite_path
 	moscall mos_cd
 
 	; exit on error
@@ -1984,6 +2002,15 @@ ls_close_error:
 
 	; close the file
 	moscall mos_fclose
+		
+	; set path to home
+	ld hl,back_path
+	moscall mos_cd
+
+	; exit on error
+	cp 0
+	jp nz,ls_folder_error
+
 	
 	; reset current frame and coordinates of the drawing pixel
 	ld hl,xpix
@@ -2001,6 +2028,14 @@ ls_folder_error:
 ls_close:
 	; close the file
 	moscall mos_fclose
+	
+	; set path to home
+	ld hl,back_path
+	moscall mos_cd
+
+	; exit on error
+	cp 0
+	jp nz,ls_folder_error
 
 	; reset current frame and coordinates of the drawing pixel
 	ld hl,xpix
@@ -2016,9 +2051,18 @@ ls_exit:
 
 ls_file_error:
 	call fn_print_file_error
+
+	; set path to home
+	ld hl,back_path
+	moscall mos_cd
+
+	; exit on error
+	cp 0
+	jp nz,ls_folder_error
+
 	ret
 
-; save a sprite, giving its name (must be on spredit folder)
+; save a sprite, giving its name
 fn_save_sprite:
 	; clear filename
 	ld hl,filename
@@ -2033,9 +2077,22 @@ ss_clear_filename:
 	; get filename
 	call fn_input_text8
 
-	; set path to home
-	ld hl,home_path
+	; set path to sprite path
+	ld hl,sprite_path
 	moscall mos_cd
+
+	; create it on error
+	cp 0
+	push af
+	call nz,fn_create_sprite_folder
+	pop af
+	jr z,ss_next
+
+	; set path to sprite path
+	ld hl,sprite_path
+	moscall mos_cd
+
+ss_next:
 
 	; exit on error
 	cp 0
@@ -2043,7 +2100,7 @@ ss_clear_filename:
 	
 	; open the file for write
 	ld hl,filename
-	ld c,fa_create_new|fa_write
+	ld c,fa_create_always|fa_write
 	moscall mos_fopen
 		
 	; exit on error
@@ -2113,6 +2170,14 @@ ss_close_error:
 
 	; close the file
 	moscall mos_fclose
+		
+	; set path to home
+	ld hl,back_path
+	moscall mos_cd
+
+	; exit on error
+	cp 0
+	jp nz,ss_folder_error
 	
 	; reset current frame and coordinates of the drawing pixel
 	ld hl,frames_count
@@ -2135,6 +2200,14 @@ ss_folder_error:
 ss_close:
 	; close the file
 	moscall mos_fclose
+	
+	; set path to home
+	ld hl,back_path
+	moscall mos_cd
+
+	; exit on error
+	cp 0
+	jp nz,ss_folder_error
 
 	; reset current frame and coordinates of the drawing pixel
 	ld hl,frames_count
@@ -2153,6 +2226,227 @@ ss_exit:
 
 ss_file_error:
 	call fn_print_file_error
+		
+	; set path to home
+	ld hl,back_path
+	moscall mos_cd
+
+	; exit on error
+	cp 0
+	jp nz,ss_folder_error
+	ret
+
+; export sprite data in assembly language, giving its name
+fn_export_sprite:
+	; clear filename
+	ld hl,filename
+	ld b,12
+	xor a
+
+es_clear_filename:
+	ld (hl),a
+	inc hl
+	djnz es_clear_filename
+
+	; get filename
+	call fn_input_text8
+
+	; set path to sprite path
+	ld hl,sprite_path
+	moscall mos_cd
+
+	; create it on error
+	cp 0
+	push af
+	call nz,fn_create_sprite_folder
+	pop af
+	jr z,es_next
+
+	; set path to sprite path
+	ld hl,sprite_path
+	moscall mos_cd
+
+	; exit on error
+	cp 0
+	jp nz,es_folder_error
+
+es_next:
+	; open the file for write
+	ld hl,filename
+	ld c,fa_create_always|fa_write
+	moscall mos_fopen
+		
+	; exit on error
+	cp 0
+	jp z,es_file_error
+
+	; filehandle -> C
+	ld c,a
+
+
+	; L = first frame
+	ld a,0
+	ld hl,sprite_buffer
+	ld de,$000000
+		
+es_frames_repeat:
+	push af
+	push hl
+	
+	push af
+
+	; start to write...
+	ld e,0 ; rows
+
+	ld b,';'
+	moscall mos_fputc
+
+	ld b,' '
+	moscall mos_fputc
+
+	ld b,'F'
+	moscall mos_fputc
+
+	ld b,'r'
+	moscall mos_fputc
+
+	ld b,'m'
+	moscall mos_fputc
+
+	ld b,' '
+	moscall mos_fputc
+
+	pop af
+	add a,'0'
+	ld b,a
+	moscall mos_fputc
+
+	ld b,13
+	moscall mos_fputc
+
+	ld b,10
+	moscall mos_fputc
+
+es_repeat:
+
+	ld b,'D'
+	moscall mos_fputc
+
+	ld b,'B'
+	moscall mos_fputc
+
+	ld b,' '
+	moscall mos_fputc
+
+	ld d,0 ; columns
+
+es_repeat_line:
+	push de
+	
+	ld a,(hl)
+	inc hl
+	
+	; convert A to BCD
+	call fn_hex2bcd
+	
+	; write two numbers (chars)
+	ld e,a
+	and $f0
+	rrca
+	rrca
+	rrca
+	rrca
+	add '0'
+	
+	ld b,a
+	moscall mos_fputc
+	
+	ld a,e
+	and $0f
+	add '0'
+	
+	ld b,a
+	moscall mos_fputc
+
+	pop de
+	inc d
+	ld a,(spr_size)
+	cp d
+	push af
+	call nz,fn_comma
+	pop af
+	jp nz,es_repeat_line
+	
+	ld b,13 ; CR
+	moscall mos_fputc
+
+	ld b,10 ; LF
+	moscall mos_fputc
+
+	inc e
+	ld a,(spr_size)
+	cp e
+	jp nz,es_repeat
+
+	ld b,13 ; CR
+	moscall mos_fputc
+
+	ld b,10 ; LF
+	moscall mos_fputc
+
+	pop hl
+	push de
+	mlt de
+	add hl,de
+	pop de
+	pop af
+	inc a
+	ld ix,frames_count
+	cp (ix+0)
+	jp nz,es_frames_repeat
+
+	; close the file
+	moscall mos_fclose
+		
+	; set path to home
+	ld hl,back_path
+	moscall mos_cd
+
+	; exit on error
+	cp 0
+	jp nz,es_folder_error
+	
+	; reset current frame and coordinates of the drawing pixel
+	ld hl,frames_count
+	ld a,(hl)
+	dec a
+	ld hl,current_frame
+	ld (hl),a
+	ld hl,xpix
+	xor a
+	ld (hl),a
+	ld hl,ypix
+	ld (hl),a
+	jr es_exit
+
+es_folder_error:
+	; write error
+	call fn_print_folder_error
+	jp es_exit
+	
+es_exit:
+	ret
+
+es_file_error:
+	call fn_print_file_error
+		
+	; set path to home
+	ld hl,back_path
+	moscall mos_cd
+
+	; exit on error
+	cp 0
+	jp nz,es_folder_error
 	ret
 
 ; print 'file error'
@@ -2413,6 +2707,33 @@ i_false:
 	XOR A
 	RET
 
+fn_create_sprite_folder:
+	ld hl,sprite_path
+	moscall mos_mkdir
+	ret
+
+fn_comma:
+	ld b,','
+	moscall mos_fputc
+	ret
+	
+; Hex to BCD
+; converts a hex number (eg. $10) to its BCD representation (eg. $16).
+; Input: a = hex number
+; Output: a = BCD number
+; Clobbers: b,c
+fn_hex2bcd:
+		push bc
+		ld c,a  ; Original (hex) number
+		ld b,8  ; How many bits
+		xor a   ; Output (BCD) number, starts at 0
+htb:	sla c   ; shift c into carry
+		adc a,a
+		daa     ; Decimal adjust a, so shift = BCD x2 plus carry
+		djnz htb  ; Repeat for 8 bits
+		pop bc
+		ret
+
 ;======================================================================
 
 ; coordinates for rectangles
@@ -2485,9 +2806,12 @@ filename_label:
 ; filename without extension
 filename:
 	ds 13,0
-	
-home_path:
-	db "/home",0
+
+sprite_path:
+	db "sprites",0
+
+back_path:
+	db "..",0
 
 ; single space char to print
 spacechar:
@@ -2530,6 +2854,12 @@ keydata:
 ; buffer for the current sprite
 sprite_buffer:
 	ds BUFFER_SIZE,0
+
+asm_line:
+	DB "DB "
+	
+asm_line_length:
+	DB 3
 
 rgb_palette:
 	db $00,$00,$00
