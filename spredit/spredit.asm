@@ -1054,15 +1054,14 @@ ff_noloop1:
 	ld de,$000000
 	ld e,c ; DE = sprite width
 	ld a,c ; A = sprite width
-	rrca
-	and 127 ; A = sprite width / 2
+	srl a ; A = sprite height / 2
 
 	push hl
 	pop ix ; IX = frame address
 	add hl,de ; HL = frame address + sprite width - 1
 	dec hl
 	push hl
-	pop iy ; IY = YX + sprite width - 1
+	pop iy ; IY = IX + sprite width - 1
 	
 ff_loop2:
 	push af
@@ -1096,6 +1095,76 @@ dsl_mirror_frame:
 	call fn_inkey
 	cp 0
 	jr nz,dsl_mirror_frame
+
+	ld hl,spr_size
+	ld bc,$000000
+	ld de,$000000
+	ld e,(hl)
+	ld d,(hl)
+	ld c,e
+	mlt de ; DE = sprite length in bytes
+	ld hl,current_frame
+	ld a,(hl) ; A = current frame
+	ld hl,sprite_buffer
+	cp 0
+	jr z,mf_noloop1
+	ld b,a
+	
+mf_loop1:
+	add hl,de ; HL = sprite_buffer + (current frame * sprsize²)
+	djnz mf_loop1
+	
+mf_noloop1:
+	ld de,$000000
+	ld e,c ; E = sprite height
+	ld a,c ; A = sprite width
+	ld b,c ; B = sprite height
+	srl b ; divide B by 2, so B = sprite height / 2
+	
+	push hl
+	pop ix ; IX = frame address
+	ld d,c
+	dec d
+	mlt de ; DE = sprite length - sprite width
+	add hl,de ; HL = frame address + sprite length - sprite width
+	push hl
+	pop iy ; IY = IX + sprite length - sprite width
+	ld hl,$000000
+	ld l,c ; HL = sprite width
+	
+mf_loop2:
+	push af
+	push de
+	push ix
+	push iy
+mf_loop3:
+	ld e,(ix+0)
+	ld d,(iy+0)
+	ld (ix+0),d
+	ld (iy+0),e
+	inc ix
+	inc iy
+	dec a
+	cp 0
+	jr nz,mf_loop3
+	pop iy
+	pop ix
+	pop de
+	pop af
+	ex de,hl
+	add ix,de
+	ex de,hl
+	push hl
+	push iy
+	pop hl
+	pop de
+	or a
+	sbc hl,de
+	push hl
+	push de
+	pop hl
+	pop iy
+	djnz mf_loop2
 	
 	call fn_refresh_sprite
 	ret
