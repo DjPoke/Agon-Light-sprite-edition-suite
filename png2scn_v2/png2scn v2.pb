@@ -163,15 +163,7 @@ Procedure ConvertPNG2(f.s)
       b = Blue(c)
       a = Alpha(c)
       
-      o.l = 0
-      
-      For i.l = 0 To 63
-        If pal(i) = RGB(r, g, b)
-          o = i
-          
-          Break
-        EndIf
-      Next
+      o.l = (r >> 6) + ((g >> 6) * 4) + ((b >> 6) * 16) + ((a >> 6) * 64)
       
       WriteByte(1, o)
     Next
@@ -317,8 +309,8 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.03 LTS (Windows - x64)
-; CursorPosition = 167
-; FirstLine = 154
+; CursorPosition = 165
+; FirstLine = 151
 ; Folding = -
 ; EnableXP
 ; UseIcon = png2scn.ico
