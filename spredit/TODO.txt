@@ -1,3 +1,3 @@
 TODO:
 =====
-* Add r/R key to rotate frame
+* Add the possibility to choose sprite width & height (min: 1*1, max:32*32)

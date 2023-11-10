@@ -29,6 +29,7 @@ Now, you are in 'edit sprite mode'. This is the keys you can use :
 * E:					export a sprite as assembler data
 * F:					flip frame horizontally
 * M:					mirror frame vertically
+* R:					rotate frame clockwise
 * Return:				Floor Fill (must be inside borders of the same color)
 
 While in palette mode, this is the keys you can use :

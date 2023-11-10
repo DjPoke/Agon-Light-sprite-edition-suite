@@ -1028,6 +1028,134 @@ dsl_rotate_frame:
 	cp 0
 	jr nz,dsl_rotate_frame
 
+	; find HL as start of the first frame (buffer)
+	ld hl,spr_size
+	ld bc,$000000
+	ld de,$000000
+	ld e,(hl)
+	ld d,(hl)
+	ld c,e
+	mlt de ; DE = sprite length in bytes
+	ld hl,current_frame
+	ld a,(hl) ; A = current frame
+	ld hl,sprite_buffer
+	cp 0
+	jr z,rf_noloop1
+	ld b,a
+	
+rf_loop1:
+	add hl,de ; HL = sprite_buffer + (current frame * sprsize²)
+	djnz rf_loop1
+	
+rf_noloop1:
+	push bc
+	push hl
+	
+	; copy current frame to swap sprite buffer
+	ld de,swap_sprite_buffer
+	ld b,c
+	mlt bc
+	ldir
+
+	pop iy ; IY: destination
+	pop bc
+	
+	ld a,c
+	ld bc,$000000
+	ld c,a ; BC = sprite size
+
+	; turn and copy swap sprite buffer frame to sprite buffer
+	ld ix,swap_sprite_buffer ; IX: source
+	ld de,0 ; x
+	ld hl,0 ; y
+
+rf_loop2:
+	push ix
+	push iy
+	
+	push de
+	push hl
+
+	; add x
+	add ix,de
+
+	; add y * width
+	ld a,h
+	or l
+	cp 0
+	jr z,rf_done1
+rf_loop3:
+	add ix,bc
+	dec hl
+	ld a,h
+	or l
+	cp 0
+	jr nz,rf_loop3
+
+rf_done1:
+	; found the pixel value
+	ld a,(ix+0)
+	
+	pop hl
+	pop de
+	push de
+	push hl
+	
+	; add y
+	ex de,hl
+	add iy,bc
+	or a
+	push hl
+	push iy
+	pop hl
+	sbc hl,de
+	push hl
+	pop iy
+	dec iy
+	pop hl
+	ex de,hl
+
+	; add x * width
+	push af
+	ld a,d
+	or e
+	cp 0
+	jr z,rf_done2
+rf_loop5:
+	add iy,bc
+	dec de
+	ld a,d
+	or e
+	cp 0
+	jr nz,rf_loop5
+
+rf_done2:
+	pop af
+
+	; store the pixel value
+	ld (iy+0),a
+	
+	pop hl
+	pop de
+	
+	pop iy
+	pop ix
+	
+	inc de
+	ex de,hl
+	or a
+	sbc hl,bc
+	add hl,bc
+	ex de,hl
+	jp c,rf_loop2
+
+	ld de,0
+	inc hl
+	or a
+	sbc hl,bc
+	add hl,bc
+	jp c,rf_loop2
+	
 	call fn_refresh_sprite
 	ret
 
@@ -3027,6 +3155,10 @@ keydata:
 ; buffer for the current sprite
 sprite_buffer:
 	ds BUFFER_SIZE,0
+
+; buffer to perform some operations
+swap_sprite_buffer:
+	ds ONE_FRAME_BUFFER_SIZE,0
 
 asm_line:
 	DB "DB "
