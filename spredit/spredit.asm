@@ -74,6 +74,7 @@ KEY_F1: equ -114
 KEY_F2: equ -115
 KEY_F3: equ -116
 KEY_F4: equ -21
+KEY_RETURN: equ -74
 
 BITLOOKUP:
 	DB 01h,02h,04h,08h
@@ -491,6 +492,11 @@ draw_sprite_loop:
 	call fn_inkey
 	cp 1
 	call z,dsl_mirror_frame
+
+	ld hl,KEY_RETURN
+	call fn_inkey
+	cp 1
+	call z,dsl_flood_fill
 
 	ld hl,KEY_ESCAPE
 	call fn_inkey
@@ -1167,6 +1173,98 @@ mf_loop3:
 	djnz mf_loop2
 	
 	call fn_refresh_sprite
+	ret
+
+dsl_flood_fill:
+	ld hl,KEY_RETURN
+	call fn_inkey
+	cp 0
+	jr nz,dsl_flood_fill
+	
+	; hide the cursor
+	call fn_draw_pixel_without_border
+
+	; memorize pixel coordinates
+	ld a,(xpix)
+	ld (memxpix),a
+	ld a,(ypix)
+	ld (memypix),a
+
+	; fill all recursively
+	ld a,(xpix)
+	ld e,a
+	ld a,(ypix)
+	ld d,a
+	call dsl_flood_fill_loop
+
+	; refresh all the sprite
+	call fn_refresh_sprite
+
+	; hide the cursor again
+	call fn_draw_pixel_without_border
+	
+	; restore pixel coordinates
+	; and cursor
+	ld a,(memxpix)
+	ld (xpix),a
+	ld a,(memypix)
+	ld (ypix),a
+	call fn_draw_pixel_with_border
+	ret
+
+dsl_flood_fill_loop:
+	push de
+	
+	ld ix,spr_size
+	
+	; out  of the sprite area ?
+	ld a,e
+	cp (ix+0)
+	jp nc,ffl_exit
+
+	; out  of the sprite area ?
+	ld a,d
+	cp (ix+0)
+	jp nc,ffl_exit
+	
+	; replace current pixel, if it is
+	; inside the sprite area,
+	; and has not the select palette color
+	ld a,e
+	ld (xpix),a
+	ld a,d
+	ld (ypix),a
+	call fn_get_pixel_color
+	ld hl,current_pen
+	cp (hl)
+	jp z,ffl_exit
+	ld a,(hl)
+	call fn_set_pixel_color
+
+	; restore coordinates
+	ld a,(xpix)
+	ld e,a
+	ld a,(ypix)
+	ld d,a
+	
+	; draw pixel at right
+	inc e
+	call dsl_flood_fill_loop
+	dec e
+	; draw pixel at left
+	dec e
+	call dsl_flood_fill_loop
+	inc e
+	; draw pixel up
+	inc d
+	call dsl_flood_fill_loop
+	dec d
+	; draw pixel down
+	dec d
+	call dsl_flood_fill_loop
+
+ffl_exit:
+	pop de
 	ret
 
 ; change current tool to palette
@@ -2829,6 +2927,12 @@ ys2:
 xpix:
 	db 0
 ypix:
+	db 0
+
+; memorized coordinates of active pixels to draw
+memxpix:
+	db 0
+memypix:
 	db 0
 
 ; width of a pixel in the sprite
