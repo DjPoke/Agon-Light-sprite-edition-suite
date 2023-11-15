@@ -92,7 +92,7 @@ start:
 	vdu 22
 	vdu 8
 	
-	; set logical coordinates system
+	; disable logical scale coordinates system
 	vdu 23
 	vdu 0
 	vdu $c0
