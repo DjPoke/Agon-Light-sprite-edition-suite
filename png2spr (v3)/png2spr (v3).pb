@@ -1,7 +1,7 @@
-﻿; png2scn For AgonLight
+﻿; png2spr (v3) for AgonLight
 ;
 ; by B.Vignoli
-; M.I.T 2023
+; MIT 2023-2024
 ;
 
 ; decoders
@@ -14,12 +14,12 @@ Declare ConvertPNG(f.s)
 Global Dim pal.l(63)
 
 ; create the window
-If OpenWindow(0, 0, 0, 300, 100, "png2scn - Convert png to screens !",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
+If OpenWindow(0, 0, 0, 300, 100, "png2spr v2 - Convert png to sprites !",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
   ; create the menu
   If CreateMenu(0, WindowID(0))
     MenuTitle("File")
     MenuItem(1, "&Open PNG" + Chr(9) + "Ctrl+O")
-    MenuItem(2, "&Save SCN" + Chr(9) + "Ctrl+S")
+    MenuItem(2, "&Save SPR" + Chr(9) + "Ctrl+S")
   EndIf
   
   ; initialization
@@ -50,11 +50,11 @@ If OpenWindow(0, 0, 0, 300, 100, "png2scn - Convert png to screens !",#PB_Window
           Case 2
             ; convert the image and save it
             If IsImage(1)
-              file$ = SaveFileRequester("Choose where to save the screen file", "", "SCN File|*.scn", 0)
+              file$ = SaveFileRequester("Choose where to save the sprite file", "", "SPR File|*.spr", 0)
               
               If file$ <> ""
-                If LCase(GetExtensionPart(file$)) <> "scn"
-                  file$ = file$ + ".scn"
+                If LCase(GetExtensionPart(file$)) <> "spr"
+                  file$ = file$ + ".spr"
                 EndIf
                 
                 ConvertPNG(file$)
@@ -78,20 +78,41 @@ End
 
 
 ; procedures
-Procedure ConvertPNG(f.s)  
-  ; create screen file
+Procedure ConvertPNG(f.s)
+  ; request sprite width & height
+  spr_width.l = Val(InputRequester("Sprite width", "Please input the sprite width:", "16"))
+  spr_height.l = Val(InputRequester("Sprite height", "Please input the sprite height:", "16"))
+  
+  ; wrong value ?
+  If spr_width < 1 Or spr_height < 1
+    MessageRequester("Error", "Wrong sprite size !", #PB_MessageRequester_Error)
+    End  
+  EndIf
+  
+  spr_sizex.l = ImageWidth(1) / spr_width
+  spr_sizey.l = ImageHeight(1) / spr_height
+  
+  If spr_width * spr_sizex <> ImageWidth(1) Or spr_height * spr_sizey <> ImageHeight(1)
+    MessageRequester("Error", "Wrong PNG size !", #PB_MessageRequester_Error)
+    End  
+  EndIf
+  
+  ; create spr file
   CreateFile(1, f)
-  WriteByte(1, 64)
-  WriteByte(1, ImageWidth(1) & $ff)
-  WriteByte(1, (ImageWidth(1) & $ff00) >> 8)
-  WriteByte(1, ImageHeight(1) & $ff)
-  WriteByte(1, (ImageHeight(1) & $ff00) >> 8)
+  WriteWord(1, spr_width * spr_height)
+  WriteByte(1, spr_sizex)
+  WriteByte(1, spr_sizey)
   
   ; get colors
   StartDrawing(ImageOutput(1))
   DrawingMode(#PB_2DDrawing_AllChannels)
-      For yc.l = 0 To ImageHeight(1) - 1
-        For xc.l = 0 To ImageWidth(1) - 1
+  For yt = 0 To spr_sizey - 1
+    For xt = 0 To spr_sizex - 1
+      For y = 0 To spr_height - 1
+        For x = 0 To spr_width - 1
+          xc.l = (xt * spr_width) + x
+          yc.l = (yt * spr_height) + y
+
           c1 = Point(xc, yc)
           r1 = Red(c1)
           g1 = Green(c1)
@@ -120,6 +141,8 @@ Procedure ConvertPNG(f.s)
           EndIf
         Next
       Next
+    Next
+  Next
   
   StopDrawing()
   CloseFile(1)
@@ -218,10 +241,8 @@ DataSection
 	Data.l $FF,$FF,$AA
 EndDataSection
 
-; IDE Options = PureBasic 6.03 LTS (Windows - x64)
-; CursorPosition = 87
-; FirstLine = 78
+; IDE Options = PureBasic 6.12 LTS (Windows - x64)
 ; Folding = -
 ; EnableXP
-; UseIcon = png2scn.ico
-; Executable = png2scn.exe
+; UseIcon = png2spr.ico
+; Executable = png2spr v2.exe

@@ -1,4 +1,4 @@
-﻿; png2scn For AgonLight
+﻿; png2scn (v3) for AgonLight
 ;
 ; by B.Vignoli
 ; MIT 2023-2024
@@ -309,8 +309,8 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 3
+; CursorPosition = 8
 ; Folding = -
 ; EnableXP
 ; UseIcon = png2scn.ico
-; Executable = png2scn v2.exe
+; Executable = png2scn (v3).exe
