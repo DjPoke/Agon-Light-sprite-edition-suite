@@ -1,7 +1,7 @@
 ﻿; png2spr For AgonLight
 ;
 ; by B.Vignoli
-; M.I.T 2023
+; MIT 2023-2024
 ;
 
 ; decoders
@@ -241,8 +241,8 @@ DataSection
 	Data.l $FF,$FF,$AA
 EndDataSection
 
-; IDE Options = PureBasic 6.03 LTS (Windows - x64)
-; CursorPosition = 16
+; IDE Options = PureBasic 6.12 LTS (Windows - x64)
+; CursorPosition = 4
 ; Folding = -
 ; EnableXP
 ; UseIcon = png2spr.ico
