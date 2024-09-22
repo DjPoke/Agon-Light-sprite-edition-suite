@@ -1,11 +1,8 @@
-﻿; png2spr (v3) for AgonLight
+﻿; png2spr (for AgonLight)
 ;
 ; by B.Vignoli
 ; MIT 2023-2024
 ;
-
-; decoders
-UsePNGImageDecoder()
 
 ; declarations
 Declare InitPalette()
@@ -14,11 +11,11 @@ Declare ConvertPNG(f.s)
 Global Dim pal.l(63)
 
 ; create the window
-If OpenWindow(0, 0, 0, 300, 100, "png2spr v2 - Convert png to sprites !",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
+If OpenWindow(0, 0, 0, 300, 100, "png2spr (v3)",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
   ; create the menu
   If CreateMenu(0, WindowID(0))
     MenuTitle("File")
-    MenuItem(1, "&Open PNG" + Chr(9) + "Ctrl+O")
+    MenuItem(1, "&Open BMP" + Chr(9) + "Ctrl+O")
     MenuItem(2, "&Save SPR" + Chr(9) + "Ctrl+S")
   EndIf
   
@@ -41,7 +38,7 @@ If OpenWindow(0, 0, 0, 300, 100, "png2spr v2 - Convert png to sprites !",#PB_Win
         Select em
           Case 1
             ; request for a file name
-            file$ = OpenFileRequester("Choose a png file to load", "", "PNG File|*.png", 0)
+            file$ = OpenFileRequester("Choose a png file to load", "", "BMP File|*.bmp", 0)
             
             ; open the png file
             If file$ <> ""
@@ -242,7 +239,8 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
+; CursorPosition = 13
 ; Folding = -
 ; EnableXP
-; UseIcon = png2spr.ico
-; Executable = png2spr v2.exe
+; UseIcon = icons\png2spr.ico
+; Executable = png2spr.exe

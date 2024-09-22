@@ -1,4 +1,4 @@
-﻿; png2scn (v3) for AgonLight
+﻿; png2scn (for AgonLight)
 ;
 ; by B.Vignoli
 ; MIT 2023-2024
@@ -16,14 +16,12 @@ Declare ConvertPNG1(f.s)
 Global Dim pal.l(63)
 
 ; create the window
-If OpenWindow(0, 0, 0, 300, 100, "png2scn - Convert png to screens !",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
+If OpenWindow(0, 0, 0, 300, 100, "png2scn (v3)",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
   ; create the menu
   If CreateMenu(0, WindowID(0))
     MenuTitle("File")
-    MenuItem(1, "&Open PNG" + Chr(9) + "Ctrl+O")
-    MenuItem(2, "&Save RGBA8888 SCN" + Chr(9) + "Ctrl+S")
-    MenuItem(3, "&Save RGBA2222 SCN" + Chr(9) + "Ctrl+S")
-    MenuItem(4, "&Save 1 Bit SCN" + Chr(9) + "Ctrl+S")
+    MenuItem(1, "&Open BMP" + Chr(9) + "Ctrl+O")
+    MenuItem(2, "&Save SCN" + Chr(9) + "Ctrl+S")
   EndIf
   
   ; initialization
@@ -45,7 +43,7 @@ If OpenWindow(0, 0, 0, 300, 100, "png2scn - Convert png to screens !",#PB_Window
         Select em
           Case 1
             ; request for a file name
-            file$ = OpenFileRequester("Choose a png file to load", "", "PNG File|*.png", 0)
+            file$ = OpenFileRequester("Choose a png file to load", "", "BMP File|*.BMP", 0)
             
             ; open the png file
             If file$ <> ""
@@ -62,36 +60,6 @@ If OpenWindow(0, 0, 0, 300, 100, "png2scn - Convert png to screens !",#PB_Window
                 EndIf
                 
                 ConvertPNG8(file$)
-                
-                MessageRequester("Info", "Ok !", #PB_MessageRequester_Info)
-              EndIf
-            EndIf
-          Case 3
-            ; convert the image and save it
-            If IsImage(1)
-              file$ = SaveFileRequester("Choose where to save the screen file", "", "SCN File|*.scn", 0)
-              
-              If file$ <> ""
-                If LCase(GetExtensionPart(file$)) <> "scn"
-                  file$ = file$ + ".scn"
-                EndIf
-                
-                ConvertPNG2(file$)
-                
-                MessageRequester("Info", "Ok !", #PB_MessageRequester_Info)
-              EndIf
-            EndIf
-          Case 4
-            ; convert the image and save it
-            If IsImage(1)
-              file$ = SaveFileRequester("Choose where to save the screen file", "", "SCN File|*.scn", 0)
-              
-              If file$ <> ""
-                If LCase(GetExtensionPart(file$)) <> "scn"
-                  file$ = file$ + ".scn"
-                EndIf
-                
-                ConvertPNG1(file$)
                 
                 MessageRequester("Info", "Ok !", #PB_MessageRequester_Info)
               EndIf
@@ -309,8 +277,9 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 8
+; CursorPosition = 45
+; FirstLine = 40
 ; Folding = -
 ; EnableXP
-; UseIcon = png2scn.ico
-; Executable = png2scn (v3).exe
+; UseIcon = icons\png2scn.ico
+; Executable = png2scn.exe
