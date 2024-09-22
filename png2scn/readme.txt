@@ -1,7 +1,7 @@
-png2scn (v3)
-===========
+png2scn
+=======
 
-This tool for Agon Light computers converts png images to a screen's data.
+This tool for Agon Light computers converts BMP images to a screen's data.
 Images must be a Bitmap with 2,4,16 or 64 colors, corresponding to the
 mode you'll use in your AgonLight.
 
