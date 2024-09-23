@@ -88,6 +88,7 @@ Procedure LoadScreen(file$)
     
     crunched.l = ReadByte(1)
     
+    ; not crunched file
     If crunched = 0
       For y.l = 0 To height - 1
         For x.l = 0 To width - 1
@@ -96,6 +97,7 @@ Procedure LoadScreen(file$)
           Plot(x, y, pal(c))
         Next
       Next
+    ; crunched file
     Else
       x.l = 0
       y.l = 0
@@ -104,24 +106,29 @@ Procedure LoadScreen(file$)
       While Not Eof(1)
         b = ReadByte(1)
         
-        If b > 1 And b < 255
+        ; number of different bytes
+        If b >= 2 And b <= 255
           For i = 1 To b
-            Plot(x, y, pal(ReadByte(1)))
+            d.a = ReadByte(1)
+            
+            Plot(x, y, pal(d))
             
             x + 1
             
-            If x = width
+            If x > width - 1
               x = 0
               y + 1
               
-              If y = height
+              If y > height - 1
                 MessageRequester("Error", "Too much data in the crunched file !", #PB_MessageRequester_Error)
                 
                 Break(2)
               EndIf
             EndIf
           Next
+        ; more same bytes than 2
         ElseIf b = 0
+          ; count
           ct.a = ReadByte(1)
           
           If ct = 0: ct = 256 : EndIf
@@ -133,18 +140,19 @@ Procedure LoadScreen(file$)
             
             x + 1
             
-            If x = width
+            If x > width - 1
               x = 0
               y + 1
               
-              If y = height
+              If y > height - 1
                 MessageRequester("Error", "Too much data in the crunched file !", #PB_MessageRequester_Error)
                 
                 Break(2)
               EndIf
             EndIf
           Next          
-        ElseIf b = 255
+        ; two same bytes
+        ElseIf b = 1
           d.a = ReadByte(1)
           
           For i = 1 To 2
@@ -152,11 +160,11 @@ Procedure LoadScreen(file$)
             
             x + 1
             
-            If x = width
+            If x > width - 1
               x = 0
               y + 1
               
-              If y = height
+              If y > height - 1
                 MessageRequester("Error", "Too much data in the crunched file !", #PB_MessageRequester_Error)
                 
                 Break(2)
@@ -204,8 +212,8 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 130
-; FirstLine = 111
+; CursorPosition = 138
+; FirstLine = 120
 ; Folding = -
 ; EnableXP
 ; DPIAware
