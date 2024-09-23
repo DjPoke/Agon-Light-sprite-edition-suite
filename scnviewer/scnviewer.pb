@@ -97,6 +97,74 @@ Procedure LoadScreen(file$)
         Next
       Next
     Else
+      x.l = 0
+      y.l = 0
+      b.a = 0
+      
+      While Not Eof(1)
+        b = ReadByte(1)
+        
+        If b > 1 And b < 255
+          For i = 1 To b
+            Plot(x, y, pal(ReadByte(1)))
+            
+            x + 1
+            
+            If x = width
+              x = 0
+              y + 1
+              
+              If y = height
+                MessageRequester("Error", "Too much data in the crunched file !", #PB_MessageRequester_Error)
+                
+                Break(2)
+              EndIf
+            EndIf
+          Next
+        ElseIf b = 0
+          ct.a = ReadByte(1)
+          
+          If ct = 0: ct = 256 : EndIf
+          
+          d.a = ReadByte(1)
+          
+          For i = 1 To ct
+            Plot(x, y, pal(d))
+            
+            x + 1
+            
+            If x = width
+              x = 0
+              y + 1
+              
+              If y = height
+                MessageRequester("Error", "Too much data in the crunched file !", #PB_MessageRequester_Error)
+                
+                Break(2)
+              EndIf
+            EndIf
+          Next          
+        ElseIf b = 255
+          d.a = ReadByte(1)
+          
+          For i = 1 To 2
+            Plot(x, y, pal(d))
+            
+            x + 1
+            
+            If x = width
+              x = 0
+              y + 1
+              
+              If y = height
+                MessageRequester("Error", "Too much data in the crunched file !", #PB_MessageRequester_Error)
+                
+                Break(2)
+              EndIf
+            EndIf
+          Next          
+        EndIf
+      Wend
     EndIf
     
     StopDrawing()
@@ -136,8 +204,8 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 43
-; FirstLine = 30
+; CursorPosition = 130
+; FirstLine = 111
 ; Folding = -
 ; EnableXP
 ; DPIAware

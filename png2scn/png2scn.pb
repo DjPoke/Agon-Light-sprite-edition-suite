@@ -307,13 +307,15 @@ Procedure ApplyPaletteAndCrunch(file$)
       ;
       ProgressBarGadget(2, 256, 376, 512, 16, 0, 100)
       
+      ;====================
       ; TODO: remove me !
       ReDim dat(16)
       
       For i = 0 To 15
         dat(i) = 4
       Next
-      ; for to test...
+      ; for test purpose...
+      ;====================
 
       ; crunch data
       cpt1.l = 0
@@ -512,7 +514,7 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 315
+; CursorPosition = 310
 ; FirstLine = 302
 ; Folding = -
 ; EnableXP
