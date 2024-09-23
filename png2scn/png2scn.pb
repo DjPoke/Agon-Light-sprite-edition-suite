@@ -4,12 +4,6 @@
 ; MIT 2023-2024
 ;
 
-#NOT_ATTRIBUED = 0
-#DIFFERENT = 1
-#SAME2 = 2
-#SAMEMORE = 3
-#DONE = 4
-
 ; decoders
 UsePNGImageDecoder()
 
@@ -19,6 +13,8 @@ Declare ApplyPalette(file$)
 Declare ApplyPaletteAndCrunch(file$)
 Declare.l CountColors()
 Declare.l FindMode(width.l, height.l, pcount.l)
+Declare.l FindNextEnd(c1.l, sz.l)
+Declare.l FindNextDataType(c1.l, c2.l, sz.l)
 
 Global Dim dat.a(0)
 Global Dim pal.l(63)
@@ -304,161 +300,68 @@ Procedure ApplyPaletteAndCrunch(file$)
       
       StopDrawing()
       
-      ;
-      ProgressBarGadget(2, 256, 376, 512, 16, 0, 100)
-      
       ; crunch data
       cpt1.l = 0
       cpt2.l = 0
-      current.a = dat(cpt1)
-      cmd.l = #NOT_ATTRIBUED
+      current.a = 0
       
-      ; while not done...
-      While cmd <> #DONE
-        ; prepare to read next value
-        cpt2 + 1
+      Repeat
+        ; get current byte of color
+        current = dat(cpt1)
         
-        ; not EOF ? continue
-        If cpt2 < ArraySize(dat())
-          Select cmd
-            Case #NOT_ATTRIBUED
-              ; next data is different ?
-              If dat(cpt2) <> current
-                ; change command to DIFFERENT
-                cmd = #DIFFERENT
-                ; else  
-              Else
-                ; change command to SAME2
-                cmd = #SAME2
-              EndIf              
-            Case #DIFFERENT
-              ; next data is different ?
-              If dat(cpt2) <> dat(cpt2 - 1)
-                ; different data count = 255 ?
-                If cpt2 - cpt1 + 1 = 255
-                  ; write crunched data
-                  WriteByte(1, 255)
-                  
-                  For i = cpt1 To cpt2
-                    WriteByte(1, dat(i))
-                  Next
-                 
-                  cpt1 = cpt2 + 1
-                  cpt2 = cpt1
-                  current = dat(cpt1)
-                  
-                  cmd = #NOT_ATTRIBUED
-                EndIf
-              ; next data is same ?
-              Else
-                ; pointer go back
-                cpt2 - 2
-                
-                ; if there is only one data different...
-                If cpt1 = cpt2
-                  ; write data count and data
-                  WriteByte(1, 1)
-                  WriteByte(1, current)
-                  
-                  cpt1 = cpt2 + 1
-                  cpt2 = cpt1
-                  current = dat(cpt1)
-                  
-                  cmd = #NOT_ATTRIBUED                  
-                ; else, if there are lot of differents data
-                Else
-                  ; write data count and data
-                  WriteByte(1, cpt2 - cpt1 + 1)
-                  
-                  For i = cpt1 To cpt2
-                    WriteByte(1, dat(i))
-                  Next
-                  
-                  cpt1 = cpt2 + 1
-                  cpt2 = cpt1
-                  current = dat(cpt1)
-                  
-                  cmd = #NOT_ATTRIBUED
-                EndIf
-              EndIf
-            Case #SAME2
-              ; if there are more than two same data...
-              If dat(cpt2) = dat(cpt2 - 1)
-                ; change command to SAME MORE
-                cmd = #SAMEMORE
-                ; else...
-              Else
-                ; write byte 1, and the byte value
-                WriteByte(1, 1)
-                WriteByte(1, current)
-                
-                cpt1 = cpt2 + 1
-                cpt2 = cpt1
-                current = dat(cpt1)
-                
-                cmd = #NOT_ATTRIBUED
-              EndIf
-            Case #SAMEMORE
-              ; next data is same ?
-              If dat(cpt2) = dat(cpt2 - 1)
-                ; we have 256 bytes the same ?
-                If cpt2 - cpt1 = 256
-                  ; write byte 0 two times, and the byte value
-                  WriteByte(1, 0)
-                  WriteByte(1, 0)
-                  WriteByte(1, current)                  
-                
-                  cpt1 = cpt2 + 1
-                  cpt2 = cpt1
-                  current = dat(cpt1)
-                  
-                  cmd = #NOT_ATTRIBUED
-                EndIf
-              ; next data is different ?
-              Else
-                cpt2 - 1
-                
-                ; write byte 0, bytes count, and the byte value
-                WriteByte(1, 0)
-                WriteByte(1, cpt2 - cpt1 + 1)
-                WriteByte(1, current)
-                
-                cpt1 = cpt2 + 1
-                cpt2 = cpt1
-                current = dat(cpt1)
-                
-                cmd = #NOT_ATTRIBUED
-              EndIf
-          EndSelect
-        ; EOF ?
-        Else
-          Select cmd
-            Case #NOT_ATTRIBUED
-              ; write 1 byte, and the last byte value
-              WriteByte(1, 1)
-              WriteByte(1, current)
-            Case #DIFFERENT
-              ; write number of different bytes, and the last byte values
-              WriteByte(1, cpt2 - cpt1)
-              
-              For i = cpt1 To cpt2 - 1
-                WriteByte(1, dat(i))
-              Next
-            Case #SAME2
-              WriteByte(1, 1)
-              WriteByte(1, current)
-            Case #SAMEMORE
-              WriteByte(1, 0)
-              WriteByte(1, Mod(cpt2 - cpt1, 256))                
-              WriteByte(1, current)
-          EndSelect        
+        ; is there some equals ?
+        If cpt1 + 1 < ArraySize(dat()) And dat(cpt1 + 1) = current
+          cpt2 + 1
           
-          cmd = #DONE
+          ; search for next equals
+          While cpt2 < ArraySize(dat()) And dat(cpt2) = current
+            cpt2 + 1
+          Wend
         EndIf
-      Wend
+        
+        ; no equals ?
+        If cpt1 = cpt2
+          If current > 0
+            WriteByte(1, current)
+          Else
+            WriteByte(1, 0)
+            WriteByte(1, 0)
+          EndIf
+          
+          cpt1 + 1
+          cpt2 = cpt1
+          
+          If cpt2 > ArraySize(dat()) - 1
+            Break
+          EndIf
+        ; a number of equals ?
+        Else
+          ; too many equals ?
+          While cpt2 - cpt1 + 1 > 255
+            cpt2 - 1
+          Wend
+          
+          ; equals out of data ?
+          If cpt2 >= ArraySize(dat())
+            cpt2 = ArraySize(dat()) - 1
+          EndIf
+          
+          ; write bytes
+          WriteByte(1, 0)
+          WriteByte(1, cpt2 - cpt1 + 1)
+          WriteByte(1, current)
+          
+          ; end of work ?
+          If cpt2 = ArraySize(dat()) - 1
+            Break
+          EndIf
+          
+          ; next byte
+          cpt1 = cpt2 + 1
+          cpt2 = cpt1
+        EndIf
+      ForEver
     EndIf
-    
-    FreeGadget(2)
 
     CloseFile(1)
   Else
@@ -514,8 +417,8 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 309
-; FirstLine = 298
+; CursorPosition = 307
+; FirstLine = 285
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2scn.ico

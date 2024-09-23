@@ -101,76 +101,62 @@ Procedure LoadScreen(file$)
     Else
       x.l = 0
       y.l = 0
-      b.a = 0
       
       While Not Eof(1)
-        b = ReadByte(1)
+        b.a = ReadByte(1)
         
-        ; number of different bytes
-        If b >= 2 And b <= 255
-          For i = 1 To b
-            d.a = ReadByte(1)
+        ; different bytes
+        If b > 0
+          Plot(x, y, pal(b))
             
-            Plot(x, y, pal(d))
+          x + 1
             
-            x + 1
-            
-            If x > width - 1
-              x = 0
-              y + 1
-              
-              If y > height - 1
-                MessageRequester("Error", "Too much data in the crunched file !", #PB_MessageRequester_Error)
-                
-                Break(2)
-              EndIf
+          If x > width - 1
+            x = 0
+            y + 1
+            If y > height - 1
+              Break
             EndIf
-          Next
-        ; more same bytes than 2
+          EndIf          
+        ; command found
         ElseIf b = 0
-          ; count
+          ; count (or byte 0)
           ct.a = ReadByte(1)
           
-          If ct = 0: ct = 256 : EndIf
-          
-          d.a = ReadByte(1)
-          
-          For i = 1 To ct
-            Plot(x, y, pal(d))
+          ; byte 0 found
+          If ct = 0
+            v.a = 0
+            
+            Plot(x, y, pal(v))
             
             x + 1
             
             If x > width - 1
               x = 0
               y + 1
-              
               If y > height - 1
-                MessageRequester("Error", "Too much data in the crunched file !", #PB_MessageRequester_Error)
-                
-                Break(2)
+                Break
               EndIf
-            EndIf
-          Next          
-        ; two same bytes
-        ElseIf b = 1
-          d.a = ReadByte(1)
+            EndIf            
+          ; a number of equal bytes
+          Else
+            v.a = ReadByte(1)
           
-          For i = 1 To 2
-            Plot(x, y, pal(d))
-            
-            x + 1
-            
-            If x > width - 1
-              x = 0
-              y + 1
+            For i = 1 To ct
+              Plot(x, y, pal(v))
               
-              If y > height - 1
-                MessageRequester("Error", "Too much data in the crunched file !", #PB_MessageRequester_Error)
+              x + 1
+              
+              If x > width - 1
+                x = 0
+                y + 1
                 
-                Break(2)
+                If y > height - 1
+                  Break(2)
+                EndIf
               EndIf
-            EndIf
-          Next          
+            Next
+          EndIf
         EndIf
       Wend
     EndIf
@@ -212,8 +198,8 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 114
-; FirstLine = 111
+; CursorPosition = 153
+; FirstLine = 137
 ; Folding = -
 ; EnableXP
 ; DPIAware
