@@ -9,7 +9,10 @@ UsePNGImageDecoder()
 
 ; declarations
 Declare LoadPalette(file$)
-Declare ConvertPNG(file$)
+Declare ApplyPalette(file$)
+Declare ApplyPaletteAndCrunch(file$)
+Declare.l CountColors()
+Declare.l FindMode(width.l, height.l, pcount.l)
 
 Global Dim pal.l(63)
 Global palcount.l = 0
@@ -21,20 +24,15 @@ If OpenWindow(0, 0, 0, 1024, 768, "png2scn (v3)",#PB_Window_SystemMenu|#PB_Windo
     MenuTitle("File")
     MenuItem(1, "&Load PNG" + Chr(9) + "Ctrl+O")
     MenuItem(2, "&Load Palette" + Chr(9) + "Ctrl+P")
-    MenuItem(3, "&Save SCN" + Chr(9) + "Ctrl+S")
-    MenuTitle("Colors")
-    MenuItem(11, "64 colors")
-    MenuItem(12, "16 colors")
-    MenuItem(13, "4 colors")
-    MenuItem(14, "2 colors")
+    MenuItem(3, "&Save (raw) Screen" + Chr(9) + "Ctrl+S")
+    MenuItem(4, "&Save (crunched) Screen" + Chr(9) + "Ctrl+C")
   EndIf
   
-  ; check 64 colors
-  SetMenuItemState(0, 11, #True)
-  SetMenuItemState(0, 12, #False)
-  SetMenuItemState(0, 13, #False)
-  SetMenuItemState(0, 14, #False)
-  
+  AddKeyboardShortcut(0, #PB_Shortcut_Control + #PB_Shortcut_O, 1)
+  AddKeyboardShortcut(0, #PB_Shortcut_Control + #PB_Shortcut_P, 2)
+  AddKeyboardShortcut(0, #PB_Shortcut_Control + #PB_Shortcut_S, 3)
+  AddKeyboardShortcut(0, #PB_Shortcut_Control + #PB_Shortcut_C, 4)
+    
   ; create canvas gadget
   CanvasGadget(1, 0, 0, 1024, 768)
   
@@ -66,8 +64,8 @@ If OpenWindow(0, 0, 0, 1024, 768, "png2scn (v3)",#PB_Window_SystemMenu|#PB_Windo
                 
                 StartDrawing(CanvasOutput(1))
                 ; grey paper
-                DrawingMode(#PB_2DDrawing_Default)
-                Box(0, 0, ImageWidth(1), ImageHeight(1), RGB(128, 128, 128))
+                DrawingMode(#PB_2DDrawing_AllChannels)
+                Box(0, 0, ImageWidth(1), ImageHeight(1), RGBA(128, 128, 128, 255))
                 
                 ; draw image
                 DrawingMode(#PB_2DDrawing_AlphaBlend)
@@ -81,10 +79,11 @@ If OpenWindow(0, 0, 0, 1024, 768, "png2scn (v3)",#PB_Window_SystemMenu|#PB_Windo
             
             ; open the pal file
             If file$ <> ""
+              LoadPalette(file$)
             EndIf
           Case 3
-            ; convert the image and save it
-            If IsImage(1)
+            ; apply the palette to the image and save it
+            If IsImage(1) And palcount > 0
               file$ = SaveFileRequester("Choose where to save the screen file", "", "SCN File|*.scn", 0)
               
               If file$ <> ""
@@ -92,10 +91,29 @@ If OpenWindow(0, 0, 0, 1024, 768, "png2scn (v3)",#PB_Window_SystemMenu|#PB_Windo
                   file$ = file$ + ".scn"
                 EndIf
                 
-                ConvertPNG(file$)
+                ApplyPalette(file$)
                 
                 MessageRequester("Info", "Ok !", #PB_MessageRequester_Info)
               EndIf
+            Else
+                MessageRequester("Info", "Load an image an its palette first !", #PB_MessageRequester_Info)
+            EndIf
+          Case 4
+            ; apply the palette to the image, crunch it and save it
+            If IsImage(1) And palcount > 0
+              file$ = SaveFileRequester("Choose where to save the screen file", "", "SCN File|*.scn", 0)
+              
+              If file$ <> ""
+                If LCase(GetExtensionPart(file$)) <> "scn"
+                  file$ = file$ + ".scn"
+                EndIf
+                
+                ApplyPaletteAndCrunch(file$)
+                
+                MessageRequester("Info", "Ok !", #PB_MessageRequester_Info)
+              EndIf
+            Else
+                MessageRequester("Info", "Load an image an its palette first !", #PB_MessageRequester_Info)
             EndIf
         EndSelect
     EndSelect
@@ -145,7 +163,7 @@ Procedure LoadPalette(file$)
           
           If i < palcount
             c$ = ReadString(1)
-            pal(i) = RGB(Val(StringField(c$, 1, " ")), Val(StringField(c$, 2, " ")), Val(StringField(c$, 3, " ")))
+            pal(i) = RGBA(Val(StringField(c$, 1, " ")), Val(StringField(c$, 2, " ")), Val(StringField(c$, 3, " ")), 255)
           EndIf
         Next
         
@@ -159,13 +177,121 @@ Procedure LoadPalette(file$)
   EndIf
 EndProcedure
 
-Procedure ConvertPNG(file$)
+Procedure ApplyPalette(file$)
+  ; palette loaded ?
+  If CountColors() > palcount
+    MessageRequester("Error", "Too much colors in the image !", #PB_MessageRequester_Error)
+  Else
+    If CreateFile(1, file$)
+      ; find mode and save it
+      mode.b = FindMode(ImageWidth(1), ImageHeight(1), palcount)
+      
+      If mode = 24
+        MessageRequester("Error", "Not corresponding to a graphic mode of the AgonLight !", #PB_MessageRequester_Error)
+      Else
+        ; write mode
+        WriteByte(1, mode)
+        
+        ; write RGB palette
+        For i = 0 To palcount - 1
+          WriteByte(1, Red(pal(i)))
+          WriteByte(1, Green(pal(i)))
+          WriteByte(1, Blue(pal(i)))
+        Next
+        
+        ; raw file
+        WriteByte(1, 0)
+
+        ; apply palette to image
+        StartDrawing(CanvasOutput(1))
+        DrawingMode(#PB_2DDrawing_AllChannels)
+        
+        For y.l = 0 To ImageHeight(1) - 1
+          For x.l = 0 To ImageWidth(1) - 1
+            c.l = Point(x, y)
+            c = RGBA(Red(c), Green(c), Blue(c), 255)
+            
+            flag = #False
+            
+            For i = 0 To palcount - 1
+              If c = pal(i)
+                flag = #True
+                
+                WriteByte(1, i)
+              EndIf
+            Next
+            
+            If flag = #False
+              MessageRequester("Error", "Color not found from palette to image !", #PB_MessageRequester_Error)
+              Break(2)
+            EndIf
+          Next
+        Next
+        
+        StopDrawing()
+      EndIf
+      
+      CloseFile(1)
+    Else
+      MessageRequester("Error", "Can't create screen file !", #PB_MessageRequester_Error)
+    EndIf
+  EndIf
+EndProcedure
+
+Procedure ApplyPaletteAndCrunch(file$)
   ; apply palette to image
 EndProcedure
 
+Procedure.l CountColors()
+EndProcedure
+
+Procedure.l FindMode(width.l, height.l, pcount.l)
+  Restore Modes
+  For i = 0 To 23
+    Read.l w
+    Read.l h
+    Read.l pc
+    
+    If width = w And height = h And pcount = pc
+      ProcedureReturn i
+    EndIf
+  Next
+  
+  ProcedureReturn 24
+EndProcedure
+
+; data
+DataSection
+  Modes:
+    Data.l 640, 480, 16
+    Data.l 640, 480, 4
+    Data.l 640, 480, 2
+    Data.l 640, 240, 64
+    Data.l 640, 240, 16
+    Data.l 640, 240, 4
+    Data.l 640, 240, 2
+    Data.l 0, 0, 16
+    Data.l 320, 240, 64
+    Data.l 320, 240, 16
+    Data.l 320, 240, 4
+    Data.l 320, 240, 2
+    Data.l 320, 200, 64
+    Data.l 320, 200, 16
+    Data.l 320, 200, 4
+    Data.l 320, 200, 2
+    Data.l 800, 600, 4
+    Data.l 800, 600, 2
+    Data.l 1024, 768, 2
+    Data.l 1024, 768, 4
+    Data.l 512, 384, 64
+    Data.l 512, 384, 16
+    Data.l 512, 384, 4
+    Data.l 512, 384, 2
+EndDataSection
+
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 163
-; FirstLine = 130
+; CursorPosition = 161
+; FirstLine = 137
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2scn.ico

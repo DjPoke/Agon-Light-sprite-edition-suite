@@ -1,4 +1,5 @@
 TODO:
 =====
 
-- For the v3, convert only 2,4,16 or 64 colors BMP to a sprite, loading first its RAW palette
+- Program the v3
+
