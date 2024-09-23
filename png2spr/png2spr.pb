@@ -4,23 +4,39 @@
 ; MIT 2023-2024
 ;
 
+; decoders
+UsePNGImageDecoder()
+
 ; declarations
-Declare InitPalette()
-Declare ConvertPNG(f.s)
+Declare LoadPalette(file$)
+Declare ConvertPNG(file$)
 
 Global Dim pal.l(63)
+Global palcount.l = 0
 
 ; create the window
-If OpenWindow(0, 0, 0, 300, 100, "png2spr (v3)",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
+If OpenWindow(0, 0, 0, 256, 64, "png2spr (v3)",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
   ; create the menu
   If CreateMenu(0, WindowID(0))
     MenuTitle("File")
-    MenuItem(1, "&Open BMP" + Chr(9) + "Ctrl+O")
-    MenuItem(2, "&Save SPR" + Chr(9) + "Ctrl+S")
+    MenuItem(1, "&Load PNG" + Chr(9) + "Ctrl+O")
+    MenuItem(2, "&Load Palette" + Chr(9) + "Ctrl+P")
+    MenuItem(3, "&Save SPR" + Chr(9) + "Ctrl+S")
+    MenuTitle("Colors")
+    MenuItem(11, "64 colors")
+    MenuItem(12, "16 colors")
+    MenuItem(13, "4 colors")
+    MenuItem(14, "2 colors")
   EndIf
   
-  ; initialization
-  InitPalette()
+  ; check 64 colors
+  SetMenuItemState(0, 11, #True)
+  SetMenuItemState(0, 12, #False)
+  SetMenuItemState(0, 13, #False)
+  SetMenuItemState(0, 14, #False)
+  
+  ; create canvas gadget
+  CanvasGadget(1, 0, 0, 1024, 768)
   
   ; no events
   ev = 0
@@ -38,13 +54,35 @@ If OpenWindow(0, 0, 0, 300, 100, "png2spr (v3)",#PB_Window_SystemMenu|#PB_Window
         Select em
           Case 1
             ; request for a file name
-            file$ = OpenFileRequester("Choose a png file to load", "", "BMP File|*.bmp", 0)
+            file$ = OpenFileRequester("Choose a PNG file to load", "", "PNG File|*.PNG", 0)
             
             ; open the png file
             If file$ <> ""
               LoadImage(1, file$)
+              
+              ; draw it to the window
+              If ImageWidth(1) <= 1024 And ImageHeight(1) <= 768
+                ResizeGadget(1, 0, 0, ImageWidth(1), ImageHeight(1))
+                
+                StartDrawing(CanvasOutput(1))
+                ; grey paper
+                DrawingMode(#PB_2DDrawing_Default)
+                Box(0, 0, ImageWidth(1), ImageHeight(1), RGB(128, 128, 128))
+                
+                ; draw image
+                DrawingMode(#PB_2DDrawing_AlphaBlend)
+                DrawImage(ImageID(1), 0, 0)
+                StopDrawing()
+              EndIf
             EndIf
           Case 2
+            ; request for a file name
+            file$ = OpenFileRequester("Choose a PAL file to load", "", "PAL File|*.PAL", 0)
+            
+            ; open the pal file
+            If file$ <> ""
+            EndIf
+          Case 3
             ; convert the image and save it
             If IsImage(1)
               file$ = SaveFileRequester("Choose where to save the sprite file", "", "SPR File|*.spr", 0)
@@ -73,173 +111,24 @@ EndIf
 ; end program
 End
 
-
-; procedures
-Procedure ConvertPNG(f.s)
-  ; request sprite width & height
-  spr_width.l = Val(InputRequester("Sprite width", "Please input the sprite width:", "16"))
-  spr_height.l = Val(InputRequester("Sprite height", "Please input the sprite height:", "16"))
-  
-  ; wrong value ?
-  If spr_width < 1 Or spr_height < 1
-    MessageRequester("Error", "Wrong sprite size !", #PB_MessageRequester_Error)
-    End  
-  EndIf
-  
-  spr_sizex.l = ImageWidth(1) / spr_width
-  spr_sizey.l = ImageHeight(1) / spr_height
-  
-  If spr_width * spr_sizex <> ImageWidth(1) Or spr_height * spr_sizey <> ImageHeight(1)
-    MessageRequester("Error", "Wrong PNG size !", #PB_MessageRequester_Error)
-    End  
-  EndIf
-  
-  ; create spr file
-  CreateFile(1, f)
-  WriteWord(1, spr_width * spr_height)
-  WriteByte(1, spr_sizex)
-  WriteByte(1, spr_sizey)
-  
-  ; get colors
-  StartDrawing(ImageOutput(1))
-  DrawingMode(#PB_2DDrawing_AllChannels)
-  For yt = 0 To spr_sizey - 1
-    For xt = 0 To spr_sizex - 1
-      For y = 0 To spr_height - 1
-        For x = 0 To spr_width - 1
-          xc.l = (xt * spr_width) + x
-          yc.l = (yt * spr_height) + y
-
-          c1 = Point(xc, yc)
-          r1 = Red(c1)
-          g1 = Green(c1)
-          b1 = Blue(c1)
-          
-          For c2.b = 0 To 63
-            r2 = Red(pal(c2))
-            g2 = Green(pal(c2))
-            b2 = Blue(pal(c2))
-            
-            If r1 = r2 And g1 = g2 And b1 = b2
-              Break
-            EndIf
-          Next
-          
-          ; error ?
-          If c2 = 64
-            MessageRequester("Error", "Wrong RGB color in the png file !", #PB_MessageRequester_Error)
-            
-            StopDrawing()
-            CloseFile(1)
-            
-            End
-          Else
-            WriteByte(1, c2)
-          EndIf
-        Next
-      Next
-    Next
-  Next
-  
-  StopDrawing()
-  CloseFile(1)
-EndProcedure
-
-; initialize the Agon Light palette
-Procedure InitPalette()
-  Restore palette
-  
-  r.l = 0
-  g.l = 0
-  b.l = 0
-  
-  For i = 0 To 63
-    Read.l r
-    Read.l g
-    Read.l b
+Procedure LoadPalette(file$)
+  If ReadFile(1, file$)
+    FileSeek(1, 0, #PB_Absolute)
     
-    pal(i) = RGB(r, g, b)
-  Next
+    
+    
+    CloseFile(1)
+  Else
+    MessageRequester("Error", "Can't open the png file !", #PB_MessageRequester_Error)
+  EndIf
 EndProcedure
 
-DataSection
-  palette:
-  
-  Data.l $00,$00,$00
-	Data.l $AA,$00,$00
-	Data.l $00,$AA,$00
-	Data.l $AA,$AA,$00
-	Data.l $00,$00,$AA
-	Data.l $AA,$00,$AA
-	Data.l $00,$AA,$AA
-	Data.l $AA,$AA,$AA
-
-	Data.l $55,$55,$55
-	Data.l $FF,$00,$00
-	Data.l $00,$FF,$00
-	Data.l $FF,$FF,$00
-	Data.l $00,$00,$FF
-	Data.l $FF,$00,$FF
-	Data.l $00,$FF,$FF
-	Data.l $FF,$FF,$FF
-
-	Data.l $00,$00,$55
-	Data.l $00,$55,$00
-	Data.l $00,$55,$55
-	Data.l $00,$55,$AA
-	Data.l $00,$55,$FF
-	Data.l $00,$AA,$55
-	Data.l $00,$AA,$FF
-	Data.l $00,$FF,$55
-
-	Data.l $00,$FF,$AA
-	Data.l $55,$00,$00
-	Data.l $55,$00,$55
-	Data.l $55,$00,$AA
-	Data.l $55,$00,$FF
-	Data.l $55,$55,$00
-	Data.l $55,$55,$AA
-	Data.l $55,$55,$FF
-
-	Data.l $55,$AA,$00
-	Data.l $55,$AA,$55
-	Data.l $55,$AA,$AA
-	Data.l $55,$AA,$FF
-	Data.l $55,$FF,$00
-	Data.l $55,$FF,$55
-	Data.l $55,$FF,$AA
-	Data.l $55,$FF,$FF
-
-	Data.l $AA,$00,$55
-	Data.l $AA,$00,$FF
-	Data.l $AA,$55,$00
-	Data.l $AA,$55,$55
-	Data.l $AA,$55,$AA
-	Data.l $AA,$55,$FF
-	Data.l $AA,$AA,$55
-	Data.l $AA,$AA,$FF
-
-	Data.l $AA,$FF,$00
-	Data.l $AA,$FF,$55
-	Data.l $AA,$FF,$AA
-	Data.l $AA,$FF,$FF
-	Data.l $FF,$00,$55
-	Data.l $FF,$00,$AA
-	Data.l $FF,$55,$00
-	Data.l $FF,$55,$55
-
-	Data.l $FF,$55,$AA
-	Data.l $FF,$55,$FF
-	Data.l $FF,$AA,$00
-	Data.l $FF,$AA,$55
-	Data.l $FF,$AA,$AA
-	Data.l $FF,$AA,$FF
-	Data.l $FF,$FF,$55
-	Data.l $FF,$FF,$AA
-EndDataSection
+Procedure ConvertPNG(file$)
+EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 13
+; CursorPosition = 17
+; FirstLine = 14
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2spr.ico
