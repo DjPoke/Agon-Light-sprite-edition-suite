@@ -212,8 +212,8 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 138
-; FirstLine = 120
+; CursorPosition = 114
+; FirstLine = 111
 ; Folding = -
 ; EnableXP
 ; DPIAware
