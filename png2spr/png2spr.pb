@@ -15,8 +15,10 @@ Global Dim pal.l(63)
 Global palcount.l = 0
 Global newpalcount.l = 0
 
+Global version$ = "3.0"
+
 ; create the window
-If OpenWindow(0, 0, 0, 256, 64, "png2spr (v3)",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
+If OpenWindow(0, 0, 0, 256, 64, "png2spr (v" + version$ + ")",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
   ; create the menu
   If CreateMenu(0, WindowID(0))
     MenuTitle("File")
@@ -167,8 +169,8 @@ Procedure ConvertPNG(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 164
-; FirstLine = 134
+; CursorPosition = 20
+; FirstLine = 2
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2spr.ico
