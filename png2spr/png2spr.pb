@@ -13,6 +13,7 @@ Declare ConvertPNG(file$)
 
 Global Dim pal.l(63)
 Global palcount.l = 0
+Global newpalcount.l = 0
 
 ; create the window
 If OpenWindow(0, 0, 0, 256, 64, "png2spr (v3)",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
@@ -21,7 +22,7 @@ If OpenWindow(0, 0, 0, 256, 64, "png2spr (v3)",#PB_Window_SystemMenu|#PB_Window_
     MenuTitle("File")
     MenuItem(1, "&Load PNG" + Chr(9) + "Ctrl+O")
     MenuItem(2, "&Load Palette" + Chr(9) + "Ctrl+P")
-    MenuItem(3, "&Save SPR" + Chr(9) + "Ctrl+S")
+    MenuItem(3, "&Save Sprite" + Chr(9) + "Ctrl+S")
     MenuTitle("Colors")
     MenuItem(11, "64 colors")
     MenuItem(12, "16 colors")
@@ -36,7 +37,7 @@ If OpenWindow(0, 0, 0, 256, 64, "png2spr (v3)",#PB_Window_SystemMenu|#PB_Window_
   SetMenuItemState(0, 14, #False)
   
   ; create canvas gadget
-  CanvasGadget(1, 0, 0, 1024, 768)
+  CanvasGadget(1, 0, 0, 256, 32)
   
   ; no events
   ev = 0
@@ -81,6 +82,7 @@ If OpenWindow(0, 0, 0, 256, 64, "png2spr (v3)",#PB_Window_SystemMenu|#PB_Window_
             
             ; open the pal file
             If file$ <> ""
+              LoadPalette(file$)
             EndIf
           Case 3
             ; convert the image and save it
@@ -113,22 +115,60 @@ End
 
 Procedure LoadPalette(file$)
   If ReadFile(1, file$)
-    FileSeek(1, 0, #PB_Absolute)
+    tp$ = ReadString(1)
     
-    
+    If tp$ <> "JASC-PAL"
+      MessageRequester("Error", "Can't recognise palette file !", #PB_MessageRequester_Error)
+    Else
+      ver$ = ReadString(1)
+      
+      If ver$ <> "0100"
+        MessageRequester("Error", "Can't recognise palette file !", #PB_MessageRequester_Error)
+      Else
+        palcount = Val(ReadString(1))
+        newpalcount = palcount
+        
+        If newpalcount = 1
+          newpalcount = 2
+        ElseIf newpalcount = 3
+          newpalcount = 4
+        ElseIf newpalcount > 4 And newpalcount < 16
+          newpalcount = 16
+        ElseIf newpalcount > 16 And newpalcount < 64
+          newpalcount = 64
+        ElseIf newpalcount = 2 Or newpalcount = 4 Or newpalcount = 16 Or newpalcount = 64
+          ; no changes  
+        Else
+          MessageRequester("Error", "Too much colors in the palette !", #PB_MessageRequester_Error)
+        EndIf
+        
+        For i = 0 To newpalcount - 1
+          pal(i) = RGBA(0, 0, 0, 255)
+          
+          If i < palcount
+            c$ = ReadString(1)
+            pal(i) = RGB(Val(StringField(c$, 1, " ")), Val(StringField(c$, 2, " ")), Val(StringField(c$, 3, " ")))
+          EndIf
+        Next
+        
+        palcount = newpalcount        
+      EndIf
+    EndIf   
     
     CloseFile(1)
   Else
-    MessageRequester("Error", "Can't open the png file !", #PB_MessageRequester_Error)
+    MessageRequester("Error", "Can't find palette file !", #PB_MessageRequester_Error)
   EndIf
 EndProcedure
 
 Procedure ConvertPNG(file$)
+  ; apply palette to frames
+  
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 17
-; FirstLine = 14
+; CursorPosition = 164
+; FirstLine = 134
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2spr.ico

@@ -113,22 +113,59 @@ End
 
 Procedure LoadPalette(file$)
   If ReadFile(1, file$)
-    FileSeek(1, 0, #PB_Absolute)
+    tp$ = ReadString(1)
     
-    
+    If tp$ <> "JASC-PAL"
+      MessageRequester("Error", "Can't recognise palette file !", #PB_MessageRequester_Error)
+    Else
+      ver$ = ReadString(1)
+      
+      If ver$ <> "0100"
+        MessageRequester("Error", "Can't recognise palette file !", #PB_MessageRequester_Error)
+      Else
+        palcount = Val(ReadString(1))
+        newpalcount = palcount
+        
+        If newpalcount = 1
+          newpalcount = 2
+        ElseIf newpalcount = 3
+          newpalcount = 4
+        ElseIf newpalcount > 4 And newpalcount < 16
+          newpalcount = 16
+        ElseIf newpalcount > 16 And newpalcount < 64
+          newpalcount = 64
+        ElseIf newpalcount = 2 Or newpalcount = 4 Or newpalcount = 16 Or newpalcount = 64
+          ; no changes  
+        Else
+          MessageRequester("Error", "Too much colors in the palette !", #PB_MessageRequester_Error)
+        EndIf
+        
+        For i = 0 To newpalcount - 1
+          pal(i) = RGBA(0, 0, 0, 255)
+          
+          If i < palcount
+            c$ = ReadString(1)
+            pal(i) = RGB(Val(StringField(c$, 1, " ")), Val(StringField(c$, 2, " ")), Val(StringField(c$, 3, " ")))
+          EndIf
+        Next
+        
+        palcount = newpalcount        
+      EndIf
+    EndIf   
     
     CloseFile(1)
   Else
-    MessageRequester("Error", "Can't open the png file !", #PB_MessageRequester_Error)
+    MessageRequester("Error", "Can't find palette file !", #PB_MessageRequester_Error)
   EndIf
 EndProcedure
 
 Procedure ConvertPNG(file$)
+  ; apply palette to image
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 24
-; FirstLine = 13
+; CursorPosition = 163
+; FirstLine = 130
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2scn.ico
