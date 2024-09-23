@@ -125,9 +125,7 @@ Procedure LoadScreen(file$)
           
           ; byte 0 found
           If ct = 0
-            v.a = 0
-            
-            Plot(x, y, pal(v))
+            Plot(x, y, pal(0))
             
             x + 1
             
@@ -198,8 +196,8 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 153
-; FirstLine = 137
+; CursorPosition = 140
+; FirstLine = 127
 ; Folding = -
 ; EnableXP
 ; DPIAware

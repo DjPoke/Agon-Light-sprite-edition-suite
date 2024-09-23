@@ -317,8 +317,10 @@ Procedure ApplyPaletteAndCrunch(file$)
           While cpt2 < ArraySize(dat()) And dat(cpt2) = current
             cpt2 + 1
           Wend
+          
+          cpt2 - 1
         EndIf
-        
+             
         ; no equals ?
         If cpt1 = cpt2
           If current > 0
@@ -417,8 +419,8 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 307
-; FirstLine = 285
+; CursorPosition = 302
+; FirstLine = 291
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2scn.ico
