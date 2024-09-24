@@ -246,11 +246,11 @@ Procedure ApplyPalette(file$)
     WriteByte(1, size)
     
     ; apply palette to frames
-    For i = 2 To frames + 1
+    For j = 2 To frames + 1
       StartDrawing(CanvasOutput(1))
       DrawingMode(#PB_2DDrawing_AllChannels)
       Box(0, 0, 256, 256, RGB(0, 0, 0))
-      DrawImage(ImageID(i), 0, 0)
+      DrawImage(ImageID(j), 0, 0)
       
       For y.l = 0 To size - 1
         For x.l = 0 To size - 1
@@ -264,6 +264,8 @@ Procedure ApplyPalette(file$)
               flag = #True
               
               WriteByte(1, i)
+              
+              Break
             EndIf
           Next
           
@@ -282,8 +284,8 @@ Procedure ApplyPalette(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 245
-; FirstLine = 229
+; CursorPosition = 252
+; FirstLine = 245
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2spr.ico
