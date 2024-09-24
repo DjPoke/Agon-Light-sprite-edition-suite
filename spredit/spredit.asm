@@ -2147,9 +2147,9 @@ it8l_return:
 
 	ret
 
-; load a sprite, giving its name
+; load a sprite, giving its full name, with extension
 fn_load_sprite:
-	; clear filename
+	; clear the filename on the screen
 	ld hl,filename
 	ld b,12
 	xor a
@@ -2162,11 +2162,11 @@ ls_clear_filename:
 	; get filename
 	call fn_input_text8
 	
-	; set path to home
+	; set path to 'sprites/'
 	ld hl,sprite_path
 	moscall mos_cd
 
-	; exit on error
+	; exit on folder error
 	cp 0
 	jp nz,ls_folder_error
 	
@@ -2175,7 +2175,7 @@ ls_clear_filename:
 	ld c,fa_open_existing|fa_read
 	moscall mos_fopen
 	
-	; exit on error
+	; exit on file error
 	cp 0
 	jp z,ls_file_error
 
@@ -2185,9 +2185,9 @@ ls_clear_filename:
 	; get colors count
 	moscall mos_fgetc
 	jp c,ls_close_error
-	
-	cp MAX_COLORS
-	jp nz,ls_close_error
+
+	cp MAX_COLORS + 1
+	jp nc,ls_close_error
 
 	; store colors count
 	ld hl,colors_count
@@ -2200,6 +2200,8 @@ ls_clear_filename:
 	; store frames count
 	ld hl,frames_count
 	ld (hl),a
+	
+	; set last frame as current frame
 	ld hl,current_frame
 	dec a
 	ld (hl),a
@@ -2249,7 +2251,7 @@ ls_next3:
 	ld (hl),b
 	
 ls_next4:
-
+	ld hl,#000000
 	ld l,a
 	ld h,a
 	mlt hl ; HL = sprite length
@@ -3106,7 +3108,7 @@ filename_label:
 
 ; filename without extension
 filename:
-	ds 13,0
+	ds 13
 
 sprite_path:
 	db "sprites",0
@@ -3154,11 +3156,11 @@ keydata:
 
 ; buffer for the current sprite
 sprite_buffer:
-	ds BUFFER_SIZE,0
+	ds BUFFER_SIZE
 
 ; buffer to perform some operations
 swap_sprite_buffer:
-	ds ONE_FRAME_BUFFER_SIZE,0
+	ds ONE_FRAME_BUFFER_SIZE
 
 asm_line:
 	DB "DB "
