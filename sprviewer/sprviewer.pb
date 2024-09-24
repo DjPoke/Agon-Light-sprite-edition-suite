@@ -70,7 +70,8 @@ Procedure LoadSpr(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 15
+; CursorPosition = 63
+; FirstLine = 37
 ; Folding = -
 ; EnableXP
 ; DPIAware

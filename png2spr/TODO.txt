@@ -1,5 +1,0 @@
-TODO:
-=====
-
-- Export animated sprites
-

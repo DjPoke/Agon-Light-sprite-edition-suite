@@ -408,8 +408,8 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 362
-; FirstLine = 329
+; CursorPosition = 234
+; FirstLine = 213
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2scn.ico

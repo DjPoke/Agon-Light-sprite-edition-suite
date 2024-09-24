@@ -14,9 +14,9 @@ easily be compiled for Mac (intel, M1/M2), Linux and Raspberry Pi.
 
 sprite structure:
 =================
+colors count : byte
 frames count : byte
-spr width    : byte
-spr height   : byte
+spr size	 : byte
 data         : width x height bytes of colors (color numbers from the palette)
 
 

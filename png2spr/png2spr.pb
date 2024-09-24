@@ -9,7 +9,7 @@ UsePNGImageDecoder()
 
 ; declarations
 Declare LoadPalette(file$)
-Declare ConvertPNG(file$)
+Declare ApplyPalette(file$)
 
 Global Dim pal.l(63)
 Global palcount.l = 0
@@ -64,6 +64,12 @@ If OpenWindow(0, 0, 0, 256, 256, "png2spr (v" + version$ + ")",#PB_Window_System
             
             ; open the png file
             If file$ <> ""
+              If frames > 0
+                For i = 1 To frames + 1
+                  FreeImage(i)
+                Next
+              EndIf
+              
               LoadImage(1, file$)
               
               If ImageWidth(1) = ImageHeight(1)
@@ -119,7 +125,7 @@ If OpenWindow(0, 0, 0, 256, 256, "png2spr (v" + version$ + ")",#PB_Window_System
             EndIf
           Case 3
             ; convert the image and save it
-            If IsImage(1)
+            If IsImage(1) And palcount > 0
               file$ = SaveFileRequester("Choose where to save the sprite file", "", "SPR File|*.spr", 0)
               
               If file$ <> ""
@@ -127,10 +133,12 @@ If OpenWindow(0, 0, 0, 256, 256, "png2spr (v" + version$ + ")",#PB_Window_System
                   file$ = file$ + ".spr"
                 EndIf
                 
-                ConvertPNG(file$)
+                ApplyPalette(file$)
                 
                 MessageRequester("Info", "Ok !", #PB_MessageRequester_Info)
               EndIf
+            Else
+              MessageRequester("Info", "Load an image/animstrip an its palette first !", #PB_MessageRequester_Info)
             EndIf
         EndSelect
     EndSelect
@@ -205,7 +213,7 @@ Procedure LoadPalette(file$)
           
           If i < palcount
             c$ = ReadString(1)
-            pal(i) = RGB(Val(StringField(c$, 1, " ")), Val(StringField(c$, 2, " ")), Val(StringField(c$, 3, " ")))
+            pal(i) = RGBA(Val(StringField(c$, 1, " ")), Val(StringField(c$, 2, " ")), Val(StringField(c$, 3, " ")), 255)
           EndIf
         Next
         
@@ -219,14 +227,63 @@ Procedure LoadPalette(file$)
   EndIf
 EndProcedure
 
-Procedure ConvertPNG(file$)
-  ; apply palette to frames
+; apply palette to frames
+Procedure ApplyPalette(file$)
+  If CreateFile(1, file$)
+    ; write colors count
+    WriteByte(1, palcount)
+    
+    ; write frames count
+    WriteByte(1, frames)
+    
+    ; write width and height
+    size.l = ImageWidth(1)
+    
+    If ImageWidth(1) > ImageHeight(1)
+      size = ImageHeight(1)
+    EndIf
+    
+    WriteByte(1, size)
+    
+    ; apply palette to frames
+    For i = 2 To frames + 1
+      StartDrawing(CanvasOutput(1))
+      DrawingMode(#PB_2DDrawing_AllChannels)
+      Box(0, 0, 256, 256, RGB(0, 0, 0))
+      DrawImage(ImageID(i), 0, 0)
+      
+      For y.l = 0 To size - 1
+        For x.l = 0 To size - 1
+          c.l = Point(x, y)
+          c = RGBA(Red(c), Green(c), Blue(c), 255)
+          
+          flag = #False
+          
+          For i = 0 To palcount - 1
+            If c = pal(i)
+              flag = #True
+              
+              WriteByte(1, i)
+            EndIf
+          Next
+          
+          If flag = #False
+            MessageRequester("Error", "Color not found from palette to image !", #PB_MessageRequester_Error)
+            Break(2)
+          EndIf
+        Next
+      Next
+      
+      StopDrawing()
+    Next
   
+    CloseFile(1)
+  EndIf
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 154
-; FirstLine = 162
+; CursorPosition = 245
+; FirstLine = 229
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2spr.ico
