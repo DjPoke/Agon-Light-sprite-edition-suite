@@ -110,7 +110,7 @@ Procedure LoadSpr(file$)
     For f = 1 To frames
       StartDrawing(CanvasOutput(1))
       DrawingMode(#PB_2DDrawing_AllChannels)
-      Box(0, 0, 256, 256, RGB(0, 0, 0))
+      Box(0, 0, 256, 256, RGBA(0, 0, 0, 255))
       
       For y = 0 To size - 1
         For x = 0 To size - 1
@@ -180,8 +180,8 @@ Procedure LoadPalette(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 119
-; FirstLine = 96
+; CursorPosition = 123
+; FirstLine = 105
 ; Folding = -
 ; EnableXP
 ; DPIAware
