@@ -15,21 +15,20 @@ Global Dim pal.l(63)
 Global palcount.l = 0
 Global newpalcount.l = 0
 
+Global frames.l = 0
+Global currentframe.l = 0
+Global cptframes.l = 0
+
 Global version$ = "3.0"
 
 ; create the window
-If OpenWindow(0, 0, 0, 256, 64, "png2spr (v" + version$ + ")",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
+If OpenWindow(0, 0, 0, 256, 256, "png2spr (v" + version$ + ")",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
   ; create the menu
   If CreateMenu(0, WindowID(0))
     MenuTitle("File")
     MenuItem(1, "&Load PNG" + Chr(9) + "Ctrl+O")
     MenuItem(2, "&Load Palette" + Chr(9) + "Ctrl+P")
     MenuItem(3, "&Save Sprite" + Chr(9) + "Ctrl+S")
-    MenuTitle("Colors")
-    MenuItem(11, "64 colors")
-    MenuItem(12, "16 colors")
-    MenuItem(13, "4 colors")
-    MenuItem(14, "2 colors")
   EndIf
   
   ; check 64 colors
@@ -39,7 +38,12 @@ If OpenWindow(0, 0, 0, 256, 64, "png2spr (v" + version$ + ")",#PB_Window_SystemM
   SetMenuItemState(0, 14, #False)
   
   ; create canvas gadget
-  CanvasGadget(1, 0, 0, 256, 32)
+  CanvasGadget(1, 0, 0, 256, 256)
+  
+  StartDrawing(CanvasOutput(1))
+  DrawingMode(#PB_2DDrawing_Default)
+  Box(0, 0, 256, 256, RGB(0, 0, 0))
+  StopDrawing()
   
   ; no events
   ev = 0
@@ -47,12 +51,11 @@ If OpenWindow(0, 0, 0, 256, 64, "png2spr (v" + version$ + ")",#PB_Window_SystemM
   ; main loop
   Repeat
     ; wait for events
-    ev = WaitWindowEvent()
+    ev = WindowEvent()
     
     Select ev
       Case #PB_Event_Menu
         em = EventMenu()
-        
         
         Select em
           Case 1
@@ -63,19 +66,47 @@ If OpenWindow(0, 0, 0, 256, 64, "png2spr (v" + version$ + ")",#PB_Window_SystemM
             If file$ <> ""
               LoadImage(1, file$)
               
-              ; draw it to the window
-              If ImageWidth(1) <= 1024 And ImageHeight(1) <= 768
-                ResizeGadget(1, 0, 0, ImageWidth(1), ImageHeight(1))
+              If ImageWidth(1) = ImageHeight(1)
+                CopyImage(1, 2)
                 
                 StartDrawing(CanvasOutput(1))
-                ; grey paper
                 DrawingMode(#PB_2DDrawing_Default)
-                Box(0, 0, ImageWidth(1), ImageHeight(1), RGB(128, 128, 128))
-                
-                ; draw image
-                DrawingMode(#PB_2DDrawing_AlphaBlend)
-                DrawImage(ImageID(1), 0, 0)
+                DrawImage(ImageID(2), 0, 0)
                 StopDrawing()
+                
+                frames = 1
+                currentframe = 1
+                cptframes = 0
+              ElseIf ImageWidth(1) > ImageHeight(1)
+                div1.d = ImageWidth(1) / ImageHeight(1)
+                div2.l = Round(div1, #PB_Round_Nearest)
+                frames = 0
+                currentframe = 1
+                cptframes = 0
+                
+                If div1 = div2
+                  For i = 1 To div2
+                    GrabImage(1, 2 + frames, ImageHeight(1) * (i - 1), 0, ImageHeight(1), ImageHeight(1))
+                    frames + 1
+                  Next                  
+                Else
+                  MessageRequester("Error", "Animstrip's width and height are not proportionnal !", #PB_MessageRequester_Error)
+                EndIf
+              ElseIf ImageWidth(1) < ImageHeight(1)
+                div1.d = ImageHeight(1) / ImageWidth(1)
+                div2.l = Round(div1, #PB_Round_Nearest)
+                frames = 0
+                currentframe = 1
+                cptframes = 0
+                
+                If div1 = div2
+                  For i = 1 To div2
+                    GrabImage(1, 2 + frames, ImageWidth(1) * (i - 1), 0, ImageWidth(1), ImageWidth(1))
+                    frames + 1
+                  Next                  
+                Else
+                  MessageRequester("Error", "Animstrip's width and height are not proportionnal !", #PB_MessageRequester_Error)
+                EndIf
               EndIf
             EndIf
           Case 2
@@ -103,6 +134,31 @@ If OpenWindow(0, 0, 0, 256, 64, "png2spr (v" + version$ + ")",#PB_Window_SystemM
             EndIf
         EndSelect
     EndSelect
+    
+    ; drawing animation
+    If frames > 0
+      cptframes + 1
+      
+      If cptframes = 100
+        cptframes = 0
+        
+        ResizeImage(1 + currentframe, 128, 128, #PB_Image_Raw)
+        
+        StartDrawing(CanvasOutput(1))
+        DrawingMode(#PB_2DDrawing_Default)
+        Box(0, 0, 256, 256, RGB(0, 0, 0))
+        DrawImage(ImageID(1 + currentframe), 0, 0)
+        StopDrawing()
+        
+        ResizeImage(1 + currentframe, ImageWidth(1), ImageWidth(1), #PB_Image_Raw)
+        
+        currentframe + 1
+        
+        If currentframe > frames: currentframe = 1 : EndIf
+      EndIf
+    EndIf
+    
+    Delay(1)
   Until ev = #PB_Event_CloseWindow
   
   ; close the window
@@ -169,8 +225,8 @@ Procedure ConvertPNG(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 20
-; FirstLine = 2
+; CursorPosition = 154
+; FirstLine = 162
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2spr.ico
