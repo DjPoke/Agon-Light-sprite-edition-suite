@@ -284,8 +284,8 @@ Procedure ApplyPalette(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 252
-; FirstLine = 245
+; CursorPosition = 147
+; FirstLine = 138
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2spr.ico
