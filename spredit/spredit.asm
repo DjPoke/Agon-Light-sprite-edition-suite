@@ -96,6 +96,8 @@ KEY_7:	equ -37 ; reset color to black
 ; KEY_S: save palette file
 
 MAX_PAL_DATA: equ 836 ; max palette chars
+MAX_PAL_DATA_HI: equ 03h
+MAX_PAL_DATA_LO: equ 44h
 
 BITLOOKUP:
 	DB 01h,02h,04h,08h
@@ -2214,16 +2216,19 @@ lp_clear_filename:
 
 	; filehandle -> C
 	ld c,a
+
 	
 	; get palette header
 	ld hl,header_buffer
 	ld de,16
+	push bc ; store filehandle
 	moscall mos_fread
+	pop bc ; restore filehandle
 	ld a,16
 	cp e
 	jp nz,lp_close_error
 	
-	; compare headers
+	; compare loaded header with needed header
 	ld de,header
 	ld hl,header_buffer
 	ld b,a
@@ -2233,11 +2238,20 @@ lp_compare:
 	cp (hl)
 	jp nz,lp_header_error
 	
+	inc de
+	inc hl
+	dec b
+	
+	ld a,b
+	cp 0
+	jp nz,lp_compare
+	
 	; read number of colors
 	ld de,#000000
 	ld hl,palette_buffer
-
+	
 lp_load_pal_loop:
+	push bc
 	push de
 	push hl
 	
@@ -2249,20 +2263,21 @@ lp_load_pal_loop:
 	
 	pop hl
 	pop de
-	ld (hl),a ; store char
+	pop bc
+	ld (hl),a ; store loaded char
 	inc de ; count chars
-	ld bc,MAX_PAL_DATA
 	ld a,b
-	cp d
-	jp nz,lp_load_pal_loop
+	cp MAX_PAL_DATA_HI
+	jp c,lp_load_pal_loop
 	ld a,b
-	cp e
-	jp nz,lp_load_pal_loop
+	cp MAX_PAL_DATA_LO
+	jp c,lp_load_pal_loop
 
 ; end of file
 lp_loaded:
 	pop hl
 	pop de
+	pop bc
 
 	jp lp_close
 	
@@ -2298,8 +2313,12 @@ lp_header_error:
 	jp lp_exit
 	
 lp_close:
+	push bc
+	
 	; close the file
 	moscall mos_fclose
+	
+	pop bc
 	
 	; set path to home
 	ld hl,back_path
@@ -2308,7 +2327,7 @@ lp_close:
 	; exit on error
 	cp 0
 	jp nz,lp_folder_error
-	
+
 	; store first color 0
 	xor a
 	ld hl,color_byte
@@ -2317,91 +2336,124 @@ lp_close:
 	; read number of colors in the palette
 	ld hl,palette_buffer
 	ld a,(hl)
-	cp '2'
-	jp z,lp_two_colors
-	cp '4'
-	jp z,lp_four_colors
-	cp '1'
-	jp z,lp_sixteen_colors
-	cp '6'
-	jp z,lp_sixty_four_colors
+	ld b,a
+	inc hl
+	ld a,(hl)
+	ld c,a ; bc = 1st char, 2nd char or 13
+
+	ld a,c
+	cp 48
+	jp c,lp_one_number
+	cp 58
+	jp nc,lp_two_number
+	jp lp_data_error
+	
+lp_one_number:
+	ld a,c
+	cp 13
+	jp nz,lp_data_error
+	
+	inc hl
+	ld a,(hl)
+	cp 10
+	jp nz,lp_data_error
+
+	inc hl
+	
+	ld a,b
+	sub 48
+	
+	push hl
+	ld hl,new_colors_count
+	ld (hl),a
+	pop hl
+	
+	cp 0
+	jp z,lp_data_error
+	cp 3
+	jp c,lp_two_colors
+	cp 5
+	jp c,lp_four_colors
+	
+	jp lp_sixteen_colors
+
+lp_two_number:
+	inc hl
+	ld a,(hl)
+	cp 13
+	jp nz,lp_data_error
+	
+	inc hl
+	ld a,(hl)
+	cp 10
+	jp nz,lp_data_error
+
+	inc hl
+	
+	ld a,b
+	sub 48
+	ld bc,#000000
+	ld b,a
+	ld c,10
+	mlt bc
+	add a,c
+	
+	push hl
+	ld hl,new_colors_count
+	ld (hl),a
+	pop hl
+	
+	cp 10
+	jp c,lp_data_error
+	cp 17
+	jp c,lp_sixteen_colors
+	cp 65
+	jp c,lp_sixty_four_colors
 	
 	jp lp_data_error
 
 lp_two_colors:
-	inc hl
-	ld a,(hl)
-	cp 13
-	jp nz,lp_data_error
-	inc hl
-	ld a,(hl)
-	cp 10
-	jp nz,lp_data_error
-
 	push hl
 	ld hl,colors_count
 	ld a,2
 	ld (hl),a
+	ld hl,new_colors_count
+	ld a,(hl)
 	pop hl
+	ld b,0 ; start wit color 0
 	jp lp_read_colors
 
 lp_four_colors:
-	inc hl
-	ld a,(hl)
-	cp 13
-	jp nz,lp_data_error
-	inc hl
-	ld a,(hl)
-	cp 10
-	jp nz,lp_data_error
-
 	push hl
 	ld hl,colors_count
 	ld a,4
 	ld (hl),a
+	ld hl,new_colors_count
+	ld a,(hl)
 	pop hl
+	ld b,0 ; start wit color 0
 	jp lp_read_colors
 
 lp_sixteen_colors:
-	inc hl
-	ld a,(hl)
-	cp '6'
-	jp nz,lp_data_error
-	inc hl
-	ld a,(hl)
-	cp 13
-	jp nz,lp_data_error
-	inc hl
-	ld a,(hl)
-	cp 10
-	jp nz,lp_data_error
-
 	push hl
 	ld hl,colors_count
 	ld a,16
 	ld (hl),a
+	ld hl,new_colors_count
+	ld a,(hl)
 	pop hl
+	ld b,0 ; start wit color 0
 	jp lp_read_colors
 
 lp_sixty_four_colors:
-	inc hl
-	ld a,(hl)
-	cp '4'
-	jp nz,lp_data_error
-	inc hl
-	ld a,(hl)
-	cp 13
-	jp nz,lp_data_error
-	inc hl
-	ld a,(hl)
-	cp 10
-	jp nz,lp_data_error
-
 	push hl
 	ld hl,colors_count
 	ld a,64
 	ld (hl),a
+	ld hl,new_colors_count
+	ld a,(hl)
 	pop hl
+	ld b,0 ; start wit color 0
 	jp lp_read_colors
 
 lp_read_colors:
@@ -2432,6 +2484,8 @@ lp_exit:
 	ret
 
 lp_data_error:
+	call fn_print_data_error
+
 	ret
 
 lp_file_error:
@@ -2546,11 +2600,10 @@ lp_set_tint:
 	push de
 	push hl
 	
+	push bc
 	vdu 19
-	push hl
-	ld hl,color_byte
-	ld a,(hl)
-	pop hl
+	pop bc	
+	ld a,b
 	vdu_a
 	vdu 255
 
@@ -2563,6 +2616,8 @@ lp_set_tint:
 	pop bc
 	ld a,c
 	vdu_a
+	
+	pop bc
 	
 	ret
 
@@ -3172,7 +3227,7 @@ es_file_error:
 
 ; print 'file error'
 fn_print_file_error:
-	vdu 7	
+	vdu 7
 	
 	; locate x,y
 	vdu 31
@@ -3241,6 +3296,36 @@ fn_print_header_error:
 
 	; print text
 	ld hl,header_error
+	ld bc,0
+	xor a
+	rst.lis $18
+
+	call fn_input_key
+
+	; locate x,y
+	vdu 31
+	vdu FILENAME_X
+	vdu FILENAME_Y
+
+	; print text
+	ld hl,void_filename
+	ld bc,0
+	xor a
+	rst.lis $18
+
+	ret
+
+; print 'data error'
+fn_print_data_error:
+	vdu 7	
+	
+	; locate x,y
+	vdu 31
+	vdu FILENAME_X
+	vdu FILENAME_Y
+
+	; print text
+	ld hl,data_error
 	ld bc,0
 	xor a
 	rst.lis $18
@@ -3485,18 +3570,6 @@ htb:	sla c   ; shift c into carry
 		pop bc
 		ret
 
-fnin_found:
-	ld a,1
-	ret
-	
-fnin_nine:
-	jr z,fnin_found
-	
-fnin_not_number:
-	xor a
-	ret
-	
-
 ;======================================================================
 
 ; coordinates for rectangles
@@ -3605,8 +3678,16 @@ folder_error:
 header_error:
 	db "Header error !        ",0
 
+; data error message
+data_error:
+	db "Data error !        ",0
+
 ; number of colors
 colors_count:
+	db 0
+
+; real number of colors
+new_colors_count:
 	db 0
 
 ; current frame
