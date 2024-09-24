@@ -12,12 +12,12 @@ Declare LoadPalette(file$)
 Declare ApplyPalette(file$)
 
 Global Dim pal.l(63)
-Global palcount.l = 0
-Global newpalcount.l = 0
+Global palcount.a= 0
+Global newpalcount.a = 0
 
-Global frames.l = 0
-Global currentframe.l = 0
-Global cptframes.l = 0
+Global frames.a = 0
+Global currentframe.a = 0
+Global cptframes.a = 0
 
 Global version$ = "3.0"
 
@@ -284,8 +284,8 @@ Procedure ApplyPalette(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 147
-; FirstLine = 138
+; CursorPosition = 19
+; FirstLine = 3
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2spr.ico

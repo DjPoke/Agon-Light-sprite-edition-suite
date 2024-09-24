@@ -2361,7 +2361,7 @@ ls_file_error:
 
 ; save a sprite, giving its name
 fn_save_sprite:
-	; clear filename
+	; clear filename on the screen
 	ld hl,filename
 	ld b,12
 	xor a
@@ -2422,6 +2422,7 @@ ss_next:
 	moscall mos_fputc
 
 	; de = size²
+	ld hl,#000000
 	ld l,b
 	ld h,b
 	mlt hl ; HL = sprite length

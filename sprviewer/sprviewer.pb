@@ -52,7 +52,10 @@ If OpenWindow(0, 0, 0, 256, 256, "sprviewer (v" + version$ + ")",#PB_Window_Syst
             
             ; open the png file
             If file1$ <> "" And file2$ <> ""
+              palcount = 0
+              frames = 0
               currentframe = 1
+              size = 0
               
               LoadPalette(file2$)
               LoadSpr(file1$)
@@ -178,8 +181,8 @@ Procedure LoadPalette(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 160
-; FirstLine = 145
+; CursorPosition = 59
+; FirstLine = 36
 ; Folding = -
 ; EnableXP
 ; DPIAware
