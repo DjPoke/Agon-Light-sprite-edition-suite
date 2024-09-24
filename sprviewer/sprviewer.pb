@@ -40,8 +40,7 @@ If OpenWindow(0, 0, 0, 256, 256, "sprviewer (v" + version$ + ")",#PB_Window_Syst
     Select ev
       Case #PB_Event_Menu
         em = EventMenu()
-        
-        
+       
         Select em
           Case 1
             ; request for a file name
@@ -181,8 +180,8 @@ Procedure LoadPalette(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 59
-; FirstLine = 36
+; CursorPosition = 119
+; FirstLine = 96
 ; Folding = -
 ; EnableXP
 ; DPIAware

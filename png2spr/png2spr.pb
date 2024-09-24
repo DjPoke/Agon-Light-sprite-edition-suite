@@ -18,6 +18,7 @@ Global newpalcount.a = 0
 Global frames.a = 0
 Global currentframe.a = 0
 Global cptframes.a = 0
+Global size.a = 0
 
 Global version$ = "3.0"
 
@@ -72,52 +73,57 @@ If OpenWindow(0, 0, 0, 256, 256, "png2spr (v" + version$ + ")",#PB_Window_System
               
               LoadImage(1, file$)
               
-              If ImageWidth(1) = ImageHeight(1)
-                CopyImage(1, 2)
-                
-                StartDrawing(CanvasOutput(1))
-                DrawingMode(#PB_2DDrawing_Default)
-                DrawImage(ImageID(2), 0, 0)
-                StopDrawing()
-                
-                frames = 1
-                currentframe = 1
-                cptframes = 0
-              ElseIf ImageWidth(1) > ImageHeight(1)
-                div1.d = ImageWidth(1) / ImageHeight(1)
-                div2.l = Round(div1, #PB_Round_Nearest)
-                frames = 0
-                currentframe = 1
-                cptframes = 0
-                
-                If div1 = div2
-                  For i = 1 To div2
-                    GrabImage(1, 2 + frames, ImageHeight(1) * (i - 1), 0, ImageHeight(1), ImageHeight(1))
-                    frames + 1
-                  Next                  
-                Else
-                  MessageRequester("Error", "Animstrip's width and height are not proportionnal !", #PB_MessageRequester_Error)
-                EndIf
-              ElseIf ImageWidth(1) < ImageHeight(1)
-                div1.d = ImageHeight(1) / ImageWidth(1)
-                div2.l = Round(div1, #PB_Round_Nearest)
-                frames = 0
-                currentframe = 1
-                cptframes = 0
-                
-                If div1 = div2
-                  For i = 1 To div2
-                    GrabImage(1, 2 + frames, ImageWidth(1) * (i - 1), 0, ImageWidth(1), ImageWidth(1))
-                    frames + 1
-                  Next                  
-                Else
-                  MessageRequester("Error", "Animstrip's width and height are not proportionnal !", #PB_MessageRequester_Error)
+              If ImageWidth(1) <= 32 Or ImageHeight(1) <= 32              
+                If ImageWidth(1) = ImageHeight(1)
+                  CopyImage(1, 2)
+                  
+                  StartDrawing(CanvasOutput(1))
+                  DrawingMode(#PB_2DDrawing_Default)
+                  DrawImage(ImageID(2), 0, 0)
+                  StopDrawing()
+                  
+                  frames = 1
+                  currentframe = 1
+                  cptframes = 0
+                  size = ImageWidth(1)
+                ElseIf ImageWidth(1) > ImageHeight(1)
+                  div1.d = ImageWidth(1) / ImageHeight(1)
+                  div2.l = Round(div1, #PB_Round_Nearest)
+                  frames = 0
+                  currentframe = 1
+                  cptframes = 0
+                  size = ImageHeight(1)
+                  
+                  If div1 = div2
+                    For i = 1 To div2
+                      GrabImage(1, 2 + frames, size * (i - 1), 0, size, size)
+                      frames + 1
+                    Next                  
+                  Else
+                    MessageRequester("Error", "Animstrip's width and height are not proportionnal !", #PB_MessageRequester_Error)
+                  EndIf
+                ElseIf ImageWidth(1) < ImageHeight(1)
+                  div1.d = ImageHeight(1) / ImageWidth(1)
+                  div2.l = Round(div1, #PB_Round_Nearest)
+                  frames = 0
+                  currentframe = 1
+                  cptframes = 0
+                  size = ImageWidth(1)
+                  
+                  If div1 = div2
+                    For i = 1 To div2
+                      GrabImage(1, 2 + frames, size * (i - 1), 0, size, size)
+                      frames + 1
+                    Next                  
+                  Else
+                    MessageRequester("Error", "Animstrip's width and height are not proportionnal !", #PB_MessageRequester_Error)
+                  EndIf
                 EndIf
               EndIf
             EndIf
           Case 2
             ; request for a file name
-            file$ = OpenFileRequester("Choose a PAL file to load", "", "PAL File|*.PAL", 0)
+            file$ = OpenFileRequester("Choose a Palette file to load", "", "PAL File|*.pal", 0)
             
             ; open the pal file
             If file$ <> ""
@@ -158,7 +164,7 @@ If OpenWindow(0, 0, 0, 256, 256, "png2spr (v" + version$ + ")",#PB_Window_System
         DrawImage(ImageID(1 + currentframe), 0, 0)
         StopDrawing()
         
-        ResizeImage(1 + currentframe, ImageWidth(1), ImageWidth(1), #PB_Image_Raw)
+        ResizeImage(1 + currentframe, size, size, #PB_Image_Raw)
         
         currentframe + 1
         
@@ -236,21 +242,15 @@ Procedure ApplyPalette(file$)
     ; write frames count
     WriteByte(1, frames)
     
-    ; write width and height
-    size.l = ImageWidth(1)
-    
-    If ImageWidth(1) > ImageHeight(1)
-      size = ImageHeight(1)
-    EndIf
-    
+    ; write size of each frame
     WriteByte(1, size)
     
     ; apply palette to frames
-    For j = 2 To frames + 1
+    For j = 1 To frames
       StartDrawing(CanvasOutput(1))
       DrawingMode(#PB_2DDrawing_AllChannels)
       Box(0, 0, 256, 256, RGB(0, 0, 0))
-      DrawImage(ImageID(j), 0, 0)
+      DrawImage(ImageID(j + 1), 0, 0)
       
       For y.l = 0 To size - 1
         For x.l = 0 To size - 1
@@ -264,18 +264,19 @@ Procedure ApplyPalette(file$)
               flag = #True
               
               WriteByte(1, i)
-              
-              Break
             EndIf
           Next
           
           If flag = #False
             MessageRequester("Error", "Color not found from palette to image !", #PB_MessageRequester_Error)
-            Break(2)
+            
+            StopDrawing()
+            
+            Break(3)
           EndIf
         Next
       Next
-      
+            
       StopDrawing()
     Next
   
@@ -284,8 +285,8 @@ Procedure ApplyPalette(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 19
-; FirstLine = 3
+; CursorPosition = 261
+; FirstLine = 246
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2spr.ico
