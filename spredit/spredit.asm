@@ -13,8 +13,10 @@
 .align 64
 .db "MOS",0,1
 
-	include "mos_api.inc"
+.FILLBYTE 0
 
+	include "mos_api.inc"
+	
 MAX_COLORS:		 	equ 64
 COLOR_MIN:	 		equ 0
 COLOR_MAX:	 		equ 63
