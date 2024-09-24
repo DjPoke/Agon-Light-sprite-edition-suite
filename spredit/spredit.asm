@@ -2147,6 +2147,12 @@ it8l_return:
 	vdu 1
 	vdu 0
 
+it8l_endloop:
+	ld hl,KEY_RETURN
+	call fn_inkey
+	CP 1
+	jp z,it8l_endloop
+
 	ret
 
 ; load a sprite, giving its full name, with extension
@@ -3111,7 +3117,7 @@ filename_label:
 
 ; filename without extension
 filename:
-	ds 13
+	db 0,0,0,0,0,0,0,0,0,0,0,0,0
 
 sprite_path:
 	db "sprites",0

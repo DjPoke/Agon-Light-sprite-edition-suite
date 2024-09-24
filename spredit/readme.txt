@@ -2,15 +2,15 @@ spredit
 =======
 
 This tool let you draw sprites directly under your Agon Light.
-
+Print this file if you want to have a quick access to the shorcuts.
 
 DjPoke
 
 ================================================================================
-some help
-=========
+Help
+====
 
-First choose the size of the sprite to be edited, by pressing key F1 to F4.
+First, choose the size of the sprite to be edited, by pressing key F1 to F4.
 (or escape to quit, at every moment)
 
 Now, you are in 'edit sprite mode'. This is the keys you can use :
@@ -30,9 +30,14 @@ Now, you are in 'edit sprite mode'. This is the keys you can use :
 * F:					flip frame horizontally
 * M:					mirror frame vertically
 * R:					rotate frame clockwise
-* Return:				Floor Fill (must be inside borders of the same color)
+* Return:				Flood Fill (must be inside borders of the same color)
+* F5:					Load Palette file (must be 2, 4, 16 or 64 colors)
+* F6:					Save Palette file
+
 
 While in palette mode, this is the keys you can use :
 
 * Tab:						Return in 'edit sprite mode'
+* R,G,B:					Increase R,G or B tint for the current color
+* Delete:					Reset color to black
 * Left/Right arrows:		Choose a color
