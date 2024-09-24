@@ -11,7 +11,6 @@ UsePNGImageDecoder()
 Declare LoadPalette(file$)
 Declare ApplyPalette(file$)
 Declare ApplyPaletteAndCrunch(file$)
-Declare.l CountColors()
 Declare.l FindMode(width.l, height.l, pcount.l)
 Declare.l FindNextEnd(c1.l, sz.l)
 Declare.l FindNextDataType(c1.l, c2.l, sz.l)
@@ -183,71 +182,64 @@ Procedure LoadPalette(file$)
 EndProcedure
 
 Procedure ApplyPalette(file$)
-  ; palette loaded ?
-  If CountColors() > palcount
-    MessageRequester("Error", "Too much colors in the image !", #PB_MessageRequester_Error)
-  Else
-    If CreateFile(1, file$)
-      ; find mode and save it
-      mode.b = FindMode(ImageWidth(1), ImageHeight(1), palcount)
+  If CreateFile(1, file$)
+    ; find mode and save it
+    mode.b = FindMode(ImageWidth(1), ImageHeight(1), palcount)
+    
+    If mode = 24
+      MessageRequester("Error", "Not corresponding to a graphic mode of the AgonLight !", #PB_MessageRequester_Error)
+    Else
+      ; write mode
+      WriteByte(1, mode)
       
-      If mode = 24
-        MessageRequester("Error", "Not corresponding to a graphic mode of the AgonLight !", #PB_MessageRequester_Error)
-      Else
-        ; write mode
-        WriteByte(1, mode)
-        
-        ; write RGB palette
-        For i = 0 To palcount - 1
-          WriteByte(1, Red(pal(i)))
-          WriteByte(1, Green(pal(i)))
-          WriteByte(1, Blue(pal(i)))
-        Next
-        
-        ; raw file: 0
-        WriteByte(1, 0)
-        
-        ; apply palette to image
-        StartDrawing(CanvasOutput(1))
-        DrawingMode(#PB_2DDrawing_AllChannels)
-        
-        For y.l = 0 To ImageHeight(1) - 1
-          For x.l = 0 To ImageWidth(1) - 1
-            c.l = Point(x, y)
-            c = RGBA(Red(c), Green(c), Blue(c), 255)
-            
-            flag = #False
-            
-            For i = 0 To palcount - 1
-              If c = pal(i)
-                flag = #True
-                
-                WriteByte(1, i)
-              EndIf
-            Next
-            
-            If flag = #False
-              MessageRequester("Error", "Color not found from palette to image !", #PB_MessageRequester_Error)
-              Break(2)
+      ; write RGB palette
+      For i = 0 To palcount - 1
+        WriteByte(1, Red(pal(i)))
+        WriteByte(1, Green(pal(i)))
+        WriteByte(1, Blue(pal(i)))
+      Next
+      
+      ; raw file: 0
+      WriteByte(1, 0)
+      
+      ; apply palette to image
+      StartDrawing(CanvasOutput(1))
+      DrawingMode(#PB_2DDrawing_AllChannels)
+      
+      For y.l = 0 To ImageHeight(1) - 1
+        For x.l = 0 To ImageWidth(1) - 1
+          c.l = Point(x, y)
+          c = RGBA(Red(c), Green(c), Blue(c), 255)
+          
+          flag = #False
+          
+          For i = 0 To palcount - 1
+            If c = pal(i)
+              flag = #True
+              
+              WriteByte(1, i)
             EndIf
           Next
+          
+          If flag = #False
+            MessageRequester("Error", "Color not found from palette to image !", #PB_MessageRequester_Error)
+            Break(2)
+          EndIf
         Next
-        
-        StopDrawing()
-      EndIf
+      Next
       
-      CloseFile(1)
-    Else
-      MessageRequester("Error", "Can't create screen file !", #PB_MessageRequester_Error)
+      StopDrawing()
     EndIf
+    
+    CloseFile(1)
+  Else
+    MessageRequester("Error", "Can't create screen file !", #PB_MessageRequester_Error)
   EndIf
 EndProcedure
 
 Procedure ApplyPaletteAndCrunch(file$)
   ; palette loaded ?
-  If CountColors() > palcount
-    MessageRequester("Error", "Too much colors in the image !", #PB_MessageRequester_Error)
-  ElseIf CreateFile(1, file$)
+  If CreateFile(1, file$)
     ; find mode and save it
     mode.b = FindMode(ImageWidth(1), ImageHeight(1), palcount)
     
@@ -320,7 +312,7 @@ Procedure ApplyPaletteAndCrunch(file$)
           
           cpt2 - 1
         EndIf
-             
+        
         ; no equals ?
         If cpt1 = cpt2
           If current > 0
@@ -336,7 +328,7 @@ Procedure ApplyPaletteAndCrunch(file$)
           If cpt2 > ArraySize(dat()) - 1
             Break
           EndIf
-        ; a number of equals ?
+          ; a number of equals ?
         Else
           ; too many equals ?
           While cpt2 - cpt1 + 1 > 255
@@ -364,14 +356,11 @@ Procedure ApplyPaletteAndCrunch(file$)
         EndIf
       ForEver
     EndIf
-
+    
     CloseFile(1)
   Else
     MessageRequester("Error", "Can't create screen file !", #PB_MessageRequester_Error)
   EndIf
-EndProcedure
-
-Procedure.l CountColors()
 EndProcedure
 
 Procedure.l FindMode(width.l, height.l, pcount.l)
@@ -419,8 +408,8 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 302
-; FirstLine = 291
+; CursorPosition = 362
+; FirstLine = 329
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2scn.ico
