@@ -10,6 +10,13 @@ This is a suite of tools to create sprites and screens for the Agon Light comput
 6) zap is an algorythm to crunch/decrunch your images.
 7) in palettes folder, you can find AgonLight default palette for Aseprite, Pro Motion or a png with the palette.
 
+current work:
+* spredit is now working again, and palettes will be improved.
+* png2scn and png2spr have been improved.
+* scnviewer and sprviewer are new.
+
+All Purebasic 6.1.2 programs can be freely compiled and adapted for Raspberry Pi, MacOS or Linux.
+
 ![screenshot1](spredit/screenshot1.jpg)
 ![screenshot2](scnviewer/screenshot2.jpg)
 ![screenshot3](sprviewer/screenshot3.jpg)
