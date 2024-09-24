@@ -51,32 +51,51 @@ SPR3232_width: 	equ 4
 BUFFER_SIZE:			equ 8192 ; 8 frames
 ONE_FRAME_BUFFER_SIZE:	equ 1024
 
+HEADER_BUFFER_SIZE:		equ 16
+
 SLOWDOWN_DELAY:	equ 20
 
-KEY_SPACE: equ -99
-KEY_UP: equ -58
+KEY_SPACE: equ -99 ; draw with color
+KEY_UP: equ -58 ; move
 KEY_DOWN: equ -42
 KEY_LEFT: equ -26
 KEY_RIGHT: equ -122
-KEY_DELETE: equ -90
-KEY_TAB: equ -97
-KEY_N: equ -86
-KEY_C: equ -83
-KEY_BACKSPACE: equ -48
-KEY_PGUP: equ -64
+KEY_DELETE: equ -90 ; remove color with black
+KEY_N: equ -86 ; add a new void frame
+KEY_C: equ -83 ; copy current frame to a new frame
+KEY_BACKSPACE: equ -48 ; delete current selected frame
+KEY_PGUP: equ -64 ; select frame
 KEY_PGDOWN: equ -79
-KEY_L: equ -87
-KEY_S: equ -82
-KEY_E: equ -35
-KEY_R: equ -52
-KEY_F: equ -68
-KEY_M: equ -102
+KEY_L: equ -87 ; load sprite
+KEY_S: equ -82 ; save sprite
+KEY_E: equ -35 ; export sprite as assembler data
+KEY_R: equ -52 ; rotate frame clockwise
+KEY_F: equ -68 ; flip frame horizontally
+KEY_M: equ -102 ; mirror frame vertically
 KEY_ESCAPE: equ -113
-KEY_F1: equ -114
-KEY_F2: equ -115
-KEY_F3: equ -116
-KEY_F4: equ -21
-KEY_RETURN: equ -74
+KEY_F1: equ -114 ; select 4x4 sprite
+KEY_F2: equ -115 ; select 8x8 sprite
+KEY_F3: equ -116 ; select 16x16 sprite
+KEY_F4: equ -21 ; select 32x32 sprite
+KEY_RETURN: equ -74 ; floodfill
+
+; play mode:
+KEY_P:	equ -56 ; switch to play mode
+KEY_D:	equ -51 ; change delay (speeds: normal (100ms), slow (250ms), fast (25ms))
+
+; palette mode:
+KEY_TAB: equ -97 ; switch to palette mode
+KEY_1:	equ -49 ; red+
+KEY_2:	equ -50 ; green+
+KEY_3:	equ -18 ; blue+
+KEY_4:	equ -19 ; red-
+KEY_5:	equ -20 ; green-
+KEY_6:	equ -53; blue-
+KEY_7:	equ -37 ; reset color to black
+; KEY_L: load palette file (must be 2, 4, 16 or 64 colors)
+; KEY_S: save palette file
+
+MAX_PAL_DATA: equ 836 ; max palette chars
 
 BITLOOKUP:
 	DB 01h,02h,04h,08h
@@ -1397,7 +1416,7 @@ ffl_exit:
 	pop de
 	ret
 
-; change current tool to palette
+; change current tool to palette tool
 dsl_palette_tool:
 	ld hl,KEY_TAB
 	call fn_inkey
@@ -1414,31 +1433,37 @@ dsl_palette_tool:
 	
 ; select palette color	
 dsl_palette_tool_loop:
+	; move to left color in the palette
 	ld hl,KEY_LEFT
 	call fn_inkey
 	cp 1
 	call z,dsl_dec_pen
 	
+	; move to right color in the palette
 	ld hl,KEY_RIGHT
 	call fn_inkey
 	cp 1
 	call z,dsl_inc_pen
-	
+
+	; return to draw sprite tool
 	ld hl,KEY_TAB
 	call fn_inkey
 	cp 1
 	jp z,dsl_draw_sprite_tool
 	
+	; load palette
 	ld hl,KEY_L
 	call fn_inkey
 	cp 1
-	call z,dslp_load_sprite
+	call z,dslp_load_palette
 	
+	; save palette
 	ld hl,KEY_S
 	call fn_inkey
 	cp 1
-	call z,dslp_save_sprite
+	call z,dslp_save_palette
 
+	; exit program
 	ld hl,KEY_ESCAPE
 	call fn_inkey
 	cp 1
@@ -1446,16 +1471,16 @@ dsl_palette_tool_loop:
 	
 	jp dsl_palette_tool_loop
 
-dslp_load_sprite:
+dslp_load_palette:
 	ld hl,KEY_L
 	call fn_inkey
 	cp 0
-	jr nz,dslp_load_sprite
+	jr nz,dslp_load_palette
 
 	ld hl,current_pen
 	ld c,(hl)
 	call fn_draw_palette_without_border
-	call fn_load_sprite
+	call fn_load_palette
 	ld hl,current_pen
 	ld c,(hl)
 	call fn_refresh_sprite
@@ -1463,16 +1488,16 @@ dslp_load_sprite:
 	call fn_change_frame
 	jp dsl_palette_tool_loop
 	
-dslp_save_sprite:
+dslp_save_palette:
 	ld hl,KEY_S
 	call fn_inkey
 	cp 0
-	jr nz,dslp_save_sprite
+	jr nz,dslp_save_palette
 
 	ld hl,current_pen
 	ld c,(hl)
 	call fn_draw_palette_without_border
-	call fn_save_sprite
+	call fn_save_palette
 	ld hl,current_pen
 	ld c,(hl)
 	call fn_draw_palette_with_border
@@ -2155,6 +2180,396 @@ it8l_endloop:
 
 	ret
 
+; load a palette
+fn_load_palette:
+	; clear the filename on the screen
+	ld hl,filename
+	ld b,12
+	xor a
+
+lp_clear_filename:
+	ld (hl),a
+	inc hl
+	djnz lp_clear_filename
+	
+	; get filename
+	call fn_input_text8
+	
+	; set path to 'palettes/'
+	ld hl,palette_path
+	moscall mos_cd
+
+	; exit on folder error
+	cp 0
+	jp nz,lp_folder_error
+	
+	; open the file for read
+	ld hl,filename
+	ld c,fa_open_existing|fa_read
+	moscall mos_fopen
+	
+	; exit on file error
+	cp 0
+	jp z,lp_file_error
+
+	; filehandle -> C
+	ld c,a
+	
+	; get palette header
+	ld hl,header_buffer
+	ld de,16
+	moscall mos_fread
+	ld a,16
+	cp e
+	jp nz,lp_close_error
+	
+	; compare headers
+	ld de,header
+	ld hl,header_buffer
+	ld b,a
+
+lp_compare:
+	ld a,(de)
+	cp (hl)
+	jp nz,lp_header_error
+	
+	; read number of colors
+	ld de,#000000
+	ld hl,palette_buffer
+
+lp_load_pal_loop:
+	push de
+	push hl
+	
+	; read colors data
+	moscall mos_fgetc
+	
+	; exit if file end
+	jp c,lp_loaded
+	
+	pop hl
+	pop de
+	ld (hl),a ; store char
+	inc de ; count chars
+	ld bc,MAX_PAL_DATA
+	ld a,b
+	cp d
+	jp nz,lp_load_pal_loop
+	ld a,b
+	cp e
+	jp nz,lp_load_pal_loop
+
+; end of file
+lp_loaded:
+	pop hl
+	pop de
+
+	jp lp_close
+	
+lp_close_error:
+	push bc
+	
+	; read error
+	call fn_print_file_error
+	
+	pop bc
+
+	; close the file
+	moscall mos_fclose
+		
+	; set path to home
+	ld hl,back_path
+	moscall mos_cd
+
+	; exit on error
+	cp 0
+	jp nz,lp_folder_error
+
+	jp lp_exit
+
+lp_folder_error:
+	; write error
+	call fn_print_folder_error
+	jp lp_exit
+
+lp_header_error:
+	; write error
+	call fn_print_header_error
+	jp lp_exit
+	
+lp_close:
+	; close the file
+	moscall mos_fclose
+	
+	; set path to home
+	ld hl,back_path
+	moscall mos_cd
+
+	; exit on error
+	cp 0
+	jp nz,lp_folder_error
+	
+	; store first color 0
+	xor a
+	ld hl,color_byte
+	ld (hl),a
+
+	; read number of colors in the palette
+	ld hl,palette_buffer
+	ld a,(hl)
+	cp '2'
+	jp z,lp_two_colors
+	cp '4'
+	jp z,lp_four_colors
+	cp '1'
+	jp z,lp_sixteen_colors
+	cp '6'
+	jp z,lp_sixty_four_colors
+	
+	jp lp_data_error
+
+lp_two_colors:
+	inc hl
+	ld a,(hl)
+	cp 13
+	jp nz,lp_data_error
+	inc hl
+	ld a,(hl)
+	cp 10
+	jp nz,lp_data_error
+
+	push hl
+	ld hl,colors_count
+	ld a,2
+	ld (hl),a
+	pop hl
+	jp lp_read_colors
+
+lp_four_colors:
+	inc hl
+	ld a,(hl)
+	cp 13
+	jp nz,lp_data_error
+	inc hl
+	ld a,(hl)
+	cp 10
+	jp nz,lp_data_error
+
+	push hl
+	ld hl,colors_count
+	ld a,4
+	ld (hl),a
+	pop hl
+	jp lp_read_colors
+
+lp_sixteen_colors:
+	inc hl
+	ld a,(hl)
+	cp '6'
+	jp nz,lp_data_error
+	inc hl
+	ld a,(hl)
+	cp 13
+	jp nz,lp_data_error
+	inc hl
+	ld a,(hl)
+	cp 10
+	jp nz,lp_data_error
+
+	push hl
+	ld hl,colors_count
+	ld a,16
+	ld (hl),a
+	pop hl
+	jp lp_read_colors
+
+lp_sixty_four_colors:
+	inc hl
+	ld a,(hl)
+	cp '4'
+	jp nz,lp_data_error
+	inc hl
+	ld a,(hl)
+	cp 13
+	jp nz,lp_data_error
+	inc hl
+	ld a,(hl)
+	cp 10
+	jp nz,lp_data_error
+
+	push hl
+	ld hl,colors_count
+	ld a,64
+	ld (hl),a
+	pop hl
+	jp lp_read_colors
+
+lp_read_colors:
+	push af
+	push bc
+	push hl
+	call lp_read_tint ; read red
+	ld c,a
+	push bc
+	call lp_read_tint ; green red
+	ld e,a
+	push de
+	call lp_read_tint ; blue red
+	ld l,a
+	pop de
+	pop bc ; RGB = c,e,l
+	call lp_set_tint
+	pop hl
+	pop bc
+	pop af
+	
+	inc b
+	dec a
+	cp 0
+	jp nz,lp_read_colors
+	
+lp_exit:
+	ret
+
+lp_data_error:
+	ret
+
+lp_file_error:
+	call fn_print_file_error
+
+	; set path to home
+	ld hl,back_path
+	moscall mos_cd
+
+	; exit on error
+	cp 0
+	jp nz,lp_folder_error
+
+	ret
+
+lp_read_tint:
+	ld c,0 ; number of chars readen
+	ld de,temp_chars_buffer
+
+	push de
+
+	; read chars
+	call lprt_read_chars
+	
+	pop de
+	
+	ld a,c
+	cp 0 ; no numbers
+	jp z,lp_data_error
+	cp 4 ; to many numbers
+	jp nc,lp_data_error
+
+	cp 3
+	jr z,lprt_three_int
+
+	cp 2
+	jr z,lprt_two_int
+	
+	; one int only
+	ld a,(de)
+	ret
+
+; two int
+lprt_two_int:
+	ld a,(de)
+	push de
+	ld de,#000000
+	ld e,a
+	ld d,10
+	mlt de
+	ld b,e
+	pop de
+	inc de
+	ld a,(de)
+	add a,b ; full int value is here
+	ret
+	
+; three int
+lprt_three_int:
+	ld a,(de)
+	push de
+	ld de,#000000
+	ld e,a
+	ld d,100
+	mlt de
+	ld b,e
+	pop de
+	inc de
+	ld a,(de)
+	push de
+	ld de,#000000
+	ld e,a
+	ld d,10
+	mlt de
+	ld c,e
+	pop de
+	inc de
+	ld a,(de)
+	add a,c
+	add a,b ; full int value is here
+	ret
+
+lprt_read_chars:
+	ld a,13
+	ld (de),a ; store eol as default char
+	
+	ld a,(hl)
+	cp ' '
+	ret z ; ret if space
+	cp 13
+	ret z ; ret if cr
+	cp 10
+	ret z ; ret if lf
+	cp '0'
+	ret c ; ret if not number
+	cp '9'
+	jr c,lprt_store
+	jr z,lprt_store
+	ret
+	
+; found a number, store it
+lprt_store:
+	sub 48 ; convert char to byte integer
+	ld (de),a ; store value
+	inc de
+	inc c
+	jp lprt_read_chars
+
+; set tint (RGB = c,e,l)
+lp_set_tint:
+	push bc
+	push de
+	push hl
+	
+	vdu 19
+	push hl
+	ld hl,color_byte
+	ld a,(hl)
+	pop hl
+	vdu_a
+	vdu 255
+
+	pop hl
+	ld a,l
+	vdu_a
+	pop de
+	ld a,e
+	vdu_a	
+	pop bc
+	ld a,c
+	vdu_a
+	
+	ret
+
+; save the palette
+fn_save_palette:
+	ret
+	
 ; load a sprite, giving its full name, with extension
 fn_load_sprite:
 	; clear the filename on the screen
@@ -2815,6 +3230,36 @@ fn_print_folder_error:
 
 	ret
 
+; print 'header error'
+fn_print_header_error:
+	vdu 7	
+	
+	; locate x,y
+	vdu 31
+	vdu FILENAME_X
+	vdu FILENAME_Y
+
+	; print text
+	ld hl,header_error
+	ld bc,0
+	xor a
+	rst.lis $18
+
+	call fn_input_key
+
+	; locate x,y
+	vdu 31
+	vdu FILENAME_X
+	vdu FILENAME_Y
+
+	; print text
+	ld hl,void_filename
+	ld bc,0
+	xor a
+	rst.lis $18
+
+	ret
+
 ; refresh all the current sprite frame
 fn_refresh_sprite:
 	ld b,0 ; B -> x cordinate
@@ -3040,6 +3485,18 @@ htb:	sla c   ; shift c into carry
 		pop bc
 		ret
 
+fnin_found:
+	ld a,1
+	ret
+	
+fnin_nine:
+	jr z,fnin_found
+	
+fnin_not_number:
+	xor a
+	ret
+	
+
 ;======================================================================
 
 ; coordinates for rectangles
@@ -3122,6 +3579,9 @@ filename:
 sprite_path:
 	db "sprites",0
 
+palette_path:
+	db "palettes",0
+
 back_path:
 	db "..",0
 
@@ -3140,6 +3600,10 @@ file_error:
 ; folder error message
 folder_error:
 	db "Folder error !        ",0
+
+; header error message
+header_error:
+	db "Header error !        ",0
 
 ; number of colors
 colors_count:
@@ -3166,6 +3630,22 @@ keydata:
 ; buffer for the current sprite
 sprite_buffer:
 	ds BUFFER_SIZE
+
+header_buffer:
+	ds HEADER_BUFFER_SIZE
+
+palette_buffer:
+	ds MAX_PAL_DATA + 1
+
+temp_chars_buffer:
+	db 0,0,0,0
+	
+color_byte:
+	db 0
+
+header:
+	db "JASC-PAL",13,10
+	db "0100",13,10
 
 ; buffer to perform some operations
 swap_sprite_buffer:
@@ -3256,12 +3736,3 @@ rgb_palette:
 ; frames count	:	byte
 ; spr size		:	byte
 ; data			:   width x height bytes of colors
-
-
-; TODO:
-;---------
-; add/remove frames must be done correctly
-; read animations with 'p' key
-; create a help text file with keyboard shorcuts list
-; solve the 'copy frame' bug
-; solve the bug of frames in fn_load/save sprite

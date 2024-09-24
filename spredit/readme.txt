@@ -38,6 +38,6 @@ Now, you are in 'edit sprite mode'. This is the keys you can use :
 While in palette mode, this is the keys you can use :
 
 * Tab:						Return in 'edit sprite mode'
-* R,G,B:					Increase R,G or B tint for the current color
-* Delete:					Reset color to black
+* 1-6:						Increase or decrease R,G or B tint for the current color
+* 7:						Reset color to black
 * Left/Right arrows:		Choose a color
