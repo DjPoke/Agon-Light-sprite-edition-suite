@@ -1,0 +1,4 @@
+TODO:
+=====
+
+- LoadSpr function, loads animated sprites
