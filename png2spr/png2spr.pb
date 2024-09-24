@@ -32,6 +32,10 @@ If OpenWindow(0, 0, 0, 256, 256, "png2spr (v" + version$ + ")",#PB_Window_System
     MenuItem(3, "&Save Sprite" + Chr(9) + "Ctrl+S")
   EndIf
   
+  AddKeyboardShortcut(0, #PB_Shortcut_Control + #PB_Shortcut_O, 1)
+  AddKeyboardShortcut(0, #PB_Shortcut_Control + #PB_Shortcut_P, 2)
+  AddKeyboardShortcut(0, #PB_Shortcut_Control + #PB_Shortcut_S, 3)
+  
   ; check 64 colors
   SetMenuItemState(0, 11, #True)
   SetMenuItemState(0, 12, #False)
@@ -264,6 +268,8 @@ Procedure ApplyPalette(file$)
               flag = #True
               
               WriteByte(1, i)
+              
+              Break
             EndIf
           Next
           
@@ -285,8 +291,8 @@ Procedure ApplyPalette(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 251
-; FirstLine = 244
+; CursorPosition = 37
+; FirstLine = 12
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2spr.ico

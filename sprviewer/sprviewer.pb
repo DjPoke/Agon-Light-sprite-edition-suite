@@ -180,8 +180,8 @@ Procedure LoadPalette(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 123
-; FirstLine = 105
+; CursorPosition = 27
+; FirstLine = 9
 ; Folding = -
 ; EnableXP
 ; DPIAware
