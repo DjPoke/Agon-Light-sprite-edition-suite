@@ -274,57 +274,8 @@ exit_menu_loop:
 
 	; clear the text screen
 	vdu 12
-	
-	; draw the palette
-	ld c,0
 
-palette_loop:
-	push bc
-
-	; choose palette color
-	vdu 18
-	vdu 0
-	pop bc
-	push bc
-	ld a,c
-	vdu_a
-
-	; store coordinates for a palette square
-	ld ix,x1
-	pop hl
-	push hl
-	ld h,5
-	mlt hl
-	push hl
-	ld (ix+0),l
-	ld (ix+1),h
-
-	ld ix,y1
-	ld hl,0
-	ld (ix+0),l
-	ld (ix+1),h
-
-	ld ix,x2
-	pop hl
-	ld de,4
-	add hl,de
-	ld (ix+0),l
-	ld (ix+1),h
-
-	ld ix,y2
-	ld hl,10
-	ld (ix+0),l
-	ld (ix+1),h
-	
-	; draw the palette filled square
-	call fn_rectf
-	
-	; next color ?
-	pop bc
-	inc c
-	ld a,c
-	cp MAX_COLORS
-	jp nz,palette_loop
+	call fn_draw_the_palette
 	
 	; store coordinates
 	ld ix,x1
@@ -349,7 +300,7 @@ palette_loop:
 	
 	; draw the border rectangle
 	call fn_rect
-	
+		
 	; store edited sprite coordinates
 	ld ix,xs1
 	ld iy,x1
@@ -1483,9 +1434,10 @@ dslp_load_palette:
 	ld c,(hl)
 	call fn_draw_palette_without_border
 	call fn_load_palette
+	call fn_draw_the_palette
+	call fn_refresh_sprite
 	ld hl,current_pen
 	ld c,(hl)
-	call fn_refresh_sprite
 	call fn_draw_palette_with_border
 	call fn_change_frame
 	jp dsl_palette_tool_loop
@@ -2636,17 +2588,17 @@ lprt_three_int:
 
 lprt_read_chars:
 	ld a,13
-	ld (de),a ; store eol as default char
+	ld (de),a ; store eol as default temp char
 	
-	ld a,(hl) ; get a new char
+	ld a,(hl) ; get a new char in the palette buffer
 	inc hl
 	
-	cp ' '
+	cp 32
 	ret z ; ret if space
 	cp 13
-	jr z,lprt_read_chars ; loop if cr
+	jr z,lprt_read_chars ; loop if CR
 	cp 10
-	ret z ; ret if lf
+	ret z ; ret if LF
 	cp 48
 	ret c ; ret if not number
 	cp 58
@@ -3616,6 +3568,60 @@ i_false:
 fn_create_sprite_folder:
 	ld hl,sprite_path
 	moscall mos_mkdir
+	ret
+
+; draw the palette
+fn_draw_the_palette:
+	ld c,0
+
+fndtp_palette_loop:
+	push bc
+
+	; choose palette color
+	vdu 18
+	vdu 0
+	pop bc
+	push bc
+	ld a,c
+	vdu_a
+
+	; store coordinates for a palette square
+	ld ix,x1
+	pop hl
+	push hl
+	ld h,5
+	mlt hl
+	push hl
+	ld (ix+0),l
+	ld (ix+1),h
+
+	ld ix,y1
+	ld hl,0
+	ld (ix+0),l
+	ld (ix+1),h
+
+	ld ix,x2
+	pop hl
+	ld de,4
+	add hl,de
+	ld (ix+0),l
+	ld (ix+1),h
+
+	ld ix,y2
+	ld hl,10
+	ld (ix+0),l
+	ld (ix+1),h
+	
+	; draw the palette filled square
+	call fn_rectf
+	
+	; next color ?
+	pop bc
+	inc c
+	ld a,c
+	cp MAX_COLORS
+	jp nz,fndtp_palette_loop
+	
 	ret
 
 fn_comma:
