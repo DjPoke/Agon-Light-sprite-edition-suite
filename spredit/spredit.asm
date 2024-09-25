@@ -591,7 +591,6 @@ dsl_load_sprite:
 	call fn_load_sprite
 	call fn_refresh_sprite
 	call fn_draw_pixel_with_border
-	call fn_change_frame
 	ret
 
 ; save a sprite
@@ -2817,31 +2816,33 @@ ls_next3:
 	
 ls_next4:
 	ld hl,#000000
-	ld l,b
-	ld h,b
-	mlt hl ; sprite length
+	ld l,a
+	ld h,a
+	mlt hl ; one frame sprite length
 	push hl
 	
 	; get frames count
-	ld hl,current_frame
+	ld hl,frames_count
 	ld b,(hl)
 
 	pop hl
 	
+	dec b	
 	ld a,b
 	cp 0
 	jr z,ls_read_data	
 
-	; de = size²
-	ld de,ONE_FRAME_BUFFER_SIZE
+	; de = one frame sprite length
+	push hl
+	pop de
 ls_add_length:
 	add hl,de
 	djnz ls_add_length
 
 ls_read_data:
-	push hl ; frame length
+	push hl ; all frames length
 	push hl
-	pop de ; frame length in DE
+	pop de
 	ld hl,sprite_buffer
 	moscall mos_fread
 	pop hl ; frame length
@@ -2905,6 +2906,7 @@ ls_close:
 
 ls_exit:
 	call fn_show_spr_descr
+	call fn_change_frame
 	call fn_change_frames_count
 	ret
 
@@ -2952,7 +2954,6 @@ ss_clear_filename:
 	moscall mos_cd
 
 ss_next:
-
 	; exit on error
 	cp 0
 	jp nz,ss_folder_error
@@ -2970,7 +2971,8 @@ ss_next:
 	ld c,a
 	
 	; store colors count in the file
-	ld b,MAX_COLORS
+	ld hl,colors_count
+	ld b,(hl)
 	moscall mos_fputc
 	
 	; store frames count in the file
@@ -2991,16 +2993,18 @@ ss_next:
 	push hl
 
 	; get frames count
-	ld hl,current_frame
+	ld hl,frames_count
 	ld b,(hl)
 	
 	pop hl
 		
+	dec b
 	ld a,b
 	cp 0
 	jr z,ss_write_data
 
-	ld de,ONE_FRAME_BUFFER_SIZE
+	push hl
+	pop de
 ss_add_length:
 	add hl,de
 	djnz ss_add_length
@@ -3012,11 +3016,9 @@ ss_write_data:
 	ld hl,sprite_buffer
 	moscall mos_fwrite
 	pop hl
-	ld a,h
-	cp d
-	jr nz,ss_close_error
-	ld a,l
-	cp e
+	or a
+	sbc hl,de
+	add hl,de
 	jr nz,ss_close_error
 	jp ss_close
 
@@ -3082,6 +3084,9 @@ ss_close:
 	ld (hl),a
 
 ss_exit:
+	call fn_show_spr_descr
+	call fn_change_frame
+	call fn_change_frames_count
 	ret
 
 ss_file_error:
