@@ -2053,7 +2053,7 @@ it8_loop:
 it8l_add_char:
 	push af
 	ld a,c
-	cp 12
+	cp 16
 	jr c,it8l_poke_char
 	pop af
 	jp it8_loop
@@ -2154,7 +2154,7 @@ it8l_endloop:
 fn_load_palette:
 	; clear the filename on the screen
 	ld hl,filename
-	ld b,12
+	ld b,16
 	xor a
 
 lp_clear_filename:
@@ -2711,7 +2711,7 @@ fn_save_palette:
 fn_load_sprite:
 	; clear the filename on the screen
 	ld hl,filename
-	ld b,12
+	ld b,16
 	xor a
 
 ls_clear_filename:
@@ -2752,6 +2752,11 @@ ls_clear_filename:
 	; store colors count
 	ld hl,colors_count
 	ld (hl),a
+	
+	; redraw palette
+	push bc
+	call fn_draw_the_palette
+	pop bc
 
 	; get frames count
 	moscall mos_fgetc
@@ -2812,9 +2817,9 @@ ls_next3:
 	
 ls_next4:
 	ld hl,#000000
-	ld l,a
-	ld h,a
-	mlt hl ; HL = sprite length
+	ld l,b
+	ld h,b
+	mlt hl ; sprite length
 	push hl
 	
 	; get frames count
@@ -2834,18 +2839,15 @@ ls_add_length:
 	djnz ls_add_length
 
 ls_read_data:
+	push hl ; frame length
 	push hl
-	push hl
-	pop de
-	ld a,e
+	pop de ; frame length in DE
 	ld hl,sprite_buffer
 	moscall mos_fread
-	pop hl
-	ld a,h
-	cp d
-	jr nz,ls_close_error
-	ld a,l
-	cp e
+	pop hl ; frame length
+	or a
+	sbc hl,de
+	add hl,de ; compare frame length with loaded bytes
 	jr nz,ls_close_error
 	jp ls_close
 
@@ -2923,7 +2925,7 @@ ls_file_error:
 fn_save_sprite:
 	; clear filename on the screen
 	ld hl,filename
-	ld b,12
+	ld b,16
 	xor a
 
 ss_clear_filename:
@@ -3098,7 +3100,7 @@ ss_file_error:
 fn_export_sprite:
 	; clear filename
 	ld hl,filename
-	ld b,12
+	ld b,16
 	xor a
 
 es_clear_filename:
@@ -3797,7 +3799,7 @@ filename_label:
 
 ; filename without extension
 filename:
-	db 0,0,0,0,0,0,0,0,0,0,0,0,0
+	ds 17
 
 sprite_path:
 	db "sprites",0
@@ -3814,23 +3816,23 @@ spacechar:
 
 ; spaces to remove filename label
 void_filename:
-	db "                      ",0
+	db "                         ",0
 
 ; file error message
 file_error:
-	db "File error !          ",0
+	db "File error !             ",0
 
 ; folder error message
 folder_error:
-	db "Folder error !        ",0
+	db "Folder error !           ",0
 
 ; header error message
 header_error:
-	db "Header error !        ",0
+	db "Header error !           ",0
 
 ; data error message
 data_error:
-	db "Data error !        ",0
+	db "Data error !             ",0
 
 ; number of colors
 colors_count:
