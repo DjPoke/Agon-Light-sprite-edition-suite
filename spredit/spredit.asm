@@ -2070,7 +2070,7 @@ it8l_poke_char:
 
 	; locate x,y
 	vdu 31
-	vdu FILENAME_X+10
+	vdu FILENAME_X+9
 	vdu FILENAME_Y
 
 	; print text
@@ -2100,10 +2100,12 @@ it8l_backspace:
 
 	; locate x,y
 	vdu 31
-	ld a,FILENAME_X+10
+	ld a,FILENAME_X+9
 	add a,c
 	vdu_a
 	vdu FILENAME_Y
+	
+	push bc
 
 	; print text
 	ld hl,spacechar
@@ -2111,6 +2113,15 @@ it8l_backspace:
 	xor a
 	rst.lis $18
 
+	pop bc
+
+	; locate x,y
+	vdu 31
+	ld a,FILENAME_X+9
+	add a,c
+	vdu_a
+	vdu FILENAME_Y
+	
 	pop bc
 	jp it8_loop
 
