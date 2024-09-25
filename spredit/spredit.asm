@@ -18,8 +18,6 @@
 	include "mos_api.inc"
 	
 MAX_COLORS:		 	equ 64
-COLOR_MIN:	 		equ 0
-COLOR_MAX:	 		equ 63
 
 MAX_FRAMES:			equ 8
 
@@ -275,6 +273,11 @@ exit_menu_loop:
 	; clear the text screen
 	vdu 12
 
+	; set colors count to max colors
+	ld hl,colors_count
+	ld a,MAX_COLORS
+	ld (hl),a
+
 	call fn_draw_the_palette
 	
 	; store coordinates
@@ -348,9 +351,6 @@ init_sprite_vars:
 	ld (ix+0),a ; current pen -> white
 	
 	; set vars
-	ld hl,colors_count
-	ld a,MAX_COLORS
-	ld (hl),a
 	ld hl,current_frame
 	xor a
 	ld (hl),a
@@ -1473,30 +1473,32 @@ dsl_draw_sprite_tool:
 
 	jp draw_sprite_loop
 
-dsl_dec_pen:	
+dsl_dec_pen:
 	ld hl,current_pen
 	ld a,(hl)
-	cp COLOR_MIN
-	jp z,dsl_palette_tool_loop
+	cp 0
+	ret z
+	cp MAX_COLORS
+	ret nc
+	
+	ld c,a ; c is the old pen
+	dec a ; a is the new pen
 
 	push af
-	push hl
+	push bc
 	
 	; unselect palette color
-	ld hl,current_pen
-	ld c,(hl)
 	call fn_draw_palette_without_border
-
-	pop hl
-	pop af
 	
-	; dec the pen
-	dec a
+	pop bc
+	pop af
+
+	; replace current pen value
+	ld hl,current_pen
 	ld (hl),a
 	
 	; select palette color
-	ld hl,current_pen
-	ld c,(hl)
+	ld c,a
 	call fn_draw_palette_with_border
 	call fn_slowdown
 	jp dsl_palette_tool_loop
@@ -1504,27 +1506,30 @@ dsl_dec_pen:
 dsl_inc_pen:
 	ld hl,current_pen
 	ld a,(hl)
-	cp COLOR_MAX
-	jp z,dsl_palette_tool_loop
+	ld hl,colors_count
+	ld c,(hl)
+	dec c
+	cp c
+	ret nc
+	
+	ld c,a ; c is the old pen
+	inc a ; a is the new pen
 
 	push af
-	push hl
+	push bc
 	
 	; unselect palette color
-	ld hl,current_pen
-	ld c,(hl)
 	call fn_draw_palette_without_border
-
-	pop hl
+	
+	pop bc
 	pop af
 
-	; inc the pen
-	inc a
+	; replace current pen value
+	ld hl,current_pen
 	ld (hl),a
 	
 	; select palette color
-	ld hl,current_pen
-	ld c,(hl)
+	ld c,a
 	call fn_draw_palette_with_border
 	call fn_slowdown
 	jp dsl_palette_tool_loop
@@ -2226,7 +2231,7 @@ lp_getcount:
 lpgc_next:
 	push af
 	ld a,13
-	ld (hl),a ; store cr
+	ld (hl),a ; store CR
 	pop af
 	
 	; test CR
@@ -2395,6 +2400,16 @@ lp_two_colors:
 	ld hl,colors_count
 	ld a,2
 	ld (hl),a
+	
+	ld b,a
+	ld hl,current_pen
+	ld a,(hl)
+	cp b
+	jr c,lptc_done
+	dec b
+	ld (hl),b
+
+lptc_done:
 	ld hl,new_colors_count
 	ld a,(hl) ; real number of coulours
 	ld b,0 ; start wit color 0
@@ -2405,6 +2420,16 @@ lp_four_colors:
 	ld hl,colors_count
 	ld a,4
 	ld (hl),a
+	
+	ld b,a
+	ld hl,current_pen
+	ld a,(hl)
+	cp b
+	jr c,lpfc_done
+	dec b
+	ld (hl),b
+
+lpfc_done:
 	ld hl,new_colors_count
 	ld a,(hl) ; real number of coulours
 	ld b,0 ; start wit color 0
@@ -2415,6 +2440,16 @@ lp_sixteen_colors:
 	ld hl,colors_count
 	ld a,16
 	ld (hl),a
+
+	ld b,a
+	ld hl,current_pen
+	ld a,(hl)
+	cp b
+	jr c,lpsc_done
+	dec b
+	ld (hl),b
+
+lpsc_done:
 	ld hl,new_colors_count
 	ld a,(hl) ; real number of coulours
 	ld b,0 ; start wit color 0
@@ -2425,6 +2460,16 @@ lp_sixty_four_colors:
 	ld hl,colors_count
 	ld a,64
 	ld (hl),a
+	
+	ld b,a
+	ld hl,current_pen
+	ld a,(hl)
+	cp b
+	jr c,lpsfc_done
+	dec b
+	ld (hl),b
+
+lpsfc_done:
 	ld hl,new_colors_count
 	ld a,(hl) ; real number of coulours
 	ld b,0 ; start wit color 0
@@ -2541,6 +2586,7 @@ lprt_exit:
 
 ; two int
 lprt_two_int:
+	push bc
 	ld de,temp_chars_buffer
 	ld a,(de)
 	sub 48
@@ -2555,10 +2601,12 @@ lprt_two_int:
 	ld a,(de)
 	sub 48
 	add a,b ; full int value is here	
+	pop bc
 	ret
 	
 ; three int
 lprt_three_int:
+	push bc
 	ld de,temp_chars_buffer
 	ld a,(de)
 	sub 48
@@ -2584,6 +2632,7 @@ lprt_three_int:
 	sub 48
 	add a,c
 	add a,b ; full int value is here
+	pop bc
 	ret
 
 lprt_read_chars:
@@ -3583,8 +3632,22 @@ fndtp_palette_loop:
 	pop bc
 	push bc
 	ld a,c
+	push af
+	vdu_a
+	pop af
+	push hl
+	ld hl,colors_count
+	cp (hl)
+	pop hl
+	jr c,fndtppl_zap
+	
+	; set 0 if color is out of palette
+	vdu 18
+	vdu 0
+	xor a
 	vdu_a
 
+fndtppl_zap:
 	; store coordinates for a palette square
 	ld ix,x1
 	pop hl
