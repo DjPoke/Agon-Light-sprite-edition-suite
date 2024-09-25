@@ -22,7 +22,6 @@ MAX_COLORS:		 	equ 64
 MAX_FRAMES:			equ 8
 
 COLOR_WHITE:		equ 15
-COLOR_GREY:			equ 7
 COLOR_BLACK:		equ 0
 
 TITLE_X: 	equ 17
@@ -48,6 +47,8 @@ SPR3232_width: 	equ 4
 
 BUFFER_SIZE:			equ 8192 ; 8 frames
 ONE_FRAME_BUFFER_SIZE:	equ 1024
+
+FILENAME_LENGTH:	equ 16
 
 HEADER_BUFFER_SIZE:		equ 16
 
@@ -1726,7 +1727,7 @@ fn_draw_pixel_with_border:
 	; set graphics pen
 	vdu 18
 	vdu 0
-	vdu COLOR_GREY ; grey pen
+	vdu 1 ; pen 1
 
 	; draw the sprite's border rectangle
 	jp fn_rect
@@ -1914,10 +1915,10 @@ fn_draw_palette_with_border:
 	; draw the palette filled square
 	call fn_rectf
 	
-	; choose grey color
+	; choose pen 1
 	vdu 18
 	vdu 0
-	ld a,COLOR_GREY
+	ld a,1
 	vdu_a
 
 	; draw the palette square border
@@ -2153,7 +2154,7 @@ it8l_endloop:
 fn_load_palette:
 	; clear the filename on the screen
 	ld hl,filename
-	ld b,16
+	ld b,FILENAME_LENGTH
 	xor a
 
 lp_clear_filename:
@@ -2493,7 +2494,7 @@ lp_read_colors:
 	
 	call lp_read_tint ; read red tint
 	cp 255
-	jp z,lp_wrong_exit1
+	jp z,lp_wrong_exit
 
 	push hl
 	ld hl,red_tint
@@ -2502,7 +2503,7 @@ lp_read_colors:
 			
 	call lp_read_tint ; read green tint
 	cp 255
-	jp z,lp_wrong_exit2
+	jp z,lp_wrong_exit
 
 	push hl
 	ld hl,green_tint
@@ -2511,7 +2512,7 @@ lp_read_colors:
 	
 	call lp_read_tint ; read blue tint
 	cp 255
-	jp z,lp_wrong_exit3
+	jp z,lp_wrong_exit
 
 	push hl
 	ld hl,blue_tint
@@ -2535,21 +2536,14 @@ lp_read_colors:
 lp_exit:
 	ret
 
-lp_wrong_exit3:
-	pop de
-	
-lp_wrong_exit2:
+lp_wrong_exit:
 	pop bc
-
-lp_wrong_exit1:
 	pop hl
-	pop bc
 	pop af
 	jp lp_data_error
 
 lp_data_error:
 	call fn_print_data_error
-
 	ret
 
 lp_file_error:
@@ -2572,7 +2566,7 @@ lp_read_tint:
 	; read next string number
 	call lprt_read_chars
 
-	ld a,c	
+	ld a,c
 	cp 0 ; no numbers
 	jp z,lprt_exit
 	cp 4 ; too many numbers
@@ -2647,9 +2641,9 @@ lprt_three_int:
 
 lprt_read_chars:
 	ld a,13
-	ld (de),a ; store eol as default temp char
+	ld (de),a ; store eol as next default temp char
 	
-	ld a,(hl) ; get a new char in the palette buffer
+	ld a,(hl) ; get the new char in the palette buffer
 	inc hl
 	
 	cp 32
@@ -2667,7 +2661,6 @@ lprt_read_chars:
 	ld (de),a
 	inc de
 	inc c
-
 	jp lprt_read_chars
 
 ; set tint (RGB = c,e,l)
@@ -2710,7 +2703,7 @@ fn_save_palette:
 fn_load_sprite:
 	; clear the filename on the screen
 	ld hl,filename
-	ld b,16
+	ld b,FILENAME_LENGTH
 	xor a
 
 ls_clear_filename:
@@ -2927,7 +2920,7 @@ ls_file_error:
 fn_save_sprite:
 	; clear filename on the screen
 	ld hl,filename
-	ld b,16
+	ld b,FILENAME_LENGTH
 	xor a
 
 ss_clear_filename:
@@ -3105,7 +3098,7 @@ ss_file_error:
 fn_export_sprite:
 	; clear filename
 	ld hl,filename
-	ld b,16
+	ld b,FILENAME_LENGTH
 	xor a
 
 es_clear_filename:
