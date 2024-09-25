@@ -737,7 +737,7 @@ af_loop3:
 	ret
 
 ; add a copy of the current frame to the animation
-dsl_add_and_copy_frame: ; TODO! debug me!
+dsl_add_and_copy_frame:
 	ld hl,KEY_C
 	call fn_inkey
 	cp 0
@@ -2491,8 +2491,6 @@ lp_read_colors:
 	push af
 	
 	call lp_read_tint ; read red tint
-	cp 255
-	jp z,lp_wrong_exit
 
 	push hl
 	ld hl,red_tint
@@ -2500,8 +2498,6 @@ lp_read_colors:
 	pop hl
 
 	call lp_read_tint ; read green tint
-	cp 255
-	jp z,lp_wrong_exit
 
 	push hl
 	ld hl,green_tint
@@ -2509,8 +2505,6 @@ lp_read_colors:
 	pop hl
 
 	call lp_read_tint ; read blue tint
-	cp 255
-	jp z,lp_wrong_exit
 
 	push hl
 	ld hl,blue_tint
@@ -2559,9 +2553,9 @@ lp_read_tint:
 
 	ld a,c
 	cp 0 ; no numbers
-	jp z,lprt_exit
+	jp z,lprt_wrong_exit
 	cp 4 ; too many numbers
-	jp nc,lprt_exit
+	jp nc,lprt_wrong_exit
 
 	cp 3
 	jr z,lprt_three_int
@@ -2575,8 +2569,8 @@ lp_read_tint:
 	sub 48
 	ret
 	
-lprt_exit:
-	ld a,255
+lprt_wrong_exit:
+	xor a
 	ret
 
 ; two int
@@ -3839,6 +3833,9 @@ green_tint:
 
 blue_tint:
 	db 0
+	
+error_flag:
+	db 0
 
 ; current frame
 current_frame:
@@ -3969,6 +3966,8 @@ rgb_palette:
 ; data			:   width x height bytes of colors
 
 ; ===============================================
+
+
 ; A = byte to debug
 debug_byte:
 	PUSH AF
@@ -4017,7 +4016,7 @@ debug_word:
 	RET
 
 debug_text:
-	DS 6
+	DS 6,0
 
 ; 16 bits number to string
 num2dec:
