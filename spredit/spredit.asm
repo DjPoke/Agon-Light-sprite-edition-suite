@@ -2277,21 +2277,22 @@ lpgc_next:
 	ld (hl),a ; store cr
 	pop af
 	
-	; test read CRLF
+	; test CR
 	cp 13
 	jp nz,lp_close_error
 
 	push bc
 
-	; read colors data
+	; read LF
 	moscall mos_fgetc
 	
 	pop bc
 	
+	; test LF
 	cp 10
 	jp nz,lp_close_error
 	
-	; read color strings
+	; prepare to read color strings
 	ld de,#000000
 	ld hl,palette_buffer
 	
@@ -2309,8 +2310,9 @@ lp_load_pal_loop:
 	pop hl
 	pop de
 	pop bc
-	
-	ld (hl),a ; store loaded char
+
+	ld (hl),a ; store loaded char in palette buffer
+	inc hl
 	inc de ; count chars
 	ld a,d
 	cp MAX_PAL_DATA_HI
@@ -2382,20 +2384,23 @@ lp_close:
 	ld a,(hl)
 	ld c,a ; bc = 1st char, 2nd char or CR
 	
-	ld hl,palette_buffer
+	; first is a char number ?
+	ld a,b
+	cp 48
+	jp c,lp_data_error
+	cp 58
+	jp nc,lp_data_error
 
 	ld a,c
 	cp 13
-	jp nz,lp_two_number
+	jp nz,lp_two_numbers
 	
-lp_one_number:
+; only one number
 	ld a,b
 	sub 48
 	
-	push hl
 	ld hl,new_colors_count
 	ld (hl),a
-	pop hl
 	
 	cp 0
 	jp z,lp_data_error
@@ -2406,7 +2411,14 @@ lp_one_number:
 	
 	jp lp_sixteen_colors
 
-lp_two_number:	
+; two numbers
+lp_two_numbers:
+	ld a,c
+	cp 48
+	jp c,lp_data_error
+	cp 58
+	jp nc,lp_data_error
+	
 	ld a,b
 	sub 48
 	ld bc,#000000
@@ -2415,11 +2427,9 @@ lp_two_number:
 	mlt bc
 	add a,c
 	
-	push hl
 	ld hl,new_colors_count
 	ld (hl),a
-	pop hl
-	
+
 	cp 10
 	jp c,lp_data_error
 	cp 17
@@ -2430,75 +2440,105 @@ lp_two_number:
 	jp lp_data_error
 
 lp_two_colors:
-	push hl
 	ld hl,colors_count
 	ld a,2
 	ld (hl),a
 	ld hl,new_colors_count
-	ld a,(hl)
-	pop hl
+	ld a,(hl) ; real number of coulours
 	ld b,0 ; start wit color 0
+	ld hl,palette_buffer ; palette will be got here
 	jp lp_read_colors
 
 lp_four_colors:
-	push hl
 	ld hl,colors_count
 	ld a,4
 	ld (hl),a
 	ld hl,new_colors_count
-	ld a,(hl)
-	pop hl
+	ld a,(hl) ; real number of coulours
 	ld b,0 ; start wit color 0
+	ld hl,palette_buffer ; palette will be got here
 	jp lp_read_colors
 
 lp_sixteen_colors:
-	push hl
 	ld hl,colors_count
 	ld a,16
 	ld (hl),a
 	ld hl,new_colors_count
-	ld a,(hl)
-	pop hl
+	ld a,(hl) ; real number of coulours
 	ld b,0 ; start wit color 0
+	ld hl,palette_buffer ; palette will be got here	
 	jp lp_read_colors
 
 lp_sixty_four_colors:
-	push hl
 	ld hl,colors_count
 	ld a,64
 	ld (hl),a
 	ld hl,new_colors_count
-	ld a,(hl)
-	pop hl
+	ld a,(hl) ; real number of coulours
 	ld b,0 ; start wit color 0
+	ld hl,palette_buffer ; palette will be got here
 	jp lp_read_colors
 
 lp_read_colors:
 	push af
-	push bc
 	push hl
-	call lp_read_tint ; read red
-	ld c,a
 	push bc
-	call lp_read_tint ; green red
-	ld e,a
-	push de
-	call lp_read_tint ; blue red
-	ld l,a
-	pop de
-	pop bc ; RGB = c,e,l
-	call lp_set_tint
+	
+	call lp_read_tint ; read red tint
+	cp 255
+	jp z,lp_wrong_exit1
+
+	push hl
+	ld hl,red_tint
+	ld (hl),a
 	pop hl
+			
+	call lp_read_tint ; read green tint
+	cp 255
+	jp z,lp_wrong_exit2
+
+	push hl
+	ld hl,green_tint
+	ld (hl),a
+	pop hl
+	
+	call lp_read_tint ; read blue tint
+	cp 255
+	jp z,lp_wrong_exit3
+
+	push hl
+	ld hl,blue_tint
+	ld (hl),a
+	pop hl
+	
 	pop bc
+	push bc
+	
+	call lp_set_tint
+	
+	pop bc
+	pop hl
 	pop af
 	
-	inc b
-	dec a
+	inc b ; increment number of colors
+	dec a ; decrement real number of colors
 	cp 0
 	jp nz,lp_read_colors
 	
 lp_exit:
 	ret
+
+lp_wrong_exit3:
+	pop de
+	
+lp_wrong_exit2:
+	pop bc
+
+lp_wrong_exit1:
+	pop hl
+	pop bc
+	pop af
+	jp lp_data_error
 
 lp_data_error:
 	call fn_print_data_error
@@ -2519,21 +2559,17 @@ lp_file_error:
 	ret
 
 lp_read_tint:
-	ld c,0 ; number of chars readen
-	ld de,temp_chars_buffer
+	ld c,0 ; number of chars readen for a single string number
+	ld de,temp_chars_buffer ; temp buffer for a string number
 
-	push de
-
-	; read chars
+	; read next string number
 	call lprt_read_chars
-	
-	pop de
-	
-	ld a,c
+
+	ld a,c	
 	cp 0 ; no numbers
-	jp z,lp_data_error
-	cp 4 ; to many numbers
-	jp nc,lp_data_error
+	jp z,lprt_exit
+	cp 4 ; too many numbers
+	jp nc,lprt_exit
 
 	cp 3
 	jr z,lprt_three_int
@@ -2542,12 +2578,20 @@ lp_read_tint:
 	jr z,lprt_two_int
 	
 	; one int only
+	ld de,temp_chars_buffer
 	ld a,(de)
+	sub 48
+	ret
+	
+lprt_exit:
+	ld a,255
 	ret
 
 ; two int
 lprt_two_int:
+	ld de,temp_chars_buffer
 	ld a,(de)
+	sub 48
 	push de
 	ld de,#000000
 	ld e,a
@@ -2557,12 +2601,15 @@ lprt_two_int:
 	pop de
 	inc de
 	ld a,(de)
-	add a,b ; full int value is here
+	sub 48
+	add a,b ; full int value is here	
 	ret
 	
 ; three int
 lprt_three_int:
+	ld de,temp_chars_buffer
 	ld a,(de)
+	sub 48
 	push de
 	ld de,#000000
 	ld e,a
@@ -2572,6 +2619,7 @@ lprt_three_int:
 	pop de
 	inc de
 	ld a,(de)
+	sub 48
 	push de
 	ld de,#000000
 	ld e,a
@@ -2581,6 +2629,7 @@ lprt_three_int:
 	pop de
 	inc de
 	ld a,(de)
+	sub 48
 	add a,c
 	add a,b ; full int value is here
 	ret
@@ -2589,53 +2638,57 @@ lprt_read_chars:
 	ld a,13
 	ld (de),a ; store eol as default char
 	
-	ld a,(hl)
+	ld a,(hl) ; get a new char
+	inc hl
+	
 	cp ' '
 	ret z ; ret if space
 	cp 13
-	ret z ; ret if cr
+	jr z,lprt_read_chars ; loop if cr
 	cp 10
 	ret z ; ret if lf
-	cp '0'
+	cp 48
 	ret c ; ret if not number
-	cp '9'
-	jr c,lprt_store
-	jr z,lprt_store
-	ret
-	
+	cp 58
+	ret nc ; ret if not number
+
 ; found a number, store it
-lprt_store:
-	sub 48 ; convert char to byte integer
-	ld (de),a ; store value
+	ld (de),a
 	inc de
 	inc c
+
 	jp lprt_read_chars
 
 ; set tint (RGB = c,e,l)
 lp_set_tint:
+	push af
 	push bc
 	push de
 	push hl
-	
+
 	push bc
 	vdu 19
-	pop bc	
+	pop bc
 	ld a,b
 	vdu_a
 	vdu 255
+	
+	ld hl,red_tint
+	ld a,(hl)
+	vdu_a
+
+	ld hl,green_tint
+	ld a,(hl)
+	vdu_a
+
+	ld hl,blue_tint
+	ld a,(hl)
+	vdu_a
 
 	pop hl
-	ld a,l
-	vdu_a
 	pop de
-	ld a,e
-	vdu_a	
 	pop bc
-	ld a,c
-	vdu_a
-	
-	pop bc
-	
+	pop af
 	ret
 
 ; save the palette
@@ -3705,6 +3758,15 @@ colors_count:
 
 ; real number of colors
 new_colors_count:
+	db 0
+
+red_tint:
+	db 0
+
+green_tint:
+	db 0
+
+blue_tint:
 	db 0
 
 ; current frame
