@@ -1,7 +1,7 @@
 ; spredit.asm
 ;
 ; by B.Vignoli
-; MIT 2023
+; MIT 2023-2024
 ;
 
 .assume adl=1
@@ -2484,13 +2484,11 @@ lpsfc_done:
 	ld hl,new_colors_count
 	ld a,(hl) ; real number of coulours
 	ld b,0 ; start wit color 0
-	ld hl,palette_buffer ; palette will be got here
+	ld hl,palette_buffer ; palette will be taken here
 	jp lp_read_colors
 
 lp_read_colors:
 	push af
-	push hl
-	push bc
 	
 	call lp_read_tint ; read red tint
 	cp 255
@@ -2500,7 +2498,7 @@ lp_read_colors:
 	ld hl,red_tint
 	ld (hl),a
 	pop hl
-			
+
 	call lp_read_tint ; read green tint
 	cp 255
 	jp z,lp_wrong_exit
@@ -2509,7 +2507,7 @@ lp_read_colors:
 	ld hl,green_tint
 	ld (hl),a
 	pop hl
-	
+
 	call lp_read_tint ; read blue tint
 	cp 255
 	jp z,lp_wrong_exit
@@ -2519,13 +2517,8 @@ lp_read_colors:
 	ld (hl),a
 	pop hl
 	
-	pop bc
-	push bc
-	
 	call lp_set_tint
 	
-	pop bc
-	pop hl
 	pop af
 	
 	inc b ; increment number of colors
@@ -2537,8 +2530,6 @@ lp_exit:
 	ret
 
 lp_wrong_exit:
-	pop bc
-	pop hl
 	pop af
 	jp lp_data_error
 
