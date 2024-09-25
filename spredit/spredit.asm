@@ -2216,7 +2216,6 @@ lp_clear_filename:
 
 	; filehandle -> C
 	ld c,a
-
 	
 	; get palette header
 	ld hl,header_buffer
@@ -2245,8 +2244,54 @@ lp_compare:
 	ld a,b
 	cp 0
 	jp nz,lp_compare
+
+	; prepare to read the number of colors
+	ld hl,color_buffer
 	
-	; read number of colors
+lp_getcount:
+	; read a string for colors count
+	push bc
+	push hl
+
+	; read colors data
+	moscall mos_fgetc
+	
+	pop hl
+	pop bc
+	
+	; exit if eof
+	jp c,lp_close_error
+
+	cp 48 ; < 0
+	jr c,lpgc_next
+	cp 58 ; > 9
+	jp nc,lp_data_error
+
+	ld (hl),a
+	inc hl
+	jr lp_getcount
+
+lpgc_next:
+	push af
+	ld a,13
+	ld (hl),a ; store cr
+	pop af
+	
+	; test read CRLF
+	cp 13
+	jp nz,lp_close_error
+
+	push bc
+
+	; read colors data
+	moscall mos_fgetc
+	
+	pop bc
+	
+	cp 10
+	jp nz,lp_close_error
+	
+	; read color strings
 	ld de,#000000
 	ld hl,palette_buffer
 	
@@ -2258,18 +2303,19 @@ lp_load_pal_loop:
 	; read colors data
 	moscall mos_fgetc
 	
-	; exit if file end
+	; exit if eof
 	jp c,lp_loaded
 	
 	pop hl
 	pop de
 	pop bc
+	
 	ld (hl),a ; store loaded char
 	inc de ; count chars
-	ld a,b
+	ld a,d
 	cp MAX_PAL_DATA_HI
 	jp c,lp_load_pal_loop
-	ld a,b
+	ld a,e
 	cp MAX_PAL_DATA_LO
 	jp c,lp_load_pal_loop
 
@@ -2328,38 +2374,21 @@ lp_close:
 	cp 0
 	jp nz,lp_folder_error
 
-	; store first color 0
-	xor a
-	ld hl,color_byte
-	ld (hl),a
-
-	; read number of colors in the palette
-	ld hl,palette_buffer
+	; read the number of colors we have in the palette
+	ld hl,color_buffer
 	ld a,(hl)
 	ld b,a
 	inc hl
 	ld a,(hl)
-	ld c,a ; bc = 1st char, 2nd char or 13
-
-	ld a,c
-	cp 48
-	jp c,lp_one_number
-	cp 58
-	jp nc,lp_two_number
-	jp lp_data_error
+	ld c,a ; bc = 1st char, 2nd char or CR
 	
-lp_one_number:
+	ld hl,palette_buffer
+
 	ld a,c
 	cp 13
-	jp nz,lp_data_error
+	jp nz,lp_two_number
 	
-	inc hl
-	ld a,(hl)
-	cp 10
-	jp nz,lp_data_error
-
-	inc hl
-	
+lp_one_number:
 	ld a,b
 	sub 48
 	
@@ -2377,19 +2406,7 @@ lp_one_number:
 	
 	jp lp_sixteen_colors
 
-lp_two_number:
-	inc hl
-	ld a,(hl)
-	cp 13
-	jp nz,lp_data_error
-	
-	inc hl
-	ld a,(hl)
-	cp 10
-	jp nz,lp_data_error
-
-	inc hl
-	
+lp_two_number:	
 	ld a,b
 	sub 48
 	ld bc,#000000
@@ -3715,15 +3732,15 @@ sprite_buffer:
 header_buffer:
 	ds HEADER_BUFFER_SIZE
 
+color_buffer:
+	db 0,0,0
+	
 palette_buffer:
 	ds MAX_PAL_DATA + 1
 
 temp_chars_buffer:
 	db 0,0,0,0
 	
-color_byte:
-	db 0
-
 header:
 	db "JASC-PAL",13,10
 	db "0100",13,10
@@ -3817,3 +3834,76 @@ rgb_palette:
 ; frames count	:	byte
 ; spr size		:	byte
 ; data			:   width x height bytes of colors
+
+; ===============================================
+; A = byte to debug
+debug_byte:
+	PUSH AF
+	PUSH BC
+	PUSH DE
+	PUSH HL
+	LD HL,$000000
+	LD L,A
+	LD DE,debug_text
+	PUSH DE
+	CALL num2dec
+	POP HL
+	INC HL
+	INC HL
+	LD BC,3
+	LD A,0
+	RST.LIS $18
+	POP HL
+	POP DE
+	POP BC
+	POP AF
+	RET
+
+; HL = word to debug
+debug_word:
+	PUSH AF
+	PUSH BC
+	PUSH DE
+	PUSH HL
+	LD DE,$000000 ; remove HLU
+	LD E,L
+	LD D,H
+	PUSH DE
+	POP HL
+	LD DE,debug_text
+	PUSH DE
+	CALL num2dec
+	POP HL
+	LD BC,5
+	LD A,0
+	RST.LIS $18
+	POP HL
+	POP DE
+	POP BC
+	POP AF
+	RET
+
+debug_text:
+	DS 6
+
+; 16 bits number to string
+num2dec:
+	LD BC,-10000
+	CALL num1
+	LD BC,-1000
+	CALL num1
+	LD BC,-100
+	CALL num1
+	LD BC,-10
+	CALL num1
+	LD C,B
+
+num1: LD A,'0'-1
+num2: INC A
+	ADD HL,BC
+	JR C,num2
+	SBC HL,BC
+
+	LD (DE),A
+	INC DE
+	RET
