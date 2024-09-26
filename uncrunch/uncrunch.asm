@@ -686,7 +686,7 @@ plot_pixel:
 	VDU_A
 
 	VDU 25
-	VDU 0
+	VDU 4 ; ?
 
 	POP HL
 	POP DE

@@ -1246,8 +1246,8 @@ PC     Output      Line
 040641             0688   	VDU 25
 040641 3E 19       0001M  		LD	A, function
 040643 49 D7       0002M  		RST.LIS	10h
-040645             0689   	VDU 0
-040645 3E 00       0001M  		LD	A, function
+040645             0689   	VDU 4
+040645 3E 04       0001M  		LD	A, function
 040647 49 D7       0002M  		RST.LIS	10h
 040649             0690   
 040649 E1          0691   	POP HL
