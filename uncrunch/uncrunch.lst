@@ -1120,7 +1120,7 @@ PC     Output      Line
 0405A4 49 CF       0002M  		RST.LIS	08h
 0405A6 DA BB 05 04 0584   	JP C,lcs_exit
 0405AA             0585   
-0405AA CC 86 06 04 0586   	CALL Z,plot_line
+0405AA CC 9A 06 04 0586   	CALL Z,plot_line
 0405AE C3 7D 05 04 0587   	JP lcs_loop
 0405B2             0588   
 0405B2             0589   lcs_error:
@@ -1252,70 +1252,91 @@ PC     Output      Line
 040649             0690   
 040649 E1          0691   	POP HL
 04064A D1          0692   	POP DE
-04064B C1          0693   	POP BC
-04064C F1          0694   	POP AF
-04064D F5          0695   	PUSH AF
-04064E C5          0696   	PUSH BC
-04064F D5          0697   	PUSH DE
-040650 E5          0698   	PUSH HL
-040651             0699   
-040651             0700   	VDU_DE
-040651 7B          0001M  		LD A,E
-040652 49 D7       0002M  		RST.LIS	10h
-040654 7A          0003M  		LD A,D
-040655 49 D7       0004M  		RST.LIS	10h
-040657             0701   
-040657 E1          0702   	POP HL
-040658 D1          0703   	POP DE
-040659 C1          0704   	POP BC
-04065A F1          0705   	POP AF
-04065B F5          0706   	PUSH AF
-04065C C5          0707   	PUSH BC
-04065D D5          0708   	PUSH DE
-04065E E5          0709   	PUSH HL
-04065F             0710   
-04065F             0711   	VDU_HL
-04065F 7D          0001M  		LD A,L
-040660 49 D7       0002M  		RST.LIS	10h
-040662 7C          0003M  		LD A,H
-040663 49 D7       0004M  		RST.LIS	10h
-040665             0712   
-040665 E1          0713   	POP HL
-040666 D1          0714   	POP DE
-040667 C1          0715   	POP BC
-040668 F1          0716   	POP AF
-040669             0717   
-040669 13          0718   	INC DE
-04066A             0719   
-04066A E5          0720   	PUSH HL
-04066B DD 21 0F 01 0721   	LD IX,width_by_mode
+04064B D5          0693   	PUSH DE
+04064C E5          0694   	PUSH HL
+04064D             0695   
+04064D             0696   	VDU_DE
+04064D 7B          0001M  		LD A,E
+04064E 49 D7       0002M  		RST.LIS	10h
+040650 7A          0003M  		LD A,D
+040651 49 D7       0004M  		RST.LIS	10h
+040653             0697   
+040653 E1          0698   	POP HL
+040654 D1          0699   	POP DE
+040655 D5          0700   	PUSH DE
+040656 E5          0701   	PUSH HL
+040657             0702   
+040657             0703   	VDU_HL
+040657 7D          0001M  		LD A,L
+040658 49 D7       0002M  		RST.LIS	10h
+04065A 7C          0003M  		LD A,H
+04065B 49 D7       0004M  		RST.LIS	10h
+04065D             0704   
+04065D             0705   	VDU 25
+04065D 3E 19       0001M  		LD	A, function
+04065F 49 D7       0002M  		RST.LIS	10h
+040661             0706   	VDU 5
+040661 3E 05       0001M  		LD	A, function
+040663 49 D7       0002M  		RST.LIS	10h
+040665             0707   
+040665 E1          0708   	POP HL
+040666 D1          0709   	POP DE
+040667 D5          0710   	PUSH DE
+040668 E5          0711   	PUSH HL
+040669             0712   
+040669             0713   	VDU_DE
+040669 7B          0001M  		LD A,E
+04066A 49 D7       0002M  		RST.LIS	10h
+04066C 7A          0003M  		LD A,D
+04066D 49 D7       0004M  		RST.LIS	10h
+04066F             0714   
+04066F E1          0715   	POP HL
+040670 D1          0716   	POP DE
+040671 D5          0717   	PUSH DE
+040672 E5          0718   	PUSH HL
+040673             0719   
+040673             0720   	VDU_HL
+040673 7D          0001M  		LD A,L
+040674 49 D7       0002M  		RST.LIS	10h
+040676 7C          0003M  		LD A,H
+040677 49 D7       0004M  		RST.LIS	10h
+040679             0721   
+040679 E1          0722   	POP HL
+04067A D1          0723   	POP DE
+04067B C1          0724   	POP BC
+04067C F1          0725   	POP AF
+04067D             0726   
+04067D 13          0727   	INC DE
+04067E             0728   
+04067E E5          0729   	PUSH HL
+04067F DD 21 0F 01 0730   	LD IX,width_by_mode
        04          
-040670 DD 6E 00    0722   	LD L,(IX+0)
-040673 DD 66 01    0723   	LD H,(IX+1)
-040676 EB          0724   	EX DE,HL
-040677 B7          0725   	OR A
-040678 ED 52       0726   	SBC HL,DE
-04067A 19          0727   	ADD HL,DE
-04067B EB          0728   	EX DE,HL
-04067C E1          0729   	POP HL
-04067D 28 01       0730   	JR Z,pp_carriage_return
-04067F C9          0731   	ret
-040680             0732   
-040680             0733   pp_carriage_return:
-040680 11 00 00 00 0734   	LD DE,$000000
-040684 23          0735   	INC HL
-040685 C9          0736   	ret
-040686             0737   
-040686             0738   ; B -> count of pixels to draw
-040686             0739   ; A -> color
-040686             0740   plot_line:
-040686 F5          0741   	PUSH AF
-040687 C5          0742   	PUSH BC
-040688 D5          0743   	PUSH DE
-040689 E5          0744   	PUSH HL
-04068A             0745   
-04068A E1          0746   	POP HL
-04068B D1          0747   	POP DE
-04068C C1          0748   	POP BC
-04068D F1          0749   	POP AF
-04068E C9          0750   	ret
+040684 DD 6E 00    0731   	LD L,(IX+0)
+040687 DD 66 01    0732   	LD H,(IX+1)
+04068A EB          0733   	EX DE,HL
+04068B B7          0734   	OR A
+04068C ED 52       0735   	SBC HL,DE
+04068E 19          0736   	ADD HL,DE
+04068F EB          0737   	EX DE,HL
+040690 E1          0738   	POP HL
+040691 28 01       0739   	JR Z,pp_carriage_return
+040693 C9          0740   	ret
+040694             0741   
+040694             0742   pp_carriage_return:
+040694 11 00 00 00 0743   	LD DE,$000000
+040698 23          0744   	INC HL
+040699 C9          0745   	ret
+04069A             0746   
+04069A             0747   ; B -> count of pixels to draw
+04069A             0748   ; A -> color
+04069A             0749   plot_line:
+04069A F5          0750   	PUSH AF
+04069B C5          0751   	PUSH BC
+04069C D5          0752   	PUSH DE
+04069D E5          0753   	PUSH HL
+04069E             0754   
+04069E E1          0755   	POP HL
+04069F D1          0756   	POP DE
+0406A0 C1          0757   	POP BC
+0406A1 F1          0758   	POP AF
+0406A2 C9          0759   	ret

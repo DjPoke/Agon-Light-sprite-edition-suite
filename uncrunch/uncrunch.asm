@@ -686,14 +686,10 @@ plot_pixel:
 	VDU_A
 
 	VDU 25
-	VDU 4 ; ?
+	VDU 4
 
 	POP HL
 	POP DE
-	POP BC
-	POP AF
-	PUSH AF
-	PUSH BC
 	PUSH DE
 	PUSH HL
 	
@@ -701,10 +697,23 @@ plot_pixel:
 
 	POP HL
 	POP DE
-	POP BC
-	POP AF
-	PUSH AF
-	PUSH BC
+	PUSH DE
+	PUSH HL
+	
+	VDU_HL
+
+	VDU 25
+	VDU 5
+
+	POP HL
+	POP DE
+	PUSH DE
+	PUSH HL
+	
+	VDU_DE
+
+	POP HL
+	POP DE
 	PUSH DE
 	PUSH HL
 	
