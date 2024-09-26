@@ -3874,8 +3874,9 @@ fn_set_color:
 	push de
 	push hl
 
-	push bc
-	
+	ld a,b
+	push af
+
 	; store rgb tints
 	ld a,l
 	ld hl,red_tint
@@ -3884,8 +3885,6 @@ fn_set_color:
 	ld (hl),e
 	ld hl,blue_tint
 	ld (hl),a
-	
-	pop bc
 
 	; point to palette rgb color
 	ld hl,rgb_palette
@@ -3895,7 +3894,7 @@ fn_set_color:
 	mlt de
 	add hl,de ; hl -> rgb colors
 
-	; store rgb tints into the palette
+	; store rgb tints into the rgb palette
 	ld de,red_tint
 	ld a,(de)
 	ld (hl),a
@@ -3908,10 +3907,8 @@ fn_set_color:
 	ld a,(de)
 	ld (hl),a
 	
-	push bc
 	vdu 19
-	pop bc
-	ld a,b
+	pop af
 	vdu_a
 	vdu 255
 	
@@ -3935,7 +3932,8 @@ fn_set_color:
 
 ; read rgb tints for the color in b
 fn_get_color:
-	push bc
+	ld a,b
+	push af
 	
 	; point to palette rgb color
 	ld hl,rgb_palette
@@ -3958,6 +3956,7 @@ fn_get_color:
 	ld a,(hl)
 	ld (de),a
 	
+	; grab rgb tints in c,e,l
 	ld hl,red_tint
 	ld c,(hl)
 	ld hl,green_tint
@@ -3966,7 +3965,8 @@ fn_get_color:
 	ld a,(hl)
 	ld l,a
 	
-	pop bc
+	pop af
+	ld b,a
 	ret
 	
 ;======================================================================

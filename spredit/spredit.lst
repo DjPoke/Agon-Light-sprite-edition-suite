@@ -1778,7 +1778,7 @@ PC     Output      Line
 0409FF CD EE 0E 04 1472   	call fn_draw_palette_without_border
 040A03 21 38 1A 04 1473   	ld hl,current_pen
 040A07 46          1474   	ld b,(hl)
-040A08 CD ED 19 04 1475   	call fn_get_color
+040A08 CD EB 19 04 1475   	call fn_get_color
 040A0C 0C          1476   	inc c
 040A0D CD 8E 19 04 1477   	call fn_set_color
 040A11 CD 05 19 04 1478   	call fn_draw_the_palette
@@ -1795,7 +1795,7 @@ PC     Output      Line
 040A2F CD EE 0E 04 1489   	call fn_draw_palette_without_border
 040A33 21 38 1A 04 1490   	ld hl,current_pen
 040A37 46          1491   	ld b,(hl)
-040A38 CD ED 19 04 1492   	call fn_get_color
+040A38 CD EB 19 04 1492   	call fn_get_color
 040A3C 1C          1493   	inc e
 040A3D CD 8E 19 04 1494   	call fn_set_color
 040A41 CD 05 19 04 1495   	call fn_draw_the_palette
@@ -1812,7 +1812,7 @@ PC     Output      Line
 040A5F CD EE 0E 04 1506   	call fn_draw_palette_without_border
 040A63 21 38 1A 04 1507   	ld hl,current_pen
 040A67 46          1508   	ld b,(hl)
-040A68 CD ED 19 04 1509   	call fn_get_color
+040A68 CD EB 19 04 1509   	call fn_get_color
 040A6C 2C          1510   	inc l
 040A6D CD 8E 19 04 1511   	call fn_set_color
 040A71 CD 05 19 04 1512   	call fn_draw_the_palette
@@ -1829,7 +1829,7 @@ PC     Output      Line
 040A8F CD EE 0E 04 1523   	call fn_draw_palette_without_border
 040A93 21 38 1A 04 1524   	ld hl,current_pen
 040A97 46          1525   	ld b,(hl)
-040A98 CD ED 19 04 1526   	call fn_get_color
+040A98 CD EB 19 04 1526   	call fn_get_color
 040A9C 0D          1527   	dec c
 040A9D CD 8E 19 04 1528   	call fn_set_color
 040AA1 CD 05 19 04 1529   	call fn_draw_the_palette
@@ -1846,7 +1846,7 @@ PC     Output      Line
 040ABF CD EE 0E 04 1540   	call fn_draw_palette_without_border
 040AC3 21 38 1A 04 1541   	ld hl,current_pen
 040AC7 46          1542   	ld b,(hl)
-040AC8 CD ED 19 04 1543   	call fn_get_color
+040AC8 CD EB 19 04 1543   	call fn_get_color
 040ACC 1D          1544   	dec e
 040ACD CD 8E 19 04 1545   	call fn_set_color
 040AD1 CD 05 19 04 1546   	call fn_draw_the_palette
@@ -1863,7 +1863,7 @@ PC     Output      Line
 040AEF CD EE 0E 04 1557   	call fn_draw_palette_without_border
 040AF3 21 38 1A 04 1558   	ld hl,current_pen
 040AF7 46          1559   	ld b,(hl)
-040AF8 CD ED 19 04 1560   	call fn_get_color
+040AF8 CD EB 19 04 1560   	call fn_get_color
 040AFC 2D          1561   	dec l
 040AFD CD 8E 19 04 1562   	call fn_set_color
 040B01 CD 05 19 04 1563   	call fn_draw_the_palette
@@ -4574,107 +4574,107 @@ PC     Output      Line
 041990 D5          3874   	push de
 041991 E5          3875   	push hl
 041992             3876   
-041992 C5          3877   	push bc
-041993             3878   
-041993             3879   	; store rgb tints
-041993 7D          3880   	ld a,l
-041994 21 59 1B 04 3881   	ld hl,red_tint
-041998 71          3882   	ld (hl),c
-041999 21 5A 1B 04 3883   	ld hl,green_tint
-04199D 73          3884   	ld (hl),e
-04199E 21 5B 1B 04 3885   	ld hl,blue_tint
-0419A2 77          3886   	ld (hl),a
-0419A3             3887   
-0419A3 C1          3888   	pop bc
-0419A4             3889   
-0419A4             3890   	; point to palette rgb color
-0419A4 21 D6 42 04 3891   	ld hl,rgb_palette
-0419A8 11 00 00 00 3892   	ld de,#000000
-0419AC 58          3893   	ld e,b
-0419AD 16 03       3894   	ld d,3
-0419AF ED 5C       3895   	mlt de
-0419B1 19          3896   	add hl,de ; hl -> rgb colors
-0419B2             3897   
-0419B2             3898   	; store rgb tints into the palette
-0419B2 11 59 1B 04 3899   	ld de,red_tint
-0419B6 1A          3900   	ld a,(de)
-0419B7 77          3901   	ld (hl),a
-0419B8 23          3902   	inc hl
-0419B9 11 5A 1B 04 3903   	ld de,green_tint
-0419BD 1A          3904   	ld a,(de)
-0419BE 77          3905   	ld (hl),a
-0419BF 23          3906   	inc hl
-0419C0 11 5B 1B 04 3907   	ld de,blue_tint
-0419C4 1A          3908   	ld a,(de)
-0419C5 77          3909   	ld (hl),a
-0419C6             3910   
-0419C6 C5          3911   	push bc
-0419C7             3912   	vdu 19
-0419C7 3E 13       0001M  		LD	A, function
-0419C9 49 D7       0002M  		RST.LIS	10h
-0419CB C1          3913   	pop bc
-0419CC 78          3914   	ld a,b
-0419CD             3915   	vdu_a
-0419CD 49 D7       0001M  		RST.LIS	10h
-0419CF             3916   	vdu 255
-0419CF 3E FF       0001M  		LD	A, function
-0419D1 49 D7       0002M  		RST.LIS	10h
-0419D3             3917   
-0419D3 21 59 1B 04 3918   	ld hl,red_tint
-0419D7 7E          3919   	ld a,(hl)
-0419D8             3920   	vdu_a
-0419D8 49 D7       0001M  		RST.LIS	10h
-0419DA             3921   
-0419DA 21 5A 1B 04 3922   	ld hl,green_tint
-0419DE 7E          3923   	ld a,(hl)
-0419DF             3924   	vdu_a
-0419DF 49 D7       0001M  		RST.LIS	10h
-0419E1             3925   
-0419E1 21 5B 1B 04 3926   	ld hl,blue_tint
-0419E5 7E          3927   	ld a,(hl)
-0419E6             3928   	vdu_a
-0419E6 49 D7       0001M  		RST.LIS	10h
-0419E8             3929   
-0419E8 E1          3930   	pop hl
-0419E9 D1          3931   	pop de
-0419EA C1          3932   	pop bc
-0419EB F1          3933   	pop af
-0419EC C9          3934   	ret
-0419ED             3935   
-0419ED             3936   ; read rgb tints for the color in b
-0419ED             3937   fn_get_color:
-0419ED C5          3938   	push bc
-0419EE             3939   
-0419EE             3940   	; point to palette rgb color
-0419EE 21 D6 42 04 3941   	ld hl,rgb_palette
-0419F2 11 00 00 00 3942   	ld de,#000000
-0419F6 58          3943   	ld e,b
-0419F7 16 03       3944   	ld d,3
-0419F9 ED 5C       3945   	mlt de
-0419FB 19          3946   	add hl,de ; hl -> rgb colors
-0419FC             3947   
-0419FC             3948   	; store rgb tints
-0419FC 11 59 1B 04 3949   	ld de,red_tint
-041A00 7E          3950   	ld a,(hl)
-041A01 12          3951   	ld (de),a
-041A02 23          3952   	inc hl
-041A03 11 5A 1B 04 3953   	ld de,green_tint
-041A07 7E          3954   	ld a,(hl)
-041A08 12          3955   	ld (de),a
-041A09 23          3956   	inc hl
-041A0A 11 5B 1B 04 3957   	ld de,blue_tint
-041A0E 7E          3958   	ld a,(hl)
-041A0F 12          3959   	ld (de),a
-041A10             3960   
-041A10 21 59 1B 04 3961   	ld hl,red_tint
-041A14 4E          3962   	ld c,(hl)
-041A15 21 5A 1B 04 3963   	ld hl,green_tint
-041A19 5E          3964   	ld e,(hl)
-041A1A 21 5B 1B 04 3965   	ld hl,blue_tint
-041A1E 7E          3966   	ld a,(hl)
-041A1F 6F          3967   	ld l,a
-041A20             3968   
-041A20 C1          3969   	pop bc
+041992 78          3877   	ld a,b
+041993 F5          3878   	push af
+041994             3879   
+041994             3880   	; store rgb tints
+041994 7D          3881   	ld a,l
+041995 21 59 1B 04 3882   	ld hl,red_tint
+041999 71          3883   	ld (hl),c
+04199A 21 5A 1B 04 3884   	ld hl,green_tint
+04199E 73          3885   	ld (hl),e
+04199F 21 5B 1B 04 3886   	ld hl,blue_tint
+0419A3 77          3887   	ld (hl),a
+0419A4             3888   
+0419A4             3889   	; point to palette rgb color
+0419A4 21 D6 42 04 3890   	ld hl,rgb_palette
+0419A8 11 00 00 00 3891   	ld de,#000000
+0419AC 58          3892   	ld e,b
+0419AD 16 03       3893   	ld d,3
+0419AF ED 5C       3894   	mlt de
+0419B1 19          3895   	add hl,de ; hl -> rgb colors
+0419B2             3896   
+0419B2             3897   	; store rgb tints into the rgb palette
+0419B2 11 59 1B 04 3898   	ld de,red_tint
+0419B6 1A          3899   	ld a,(de)
+0419B7 77          3900   	ld (hl),a
+0419B8 23          3901   	inc hl
+0419B9 11 5A 1B 04 3902   	ld de,green_tint
+0419BD 1A          3903   	ld a,(de)
+0419BE 77          3904   	ld (hl),a
+0419BF 23          3905   	inc hl
+0419C0 11 5B 1B 04 3906   	ld de,blue_tint
+0419C4 1A          3907   	ld a,(de)
+0419C5 77          3908   	ld (hl),a
+0419C6             3909   
+0419C6             3910   	vdu 19
+0419C6 3E 13       0001M  		LD	A, function
+0419C8 49 D7       0002M  		RST.LIS	10h
+0419CA F1          3911   	pop af
+0419CB             3912   	vdu_a
+0419CB 49 D7       0001M  		RST.LIS	10h
+0419CD             3913   	vdu 255
+0419CD 3E FF       0001M  		LD	A, function
+0419CF 49 D7       0002M  		RST.LIS	10h
+0419D1             3914   
+0419D1 21 59 1B 04 3915   	ld hl,red_tint
+0419D5 7E          3916   	ld a,(hl)
+0419D6             3917   	vdu_a
+0419D6 49 D7       0001M  		RST.LIS	10h
+0419D8             3918   
+0419D8 21 5A 1B 04 3919   	ld hl,green_tint
+0419DC 7E          3920   	ld a,(hl)
+0419DD             3921   	vdu_a
+0419DD 49 D7       0001M  		RST.LIS	10h
+0419DF             3922   
+0419DF 21 5B 1B 04 3923   	ld hl,blue_tint
+0419E3 7E          3924   	ld a,(hl)
+0419E4             3925   	vdu_a
+0419E4 49 D7       0001M  		RST.LIS	10h
+0419E6             3926   
+0419E6 E1          3927   	pop hl
+0419E7 D1          3928   	pop de
+0419E8 C1          3929   	pop bc
+0419E9 F1          3930   	pop af
+0419EA C9          3931   	ret
+0419EB             3932   
+0419EB             3933   ; read rgb tints for the color in b
+0419EB             3934   fn_get_color:
+0419EB 78          3935   	ld a,b
+0419EC F5          3936   	push af
+0419ED             3937   
+0419ED             3938   	; point to palette rgb color
+0419ED 21 D6 42 04 3939   	ld hl,rgb_palette
+0419F1 11 00 00 00 3940   	ld de,#000000
+0419F5 58          3941   	ld e,b
+0419F6 16 03       3942   	ld d,3
+0419F8 ED 5C       3943   	mlt de
+0419FA 19          3944   	add hl,de ; hl -> rgb colors
+0419FB             3945   
+0419FB             3946   	; store rgb tints
+0419FB 11 59 1B 04 3947   	ld de,red_tint
+0419FF 7E          3948   	ld a,(hl)
+041A00 12          3949   	ld (de),a
+041A01 23          3950   	inc hl
+041A02 11 5A 1B 04 3951   	ld de,green_tint
+041A06 7E          3952   	ld a,(hl)
+041A07 12          3953   	ld (de),a
+041A08 23          3954   	inc hl
+041A09 11 5B 1B 04 3955   	ld de,blue_tint
+041A0D 7E          3956   	ld a,(hl)
+041A0E 12          3957   	ld (de),a
+041A0F             3958   
+041A0F             3959   	; grab rgb tints in c,e,l
+041A0F 21 59 1B 04 3960   	ld hl,red_tint
+041A13 4E          3961   	ld c,(hl)
+041A14 21 5A 1B 04 3962   	ld hl,green_tint
+041A18 5E          3963   	ld e,(hl)
+041A19 21 5B 1B 04 3964   	ld hl,blue_tint
+041A1D 7E          3965   	ld a,(hl)
+041A1E 6F          3966   	ld l,a
+041A1F             3967   
+041A1F F1          3968   	pop af
+041A20 47          3969   	ld b,a
 041A21 C9          3970   	ret
 041A22             3971   
 041A22             3972   ;======================================================================
