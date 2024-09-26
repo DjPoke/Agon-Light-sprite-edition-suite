@@ -1,5 +1,0 @@
-TODO:
-=====
-* Add the possibility to edit the RGB of each color
-* Load and save RAW 64 colors palettes
-* Solve bugs

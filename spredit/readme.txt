@@ -31,13 +31,11 @@ Now, you are in 'edit sprite mode'. This is the keys you can use :
 * M:					mirror frame vertically
 * R:					rotate frame clockwise
 * Return:				Flood Fill (must be inside borders of the same color)
-* F5:					Load Palette file (must be 2, 4, 16 or 64 colors)
-* F6:					Save Palette file
-
 
 While in palette mode, this is the keys you can use :
 
 * Tab:						Return in 'edit sprite mode'
 * 1-6:						Increase or decrease R,G or B tint for the current color
 * 7:						Reset color to black
+* L:						Load Palette file (must be 2, 4, 16 or 64 colors)
 * Left/Right arrows:		Choose a color

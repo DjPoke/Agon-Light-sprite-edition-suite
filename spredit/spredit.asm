@@ -1410,12 +1410,6 @@ dsl_palette_tool_loop:
 	cp 1
 	call z,dslp_load_palette
 	
-	; save palette
-	ld hl,KEY_S
-	call fn_inkey
-	cp 1
-	call z,dslp_save_palette
-
 	; red up
 	ld hl,KEY_1
 	call fn_inkey
@@ -1634,21 +1628,6 @@ dslp_load_palette:
 	call fn_change_frame
 	jp dsl_palette_tool_loop
 	
-dslp_save_palette:
-	ld hl,KEY_S
-	call fn_inkey
-	cp 0
-	jr nz,dslp_save_palette
-
-	ld hl,current_pen
-	ld c,(hl)
-	call fn_draw_palette_without_border
-	call fn_save_palette
-	ld hl,current_pen
-	ld c,(hl)
-	call fn_draw_palette_with_border
-	jp dsl_palette_tool_loop
-
 dsl_draw_sprite_tool:
 	ld hl,KEY_TAB
 	call fn_inkey
@@ -2871,10 +2850,6 @@ lp_set_tint:
 	pop bc
 	pop af
 	ret
-
-; save the palette
-fn_save_palette:
-	ret
 	
 ; load a sprite, giving its full name, with extension
 fn_load_sprite:
@@ -3804,6 +3779,11 @@ i_false:
 
 fn_create_sprite_folder:
 	ld hl,sprite_path
+	moscall mos_mkdir
+	ret
+
+fn_create_palette_folder:
+	ld hl,palette_path
 	moscall mos_mkdir
 	ret
 
