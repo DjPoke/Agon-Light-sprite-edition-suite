@@ -3874,6 +3874,9 @@ fn_set_color:
 	push de
 	push hl
 
+	push bc
+	
+	; store rgb tints
 	ld a,l
 	ld hl,red_tint
 	ld (hl),c
@@ -3882,7 +3885,47 @@ fn_set_color:
 	ld hl,blue_tint
 	ld (hl),a
 	
-	call lp_set_tint
+	pop bc
+
+	; point to palette rgb color
+	ld hl,rgb_palette
+	ld de,#000000
+	ld e,b
+	ld d,3
+	mlt de
+	add hl,de ; hl -> rgb colors
+
+	; store rgb tints into the palette
+	ld de,red_tint
+	ld a,(de)
+	ld (hl),a
+	inc hl
+	ld de,green_tint
+	ld a,(de)
+	ld (hl),a
+	inc hl
+	ld de,blue_tint
+	ld a,(de)
+	ld (hl),a
+	
+	push bc
+	vdu 19
+	pop bc
+	ld a,b
+	vdu_a
+	vdu 255
+	
+	ld hl,red_tint
+	ld a,(hl)
+	vdu_a
+
+	ld hl,green_tint
+	ld a,(hl)
+	vdu_a
+
+	ld hl,blue_tint
+	ld a,(hl)
+	vdu_a
 
 	pop hl
 	pop de
@@ -3892,12 +3935,40 @@ fn_set_color:
 
 ; read rgb tints for the color in b
 fn_get_color:
-	; todo...
-	ld c,0
-	ld e,0
-	ld l,0
+	push bc
+	
+	; point to palette rgb color
+	ld hl,rgb_palette
+	ld de,#000000
+	ld e,b
+	ld d,3
+	mlt de
+	add hl,de ; hl -> rgb colors
+	
+	; store rgb tints
+	ld de,red_tint
+	ld a,(hl)
+	ld (de),a
+	inc hl
+	ld de,green_tint
+	ld a,(hl)
+	ld (de),a
+	inc hl
+	ld de,blue_tint
+	ld a,(hl)
+	ld (de),a
+	
+	ld hl,red_tint
+	ld c,(hl)
+	ld hl,green_tint
+	ld e,(hl)
+	ld hl,blue_tint
+	ld a,(hl)
+	ld l,a
+	
+	pop bc
 	ret
-
+	
 ;======================================================================
 
 ; coordinates for rectangles

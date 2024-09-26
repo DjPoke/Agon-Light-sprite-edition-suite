@@ -392,25 +392,25 @@ PC     Output      Line
 040092 49 D7       0002M  		RST.LIS	10h
 040094             0139   
 040094             0140   	; store coordinates
-040094 DD 21 B2 19 0141   	ld ix,x1
+040094 DD 21 22 1A 0141   	ld ix,x1
        04          
 040099 21 00 00 00 0142   	ld hl,0
 04009D DD 75 00    0143   	ld (ix+0),l
 0400A0 DD 74 01    0144   	ld (ix+1),h
 0400A3             0145   
-0400A3 DD 21 B4 19 0146   	ld ix,y1
+0400A3 DD 21 24 1A 0146   	ld ix,y1
        04          
 0400A8 21 00 00 00 0147   	ld hl,0
 0400AC DD 75 00    0148   	ld (ix+0),l
 0400AF DD 74 01    0149   	ld (ix+1),h
 0400B2             0150   
-0400B2 DD 21 B6 19 0151   	ld ix,x2
+0400B2 DD 21 26 1A 0151   	ld ix,x2
        04          
 0400B7 21 3F 01 00 0152   	ld hl,319
 0400BB DD 75 00    0153   	ld (ix+0),l
 0400BE DD 74 01    0154   	ld (ix+1),h
 0400C1             0155   
-0400C1 DD 21 B8 19 0156   	ld ix,y2
+0400C1 DD 21 28 1A 0156   	ld ix,y2
        04          
 0400C6 21 EF 00 00 0157   	ld hl,239
 0400CA DD 75 00    0158   	ld (ix+0),l
@@ -431,7 +431,7 @@ PC     Output      Line
 0400DE 49 D7       0002M  		RST.LIS	10h
 0400E0             0168   
 0400E0             0169   	; print text
-0400E0 21 C9 19 04 0170   	ld hl,title
+0400E0 21 39 1A 04 0170   	ld hl,title
 0400E4 01 00 00 00 0171   	ld bc,0
 0400E8 AF          0172   	xor a
 0400E9 49 DF       0173   	rst.lis $18
@@ -448,7 +448,7 @@ PC     Output      Line
 0400F5 49 D7       0002M  		RST.LIS	10h
 0400F7             0179   
 0400F7             0180   	; print text
-0400F7 21 D2 19 04 0181   	ld hl,menu1
+0400F7 21 42 1A 04 0181   	ld hl,menu1
 0400FB 01 00 00 00 0182   	ld bc,0
 0400FF AF          0183   	xor a
 040100 49 DF       0184   	rst.lis $18
@@ -465,7 +465,7 @@ PC     Output      Line
 04010C 49 D7       0002M  		RST.LIS	10h
 04010E             0190   
 04010E             0191   	; print text
-04010E 21 E1 19 04 0192   	ld hl,menu2
+04010E 21 51 1A 04 0192   	ld hl,menu2
 040112 01 00 00 00 0193   	ld bc,0
 040116 AF          0194   	xor a
 040117 49 DF       0195   	rst.lis $18
@@ -482,7 +482,7 @@ PC     Output      Line
 040123 49 D7       0002M  		RST.LIS	10h
 040125             0201   
 040125             0202   	; print text
-040125 21 F0 19 04 0203   	ld hl,menu3
+040125 21 60 1A 04 0203   	ld hl,menu3
 040129 01 00 00 00 0204   	ld bc,0
 04012D AF          0205   	xor a
 04012E 49 DF       0206   	rst.lis $18
@@ -499,7 +499,7 @@ PC     Output      Line
 04013A 49 D7       0002M  		RST.LIS	10h
 04013C             0212   
 04013C             0213   	; print text
-04013C 21 01 1A 04 0214   	ld hl,menu4
+04013C 21 71 1A 04 0214   	ld hl,menu4
 040140 01 00 00 00 0215   	ld bc,0
 040144 AF          0216   	xor a
 040145 49 DF       0217   	rst.lis $18
@@ -554,9 +554,9 @@ PC     Output      Line
 0401A7             0266   
 0401A7             0267   exit_menu_loop:
 0401A7             0268   	; store edited sprite size
-0401A7 21 C7 19 04 0269   	ld hl,spr_size
+0401A7 21 37 1A 04 0269   	ld hl,spr_size
 0401AB 77          0270   	ld (hl),a
-0401AC 21 C6 19 04 0271   	ld hl,pixel_width
+0401AC 21 36 1A 04 0271   	ld hl,pixel_width
 0401B0 72          0272   	ld (hl),d
 0401B1             0273   
 0401B1             0274   	; clear the text screen
@@ -565,32 +565,32 @@ PC     Output      Line
 0401B3 49 D7       0002M  		RST.LIS	10h
 0401B5             0276   
 0401B5             0277   	; set colors count to max colors
-0401B5 21 E7 1A 04 0278   	ld hl,colors_count
+0401B5 21 57 1B 04 0278   	ld hl,colors_count
 0401B9 3E 40       0279   	ld a,MAX_COLORS
 0401BB 77          0280   	ld (hl),a
 0401BC             0281   
 0401BC CD 05 19 04 0282   	call fn_draw_the_palette
 0401C0             0283   
 0401C0             0284   	; store coordinates
-0401C0 DD 21 B2 19 0285   	ld ix,x1
+0401C0 DD 21 22 1A 0285   	ld ix,x1
        04          
 0401C5 21 00 00 00 0286   	ld hl,0
 0401C9 DD 75 00    0287   	ld (ix+0),l
 0401CC DD 74 01    0288   	ld (ix+1),h
 0401CF             0289   
-0401CF DD 21 B4 19 0290   	ld ix,y1
+0401CF DD 21 24 1A 0290   	ld ix,y1
        04          
 0401D4 21 0B 00 00 0291   	ld hl,11
 0401D8 DD 75 00    0292   	ld (ix+0),l
 0401DB DD 74 01    0293   	ld (ix+1),h
 0401DE             0294   
-0401DE DD 21 B6 19 0295   	ld ix,x2
+0401DE DD 21 26 1A 0295   	ld ix,x2
        04          
 0401E3 21 3F 01 00 0296   	ld hl,319
 0401E7 DD 75 00    0297   	ld (ix+0),l
 0401EA DD 74 01    0298   	ld (ix+1),h
 0401ED             0299   
-0401ED DD 21 B8 19 0300   	ld ix,y2
+0401ED DD 21 28 1A 0300   	ld ix,y2
        04          
 0401F2 21 EF 00 00 0301   	ld hl,239
 0401F6 DD 75 00    0302   	ld (ix+0),l
@@ -600,36 +600,36 @@ PC     Output      Line
 0401FC CD 34 0C 04 0306   	call fn_rect
 040200             0307   
 040200             0308   	; store edited sprite coordinates
-040200 DD 21 BA 19 0309   	ld ix,xs1
+040200 DD 21 2A 1A 0309   	ld ix,xs1
        04          
-040205 FD 21 B2 19 0310   	ld iy,x1
+040205 FD 21 22 1A 0310   	ld iy,x1
        04          
 04020A DD 6E 00    0311   	ld l,(ix+0)
 04020D DD 66 01    0312   	ld h,(ix+1)
 040210 FD 75 00    0313   	ld (iy+0),l
 040213 FD 74 01    0314   	ld (iy+1),h
 040216             0315   
-040216 DD 21 BC 19 0316   	ld ix,ys1
+040216 DD 21 2C 1A 0316   	ld ix,ys1
        04          
-04021B FD 21 B4 19 0317   	ld iy,y1
+04021B FD 21 24 1A 0317   	ld iy,y1
        04          
 040220 DD 6E 00    0318   	ld l,(ix+0)
 040223 DD 66 01    0319   	ld h,(ix+1)
 040226 FD 75 00    0320   	ld (iy+0),l
 040229 FD 74 01    0321   	ld (iy+1),h
 04022C             0322   
-04022C DD 21 BE 19 0323   	ld ix,xs2
+04022C DD 21 2E 1A 0323   	ld ix,xs2
        04          
-040231 FD 21 B6 19 0324   	ld iy,x2
+040231 FD 21 26 1A 0324   	ld iy,x2
        04          
 040236 DD 6E 00    0325   	ld l,(ix+0)
 040239 DD 66 01    0326   	ld h,(ix+1)
 04023C FD 75 00    0327   	ld (iy+0),l
 04023F FD 74 01    0328   	ld (iy+1),h
 040242             0329   
-040242 DD 21 C0 19 0330   	ld ix,ys2
+040242 DD 21 30 1A 0330   	ld ix,ys2
        04          
-040247 FD 21 B8 19 0331   	ld iy,y2
+040247 FD 21 28 1A 0331   	ld iy,y2
        04          
 04024C DD 6E 00    0332   	ld l,(ix+0)
 04024F DD 66 01    0333   	ld h,(ix+1)
@@ -645,27 +645,27 @@ PC     Output      Line
 040260             0343   ; initialize sprite vars
 040260             0344   init_sprite_vars:
 040260             0345   	; initialize coordinates before drawing the sprite
-040260 DD 21 C2 19 0346   	ld ix,xpix
+040260 DD 21 32 1A 0346   	ld ix,xpix
        04          
 040265 AF          0347   	xor a
 040266 DD 77 00    0348   	ld (ix+0),a ; xpix = 0
 040269 DD 77 01    0349   	ld (ix+1),a	; ypix = 0
-04026C DD 21 C8 19 0350   	ld ix,current_pen
+04026C DD 21 38 1A 0350   	ld ix,current_pen
        04          
 040271 3E 0F       0351   	ld a,COLOR_WHITE
 040273 DD 77 00    0352   	ld (ix+0),a ; current pen -> white
 040276             0353   
 040276             0354   	; set vars
-040276 21 ED 1A 04 0355   	ld hl,current_frame
+040276 21 5D 1B 04 0355   	ld hl,current_frame
 04027A AF          0356   	xor a
 04027B 77          0357   	ld (hl),a
 04027C 3C          0358   	inc a
-04027D 21 EE 1A 04 0359   	ld hl,frames_count
+04027D 21 5E 1B 04 0359   	ld hl,frames_count
 040281 77          0360   	ld (hl),a
 040282             0361   
 040282             0362   	; fill buffers with zeros
 040282 01 00 20 00 0363   	ld bc,BUFFER_SIZE
-040286 21 F6 1A 04 0364   	ld hl,sprite_buffer
+040286 21 66 1B 04 0364   	ld hl,sprite_buffer
 04028A             0365   
 04028A             0366   isv_fill_loop:
 04028A AF          0367   	xor a
@@ -787,7 +787,7 @@ PC     Output      Line
 0403B4             0483   ; set the pen of the current pixel
 0403B4             0484   dsl_set_pen:
 0403B4 CD EB 0D 04 0485   	call fn_get_pixel_color
-0403B8 21 C8 19 04 0486   	ld hl,current_pen
+0403B8 21 38 1A 04 0486   	ld hl,current_pen
 0403BC BE          0487   	cp (hl)
 0403BD C8          0488   	ret z
 0403BE 7E          0489   	ld a,(hl)
@@ -807,7 +807,7 @@ PC     Output      Line
 0403D9             0503   
 0403D9             0504   ; move pixel up
 0403D9             0505   dsl_up:
-0403D9 21 C3 19 04 0506   	ld hl,ypix
+0403D9 21 33 1A 04 0506   	ld hl,ypix
 0403DD 7E          0507   	ld a,(hl)
 0403DE FE 00       0508   	cp 0
 0403E0 C8          0509   	ret z
@@ -825,11 +825,11 @@ PC     Output      Line
 040400             0521   
 040400             0522   ; move pixel down
 040400             0523   dsl_down:
-040400 21 C7 19 04 0524   	ld hl,spr_size
+040400 21 37 1A 04 0524   	ld hl,spr_size
 040404 56          0525   	ld d,(hl)
 040405 15          0526   	dec d
 040406             0527   
-040406 21 C3 19 04 0528   	ld hl,ypix
+040406 21 33 1A 04 0528   	ld hl,ypix
 04040A 7E          0529   	ld a,(hl)
 04040B BA          0530   	cp d
 04040C C8          0531   	ret z
@@ -847,7 +847,7 @@ PC     Output      Line
 04042C             0543   
 04042C             0544   ; move pixel left
 04042C             0545   dsl_left:
-04042C 21 C2 19 04 0546   	ld hl,xpix
+04042C 21 32 1A 04 0546   	ld hl,xpix
 040430 7E          0547   	ld a,(hl)
 040431 FE 00       0548   	cp 0
 040433 C8          0549   	ret z
@@ -865,11 +865,11 @@ PC     Output      Line
 040453             0561   
 040453             0562   ; move pixel right
 040453             0563   dsl_right:
-040453 21 C7 19 04 0564   	ld hl,spr_size
+040453 21 37 1A 04 0564   	ld hl,spr_size
 040457 56          0565   	ld d,(hl)
 040458 15          0566   	dec d
 040459             0567   
-040459 21 C2 19 04 0568   	ld hl,xpix
+040459 21 32 1A 04 0568   	ld hl,xpix
 04045D 7E          0569   	ld a,(hl)
 04045E BA          0570   	cp d
 04045F C8          0571   	ret z
@@ -930,32 +930,32 @@ PC     Output      Line
 0404D8 20 F4       0626   	jr nz,dsl_add_frame
 0404DA             0627   
 0404DA             0628   	; frames limit reached ? exit
-0404DA 21 EE 1A 04 0629   	ld hl,frames_count
+0404DA 21 5E 1B 04 0629   	ld hl,frames_count
 0404DE 7E          0630   	ld a,(hl)
 0404DF FE 08       0631   	cp MAX_FRAMES
 0404E1 C8          0632   	ret z
 0404E2             0633   
 0404E2             0634   	; get the number of frames to copy
-0404E2 21 EE 1A 04 0635   	ld hl,frames_count
+0404E2 21 5E 1B 04 0635   	ld hl,frames_count
 0404E6 7E          0636   	ld a,(hl)
-0404E7 21 ED 1A 04 0637   	ld hl,current_frame
+0404E7 21 5D 1B 04 0637   	ld hl,current_frame
 0404EB 46          0638   	ld b,(hl)
 0404EC 90          0639   	sub b
 0404ED 3D          0640   	dec a
 0404EE             0641   
 0404EE             0642   	; get sprsize² (length of a sprite, in bytes)
-0404EE 21 C7 19 04 0643   	ld hl,spr_size
+0404EE 21 37 1A 04 0643   	ld hl,spr_size
 0404F2 11 00 00 00 0644   	ld de,$000000
 0404F6 5E          0645   	ld e,(hl)
 0404F7 56          0646   	ld d,(hl)
 0404F8 ED 5C       0647   	mlt de ; DE = sprsize²
 0404FA             0648   
 0404FA             0649   	; prepare for the case we goto af_zap...
-0404FA 21 F6 1A 04 0650   	ld hl,sprite_buffer
+0404FA 21 66 1B 04 0650   	ld hl,sprite_buffer
 0404FE             0651   
 0404FE F5          0652   	push af
 0404FF E5          0653   	push hl
-040500 21 ED 1A 04 0654   	ld hl,current_frame
+040500 21 5D 1B 04 0654   	ld hl,current_frame
 040504 7E          0655   	ld a,(hl)
 040505 3C          0656   	inc a
 040506 47          0657   	ld b,a
@@ -982,10 +982,10 @@ PC     Output      Line
 04051C E5          0678   	push hl
 04051D C1          0679   	pop bc ; BC = HL = length (in bytes) to copy (a few frames)
 04051E             0680   
-04051E 21 ED 1A 04 0681   	ld hl,current_frame
+04051E 21 5D 1B 04 0681   	ld hl,current_frame
 040522 7E          0682   	ld a,(hl)
 040523 3C          0683   	inc a
-040524 21 F6 1A 04 0684   	ld hl,sprite_buffer
+040524 21 66 1B 04 0684   	ld hl,sprite_buffer
 040528             0685   
 040528 C5          0686   	push bc
 040529 47          0687   	ld b,a
@@ -1010,7 +1010,7 @@ PC     Output      Line
 040537             0706   
 040537             0707   af_zap:
 040537             0708   	; multiply number of frames to copy by sprsize²
-040537 21 C7 19 04 0709   	ld hl,spr_size
+040537 21 37 1A 04 0709   	ld hl,spr_size
 04053B 01 00 00 00 0710   	ld bc,$000000
 04053F 4E          0711   	ld c,(hl)
 040540 46          0712   	ld b,(hl)
@@ -1030,9 +1030,9 @@ PC     Output      Line
 04054C 20 F6       0726   	jr nz,af_loop3
 04054E             0727   
 04054E             0728   	; increment the frames count and the current frame values
-04054E 21 EE 1A 04 0729   	ld hl,frames_count
+04054E 21 5E 1B 04 0729   	ld hl,frames_count
 040552 34          0730   	inc (hl)
-040553 21 ED 1A 04 0731   	ld hl,current_frame
+040553 21 5D 1B 04 0731   	ld hl,current_frame
 040557 34          0732   	inc (hl)
 040558             0733   
 040558 CD FD 17 04 0734   	call fn_change_frame
@@ -1048,20 +1048,20 @@ PC     Output      Line
 04056F 20 F4       0744   	jr nz,dsl_add_and_copy_frame
 040571             0745   
 040571             0746   	; frames limit reached ? exit
-040571 21 EE 1A 04 0747   	ld hl,frames_count
+040571 21 5E 1B 04 0747   	ld hl,frames_count
 040575 7E          0748   	ld a,(hl)
 040576 FE 08       0749   	cp MAX_FRAMES
 040578 C8          0750   	ret z
 040579             0751   
 040579             0752   	; get the number of frames to copy
-040579 21 EE 1A 04 0753   	ld hl,frames_count
+040579 21 5E 1B 04 0753   	ld hl,frames_count
 04057D 7E          0754   	ld a,(hl)
-04057E 21 ED 1A 04 0755   	ld hl,current_frame
+04057E 21 5D 1B 04 0755   	ld hl,current_frame
 040582 46          0756   	ld b,(hl)
 040583 90          0757   	sub b
 040584             0758   
 040584             0759   	; get sprsize² (length of a sprite, in bytes)
-040584 21 C7 19 04 0760   	ld hl,spr_size
+040584 21 37 1A 04 0760   	ld hl,spr_size
 040588 11 00 00 00 0761   	ld de,$000000
 04058C 5E          0762   	ld e,(hl)
 04058D 56          0763   	ld d,(hl)
@@ -1078,9 +1078,9 @@ PC     Output      Line
 040598 E5          0774   	push hl
 040599 C1          0775   	pop bc ; BC = HL = length (in bytes) to copy (a few frames)
 04059A             0776   
-04059A 21 ED 1A 04 0777   	ld hl,current_frame
+04059A 21 5D 1B 04 0777   	ld hl,current_frame
 04059E 7E          0778   	ld a,(hl)
-04059F 21 F6 1A 04 0779   	ld hl,sprite_buffer
+04059F 21 66 1B 04 0779   	ld hl,sprite_buffer
 0405A3 FE 00       0780   	cp 0
 0405A5 28 06       0781   	jr z,aacf_loop_end2
 0405A7             0782   
@@ -1105,9 +1105,9 @@ PC     Output      Line
 0405B3 ED B8       0801   	lddr
 0405B5             0802   
 0405B5             0803   	; increment the frames count and the current frame values
-0405B5 21 EE 1A 04 0804   	ld hl,frames_count
+0405B5 21 5E 1B 04 0804   	ld hl,frames_count
 0405B9 34          0805   	inc (hl)
-0405BA 21 ED 1A 04 0806   	ld hl,current_frame
+0405BA 21 5D 1B 04 0806   	ld hl,current_frame
 0405BE 34          0807   	inc (hl)
 0405BF             0808   
 0405BF CD FD 17 04 0809   	call fn_change_frame
@@ -1123,14 +1123,14 @@ PC     Output      Line
 0405D6 20 F4       0819   	jr nz,dsl_delete_frame
 0405D8             0820   
 0405D8             0821   	; delete current selected frame
-0405D8 21 C7 19 04 0822   	ld hl,spr_size
+0405D8 21 37 1A 04 0822   	ld hl,spr_size
 0405DC 01 00 00 00 0823   	ld bc,$000000
 0405E0 4E          0824   	ld c,(hl)
 0405E1 46          0825   	ld b,(hl)
 0405E2 ED 4C       0826   	mlt bc ; BC = sprsize²
-0405E4 21 ED 1A 04 0827   	ld hl,current_frame
+0405E4 21 5D 1B 04 0827   	ld hl,current_frame
 0405E8 7E          0828   	ld a,(hl) ; A = current frame
-0405E9 21 F6 1A 04 0829   	ld hl,sprite_buffer ; HL = sprite buffer
+0405E9 21 66 1B 04 0829   	ld hl,sprite_buffer ; HL = sprite buffer
 0405ED C5          0830   	push bc
 0405EE FE 00       0831   	cp 0
 0405F0 28 06       0832   	jr z,df_loop2
@@ -1154,20 +1154,20 @@ PC     Output      Line
 040602             0850   
 040602             0851   	; current frame + 1 = frames count ?
 040602 E5          0852   	push hl
-040603 21 ED 1A 04 0853   	ld hl,current_frame
+040603 21 5D 1B 04 0853   	ld hl,current_frame
 040607 5E          0854   	ld e,(hl)
 040608 1C          0855   	inc e
-040609 21 EE 1A 04 0856   	ld hl,frames_count
+040609 21 5E 1B 04 0856   	ld hl,frames_count
 04060D 7E          0857   	ld a,(hl)
 04060E BB          0858   	cp e
 04060F E1          0859   	pop hl
 040610 C1          0860   	pop bc
 040611 CA 8A 06 04 0861   	jp z,df_exit
 040615             0862   
-040615 11 EE 1A 04 0863   	ld de,frames_count
+040615 11 5E 1B 04 0863   	ld de,frames_count
 040619 1A          0864   	ld a,(de) ; A = frames count
 04061A E5          0865   	push hl
-04061B 21 ED 1A 04 0866   	ld hl,current_frame
+04061B 21 5D 1B 04 0866   	ld hl,current_frame
 04061F 5E          0867   	ld e,(hl) ; E = current frame
 040620 E1          0868   	pop hl
 040621 93          0869   	sub e
@@ -1193,7 +1193,7 @@ PC     Output      Line
 040636 C5          0889   	push bc
 040637 D5          0890   	push de
 040638 E5          0891   	push hl
-040639 21 C7 19 04 0892   	ld hl,spr_size
+040639 21 37 1A 04 0892   	ld hl,spr_size
 04063D 11 00 00 00 0893   	ld de,$000000
 040641 5E          0894   	ld e,(hl)
 040642 56          0895   	ld d,(hl)
@@ -1206,17 +1206,17 @@ PC     Output      Line
 04064B C1          0902   	pop bc
 04064C ED B0       0903   	ldir
 04064E             0904   
-04064E 21 C7 19 04 0905   	ld hl,spr_size
+04064E 21 37 1A 04 0905   	ld hl,spr_size
 040652 01 00 00 00 0906   	ld bc,$000000
 040656 4E          0907   	ld c,(hl)
 040657 46          0908   	ld b,(hl)
 040658 ED 4C       0909   	mlt bc ; DE = one sprite frame length
 04065A             0910   
 04065A             0911   	; delete last frame data
-04065A 21 EE 1A 04 0912   	ld hl,frames_count
+04065A 21 5E 1B 04 0912   	ld hl,frames_count
 04065E 7E          0913   	ld a,(hl) ; A =frames count
 04065F 3D          0914   	dec a ; A = last frame
-040660 21 F6 1A 04 0915   	ld hl,sprite_buffer ; HL = sprite buffer
+040660 21 66 1B 04 0915   	ld hl,sprite_buffer ; HL = sprite buffer
 040664 FE 00       0916   	cp 0
 040666 28 06       0917   	jr z,df_loop5
 040668             0918   
@@ -1238,7 +1238,7 @@ PC     Output      Line
 040676 20 F6       0934   	jr nz,df_loop5
 040678             0935   
 040678             0936   	; decrement frames count
-040678 21 EE 1A 04 0937   	ld hl,frames_count
+040678 21 5E 1B 04 0937   	ld hl,frames_count
 04067C 35          0938   	dec (hl)
 04067D             0939   
 04067D CD FD 17 04 0940   	call fn_change_frame
@@ -1247,12 +1247,12 @@ PC     Output      Line
 040689 C9          0943   	ret
 04068A             0944   
 04068A             0945   df_exit:
-04068A 21 EE 1A 04 0946   	ld hl,frames_count
+04068A 21 5E 1B 04 0946   	ld hl,frames_count
 04068E 7E          0947   	ld a,(hl)
 04068F FE 01       0948   	cp 1
 040691 28 06       0949   	jr z,df_exit_end
 040693 35          0950   	dec (hl)
-040694 21 ED 1A 04 0951   	ld hl,current_frame
+040694 21 5D 1B 04 0951   	ld hl,current_frame
 040698 35          0952   	dec (hl)
 040699             0953   
 040699             0954   df_exit_end:
@@ -1268,7 +1268,7 @@ PC     Output      Line
 0406AE FE 00       0964   	cp 0
 0406B0 20 F4       0965   	jr nz,dsl_previous_frame
 0406B2             0966   
-0406B2 21 ED 1A 04 0967   	ld hl,current_frame
+0406B2 21 5D 1B 04 0967   	ld hl,current_frame
 0406B6 7E          0968   	ld a,(hl)
 0406B7 FE 00       0969   	cp 0
 0406B9 C8          0970   	ret z
@@ -1286,14 +1286,14 @@ PC     Output      Line
 0406CD FE 00       0982   	cp 0
 0406CF 20 F4       0983   	jr nz,dsl_next_frame
 0406D1             0984   
-0406D1 21 ED 1A 04 0985   	ld hl,current_frame
+0406D1 21 5D 1B 04 0985   	ld hl,current_frame
 0406D5 7E          0986   	ld a,(hl)
 0406D6 3C          0987   	inc a
-0406D7 21 EE 1A 04 0988   	ld hl,frames_count
+0406D7 21 5E 1B 04 0988   	ld hl,frames_count
 0406DB BE          0989   	cp (hl)
 0406DC C8          0990   	ret z
 0406DD             0991   
-0406DD 21 ED 1A 04 0992   	ld hl,current_frame
+0406DD 21 5D 1B 04 0992   	ld hl,current_frame
 0406E1 77          0993   	ld (hl),a
 0406E2 CD FD 17 04 0994   	call fn_change_frame
 0406E6 CD BD 17 04 0995   	call fn_refresh_sprite
@@ -1307,16 +1307,16 @@ PC     Output      Line
 0406F5 20 F4       1003   	jr nz,dsl_rotate_frame
 0406F7             1004   
 0406F7             1005   	; find HL as start of the first frame (buffer)
-0406F7 21 C7 19 04 1006   	ld hl,spr_size
+0406F7 21 37 1A 04 1006   	ld hl,spr_size
 0406FB 01 00 00 00 1007   	ld bc,$000000
 0406FF 11 00 00 00 1008   	ld de,$000000
 040703 5E          1009   	ld e,(hl)
 040704 56          1010   	ld d,(hl)
 040705 4B          1011   	ld c,e
 040706 ED 5C       1012   	mlt de ; DE = sprite length in bytes
-040708 21 ED 1A 04 1013   	ld hl,current_frame
+040708 21 5D 1B 04 1013   	ld hl,current_frame
 04070C 7E          1014   	ld a,(hl) ; A = current frame
-04070D 21 F6 1A 04 1015   	ld hl,sprite_buffer
+04070D 21 66 1B 04 1015   	ld hl,sprite_buffer
 040711 FE 00       1016   	cp 0
 040713 28 04       1017   	jr z,rf_noloop1
 040715 47          1018   	ld b,a
@@ -1330,7 +1330,7 @@ PC     Output      Line
 04071A E5          1026   	push hl
 04071B             1027   
 04071B             1028   	; copy current frame to swap sprite buffer
-04071B 11 62 3E 04 1029   	ld de,swap_sprite_buffer
+04071B 11 D2 3E 04 1029   	ld de,swap_sprite_buffer
 04071F 41          1030   	ld b,c
 040720 ED 4C       1031   	mlt bc
 040722 ED B0       1032   	ldir
@@ -1343,7 +1343,7 @@ PC     Output      Line
 04072C 4F          1039   	ld c,a ; BC = sprite size
 04072D             1040   
 04072D             1041   	; turn and copy swap sprite buffer frame to sprite buffer
-04072D DD 21 62 3E 1042   	ld ix,swap_sprite_buffer ; IX: source
+04072D DD 21 D2 3E 1042   	ld ix,swap_sprite_buffer ; IX: source
        04          
 040732 11 00 00 00 1043   	ld de,0 ; x
 040736 21 00 00 00 1044   	ld hl,0 ; y
@@ -1445,15 +1445,15 @@ PC     Output      Line
 0407A8 FE 00       1140   	cp 0
 0407AA 20 F4       1141   	jr nz,dsl_flip_frame
 0407AC             1142   
-0407AC 21 C7 19 04 1143   	ld hl,spr_size
+0407AC 21 37 1A 04 1143   	ld hl,spr_size
 0407B0 11 00 00 00 1144   	ld de,$000000
 0407B4 5E          1145   	ld e,(hl)
 0407B5 56          1146   	ld d,(hl)
 0407B6 4B          1147   	ld c,e
 0407B7 ED 5C       1148   	mlt de ; DE = sprite length in bytes
-0407B9 21 ED 1A 04 1149   	ld hl,current_frame
+0407B9 21 5D 1B 04 1149   	ld hl,current_frame
 0407BD 7E          1150   	ld a,(hl) ; A = current frame
-0407BE 21 F6 1A 04 1151   	ld hl,sprite_buffer
+0407BE 21 66 1B 04 1151   	ld hl,sprite_buffer
 0407C2 FE 00       1152   	cp 0
 0407C4 28 04       1153   	jr z,ff_noloop1
 0407C6 47          1154   	ld b,a
@@ -1509,16 +1509,16 @@ PC     Output      Line
 04080F FE 00       1204   	cp 0
 040811 20 F4       1205   	jr nz,dsl_mirror_frame
 040813             1206   
-040813 21 C7 19 04 1207   	ld hl,spr_size
+040813 21 37 1A 04 1207   	ld hl,spr_size
 040817 01 00 00 00 1208   	ld bc,$000000
 04081B 11 00 00 00 1209   	ld de,$000000
 04081F 5E          1210   	ld e,(hl)
 040820 56          1211   	ld d,(hl)
 040821 4B          1212   	ld c,e
 040822 ED 5C       1213   	mlt de ; DE = sprite length in bytes
-040824 21 ED 1A 04 1214   	ld hl,current_frame
+040824 21 5D 1B 04 1214   	ld hl,current_frame
 040828 7E          1215   	ld a,(hl) ; A = current frame
-040829 21 F6 1A 04 1216   	ld hl,sprite_buffer
+040829 21 66 1B 04 1216   	ld hl,sprite_buffer
 04082D FE 00       1217   	cp 0
 04082F 28 04       1218   	jr z,mf_noloop1
 040831 47          1219   	ld b,a
@@ -1592,15 +1592,15 @@ PC     Output      Line
 040893 CD D5 0D 04 1287   	call fn_draw_pixel_without_border
 040897             1288   
 040897             1289   	; memorize pixel coordinates
-040897 3A C2 19 04 1290   	ld a,(xpix)
-04089B 32 C4 19 04 1291   	ld (memxpix),a
-04089F 3A C3 19 04 1292   	ld a,(ypix)
-0408A3 32 C5 19 04 1293   	ld (memypix),a
+040897 3A 32 1A 04 1290   	ld a,(xpix)
+04089B 32 34 1A 04 1291   	ld (memxpix),a
+04089F 3A 33 1A 04 1292   	ld a,(ypix)
+0408A3 32 35 1A 04 1293   	ld (memypix),a
 0408A7             1294   
 0408A7             1295   	; fill all recursively
-0408A7 3A C2 19 04 1296   	ld a,(xpix)
+0408A7 3A 32 1A 04 1296   	ld a,(xpix)
 0408AB 5F          1297   	ld e,a
-0408AC 3A C3 19 04 1298   	ld a,(ypix)
+0408AC 3A 33 1A 04 1298   	ld a,(ypix)
 0408B0 57          1299   	ld d,a
 0408B1 CD D2 08 04 1300   	call dsl_flood_fill_loop
 0408B5             1301   
@@ -1612,17 +1612,17 @@ PC     Output      Line
 0408BD             1307   
 0408BD             1308   	; restore pixel coordinates
 0408BD             1309   	; and cursor
-0408BD 3A C4 19 04 1310   	ld a,(memxpix)
-0408C1 32 C2 19 04 1311   	ld (xpix),a
-0408C5 3A C5 19 04 1312   	ld a,(memypix)
-0408C9 32 C3 19 04 1313   	ld (ypix),a
+0408BD 3A 34 1A 04 1310   	ld a,(memxpix)
+0408C1 32 32 1A 04 1311   	ld (xpix),a
+0408C5 3A 35 1A 04 1312   	ld a,(memypix)
+0408C9 32 33 1A 04 1313   	ld (ypix),a
 0408CD CD C1 0D 04 1314   	call fn_draw_pixel_with_border
 0408D1 C9          1315   	ret
 0408D2             1316   
 0408D2             1317   dsl_flood_fill_loop:
 0408D2 D5          1318   	push de
 0408D3             1319   
-0408D3 DD 21 C7 19 1320   	ld ix,spr_size
+0408D3 DD 21 37 1A 1320   	ld ix,spr_size
        04          
 0408D8             1321   
 0408D8             1322   	; out  of the sprite area ?
@@ -1639,20 +1639,20 @@ PC     Output      Line
 0408E8             1333   	; inside the sprite area,
 0408E8             1334   	; and has not the select palette color
 0408E8 7B          1335   	ld a,e
-0408E9 32 C2 19 04 1336   	ld (xpix),a
+0408E9 32 32 1A 04 1336   	ld (xpix),a
 0408ED 7A          1337   	ld a,d
-0408EE 32 C3 19 04 1338   	ld (ypix),a
+0408EE 32 33 1A 04 1338   	ld (ypix),a
 0408F2 CD EB 0D 04 1339   	call fn_get_pixel_color
-0408F6 21 C8 19 04 1340   	ld hl,current_pen
+0408F6 21 38 1A 04 1340   	ld hl,current_pen
 0408FA BE          1341   	cp (hl)
 0408FB CA 25 09 04 1342   	jp z,ffl_exit
 0408FF 7E          1343   	ld a,(hl)
 040900 CD 2D 0E 04 1344   	call fn_set_pixel_color
 040904             1345   
 040904             1346   	; restore coordinates
-040904 3A C2 19 04 1347   	ld a,(xpix)
+040904 3A 32 1A 04 1347   	ld a,(xpix)
 040908 5F          1348   	ld e,a
-040909 3A C3 19 04 1349   	ld a,(ypix)
+040909 3A 33 1A 04 1349   	ld a,(ypix)
 04090D 57          1350   	ld d,a
 04090E             1351   
 04090E             1352   	; draw pixel at right
@@ -1686,7 +1686,7 @@ PC     Output      Line
 040933 CD D5 0D 04 1380   	call fn_draw_pixel_without_border
 040937             1381   
 040937             1382   	; draw selected palette color
-040937 21 C8 19 04 1383   	ld hl,current_pen
+040937 21 38 1A 04 1383   	ld hl,current_pen
 04093B 4E          1384   	ld c,(hl)
 04093C CD 89 0E 04 1385   	call fn_draw_palette_with_border
 040940             1386   
@@ -1773,112 +1773,112 @@ PC     Output      Line
 0409F6 C3 40 09 04 1467   	jp dsl_palette_tool_loop
 0409FA             1468   
 0409FA             1469   dslp_red_up:
-0409FA 21 C8 19 04 1470   	ld hl,current_pen
+0409FA 21 38 1A 04 1470   	ld hl,current_pen
 0409FE 4E          1471   	ld c,(hl)
 0409FF CD EE 0E 04 1472   	call fn_draw_palette_without_border
-040A03 21 C8 19 04 1473   	ld hl,current_pen
+040A03 21 38 1A 04 1473   	ld hl,current_pen
 040A07 46          1474   	ld b,(hl)
-040A08 CD AB 19 04 1475   	call fn_get_color
+040A08 CD ED 19 04 1475   	call fn_get_color
 040A0C 0C          1476   	inc c
 040A0D CD 8E 19 04 1477   	call fn_set_color
 040A11 CD 05 19 04 1478   	call fn_draw_the_palette
 040A15 CD BD 17 04 1479   	call fn_refresh_sprite
-040A19 21 C8 19 04 1480   	ld hl,current_pen
+040A19 21 38 1A 04 1480   	ld hl,current_pen
 040A1D 4E          1481   	ld c,(hl)
 040A1E CD 89 0E 04 1482   	call fn_draw_palette_with_border
 040A22 CD 46 18 04 1483   	call fn_slowdown
 040A26 C3 40 09 04 1484   	jp dsl_palette_tool_loop
 040A2A             1485   
 040A2A             1486   dslp_green_up:
-040A2A 21 C8 19 04 1487   	ld hl,current_pen
+040A2A 21 38 1A 04 1487   	ld hl,current_pen
 040A2E 4E          1488   	ld c,(hl)
 040A2F CD EE 0E 04 1489   	call fn_draw_palette_without_border
-040A33 21 C8 19 04 1490   	ld hl,current_pen
+040A33 21 38 1A 04 1490   	ld hl,current_pen
 040A37 46          1491   	ld b,(hl)
-040A38 CD AB 19 04 1492   	call fn_get_color
+040A38 CD ED 19 04 1492   	call fn_get_color
 040A3C 1C          1493   	inc e
 040A3D CD 8E 19 04 1494   	call fn_set_color
 040A41 CD 05 19 04 1495   	call fn_draw_the_palette
 040A45 CD BD 17 04 1496   	call fn_refresh_sprite
-040A49 21 C8 19 04 1497   	ld hl,current_pen
+040A49 21 38 1A 04 1497   	ld hl,current_pen
 040A4D 4E          1498   	ld c,(hl)
 040A4E CD 89 0E 04 1499   	call fn_draw_palette_with_border
 040A52 CD 46 18 04 1500   	call fn_slowdown
 040A56 C3 40 09 04 1501   	jp dsl_palette_tool_loop
 040A5A             1502   
 040A5A             1503   dslp_blue_up:
-040A5A 21 C8 19 04 1504   	ld hl,current_pen
+040A5A 21 38 1A 04 1504   	ld hl,current_pen
 040A5E 4E          1505   	ld c,(hl)
 040A5F CD EE 0E 04 1506   	call fn_draw_palette_without_border
-040A63 21 C8 19 04 1507   	ld hl,current_pen
+040A63 21 38 1A 04 1507   	ld hl,current_pen
 040A67 46          1508   	ld b,(hl)
-040A68 CD AB 19 04 1509   	call fn_get_color
+040A68 CD ED 19 04 1509   	call fn_get_color
 040A6C 2C          1510   	inc l
 040A6D CD 8E 19 04 1511   	call fn_set_color
 040A71 CD 05 19 04 1512   	call fn_draw_the_palette
 040A75 CD BD 17 04 1513   	call fn_refresh_sprite
-040A79 21 C8 19 04 1514   	ld hl,current_pen
+040A79 21 38 1A 04 1514   	ld hl,current_pen
 040A7D 4E          1515   	ld c,(hl)
 040A7E CD 89 0E 04 1516   	call fn_draw_palette_with_border
 040A82 CD 46 18 04 1517   	call fn_slowdown
 040A86 C3 40 09 04 1518   	jp dsl_palette_tool_loop
 040A8A             1519   
 040A8A             1520   dslp_red_down:
-040A8A 21 C8 19 04 1521   	ld hl,current_pen
+040A8A 21 38 1A 04 1521   	ld hl,current_pen
 040A8E 4E          1522   	ld c,(hl)
 040A8F CD EE 0E 04 1523   	call fn_draw_palette_without_border
-040A93 21 C8 19 04 1524   	ld hl,current_pen
+040A93 21 38 1A 04 1524   	ld hl,current_pen
 040A97 46          1525   	ld b,(hl)
-040A98 CD AB 19 04 1526   	call fn_get_color
+040A98 CD ED 19 04 1526   	call fn_get_color
 040A9C 0D          1527   	dec c
 040A9D CD 8E 19 04 1528   	call fn_set_color
 040AA1 CD 05 19 04 1529   	call fn_draw_the_palette
 040AA5 CD BD 17 04 1530   	call fn_refresh_sprite
-040AA9 21 C8 19 04 1531   	ld hl,current_pen
+040AA9 21 38 1A 04 1531   	ld hl,current_pen
 040AAD 4E          1532   	ld c,(hl)
 040AAE CD 89 0E 04 1533   	call fn_draw_palette_with_border
 040AB2 CD 46 18 04 1534   	call fn_slowdown
 040AB6 C3 40 09 04 1535   	jp dsl_palette_tool_loop
 040ABA             1536   
 040ABA             1537   dslp_green_down:
-040ABA 21 C8 19 04 1538   	ld hl,current_pen
+040ABA 21 38 1A 04 1538   	ld hl,current_pen
 040ABE 4E          1539   	ld c,(hl)
 040ABF CD EE 0E 04 1540   	call fn_draw_palette_without_border
-040AC3 21 C8 19 04 1541   	ld hl,current_pen
+040AC3 21 38 1A 04 1541   	ld hl,current_pen
 040AC7 46          1542   	ld b,(hl)
-040AC8 CD AB 19 04 1543   	call fn_get_color
+040AC8 CD ED 19 04 1543   	call fn_get_color
 040ACC 1D          1544   	dec e
 040ACD CD 8E 19 04 1545   	call fn_set_color
 040AD1 CD 05 19 04 1546   	call fn_draw_the_palette
 040AD5 CD BD 17 04 1547   	call fn_refresh_sprite
-040AD9 21 C8 19 04 1548   	ld hl,current_pen
+040AD9 21 38 1A 04 1548   	ld hl,current_pen
 040ADD 4E          1549   	ld c,(hl)
 040ADE CD 89 0E 04 1550   	call fn_draw_palette_with_border
 040AE2 CD 46 18 04 1551   	call fn_slowdown
 040AE6 C3 40 09 04 1552   	jp dsl_palette_tool_loop
 040AEA             1553   
 040AEA             1554   dslp_blue_down:
-040AEA 21 C8 19 04 1555   	ld hl,current_pen
+040AEA 21 38 1A 04 1555   	ld hl,current_pen
 040AEE 4E          1556   	ld c,(hl)
 040AEF CD EE 0E 04 1557   	call fn_draw_palette_without_border
-040AF3 21 C8 19 04 1558   	ld hl,current_pen
+040AF3 21 38 1A 04 1558   	ld hl,current_pen
 040AF7 46          1559   	ld b,(hl)
-040AF8 CD AB 19 04 1560   	call fn_get_color
+040AF8 CD ED 19 04 1560   	call fn_get_color
 040AFC 2D          1561   	dec l
 040AFD CD 8E 19 04 1562   	call fn_set_color
 040B01 CD 05 19 04 1563   	call fn_draw_the_palette
 040B05 CD BD 17 04 1564   	call fn_refresh_sprite
-040B09 21 C8 19 04 1565   	ld hl,current_pen
+040B09 21 38 1A 04 1565   	ld hl,current_pen
 040B0D 4E          1566   	ld c,(hl)
 040B0E CD 89 0E 04 1567   	call fn_draw_palette_with_border
 040B12 CD 46 18 04 1568   	call fn_slowdown
 040B16 C3 40 09 04 1569   	jp dsl_palette_tool_loop
 040B1A             1570   
 040B1A             1571   dslp_reset_color:
-040B1A 21 C8 19 04 1572   	ld hl,current_pen
+040B1A 21 38 1A 04 1572   	ld hl,current_pen
 040B1E 4E          1573   	ld c,(hl)
 040B1F CD EE 0E 04 1574   	call fn_draw_palette_without_border
-040B23 21 C8 19 04 1575   	ld hl,current_pen
+040B23 21 38 1A 04 1575   	ld hl,current_pen
 040B27 46          1576   	ld b,(hl)
 040B28 0E 00       1577   	ld c,0
 040B2A 1E 00       1578   	ld e,0
@@ -1886,7 +1886,7 @@ PC     Output      Line
 040B2E CD 8E 19 04 1580   	call fn_set_color
 040B32 CD 05 19 04 1581   	call fn_draw_the_palette
 040B36 CD BD 17 04 1582   	call fn_refresh_sprite
-040B3A 21 C8 19 04 1583   	ld hl,current_pen
+040B3A 21 38 1A 04 1583   	ld hl,current_pen
 040B3E 4E          1584   	ld c,(hl)
 040B3F CD 89 0E 04 1585   	call fn_draw_palette_with_border
 040B43 CD 46 18 04 1586   	call fn_slowdown
@@ -1898,13 +1898,13 @@ PC     Output      Line
 040B53 FE 00       1592   	cp 0
 040B55 20 F4       1593   	jr nz,dslp_load_palette
 040B57             1594   
-040B57 21 C8 19 04 1595   	ld hl,current_pen
+040B57 21 38 1A 04 1595   	ld hl,current_pen
 040B5B 4E          1596   	ld c,(hl)
 040B5C CD EE 0E 04 1597   	call fn_draw_palette_without_border
 040B60 CD 68 10 04 1598   	call fn_load_palette
 040B64 CD 05 19 04 1599   	call fn_draw_the_palette
 040B68 CD BD 17 04 1600   	call fn_refresh_sprite
-040B6C 21 C8 19 04 1601   	ld hl,current_pen
+040B6C 21 38 1A 04 1601   	ld hl,current_pen
 040B70 4E          1602   	ld c,(hl)
 040B71 CD 89 0E 04 1603   	call fn_draw_palette_with_border
 040B75 CD FD 17 04 1604   	call fn_change_frame
@@ -1916,11 +1916,11 @@ PC     Output      Line
 040B85 FE 00       1610   	cp 0
 040B87 20 F4       1611   	jr nz,dslp_save_palette
 040B89             1612   
-040B89 21 C8 19 04 1613   	ld hl,current_pen
+040B89 21 38 1A 04 1613   	ld hl,current_pen
 040B8D 4E          1614   	ld c,(hl)
 040B8E CD EE 0E 04 1615   	call fn_draw_palette_without_border
 040B92 CD 5F 13 04 1616   	call fn_save_palette
-040B96 21 C8 19 04 1617   	ld hl,current_pen
+040B96 21 38 1A 04 1617   	ld hl,current_pen
 040B9A 4E          1618   	ld c,(hl)
 040B9B CD 89 0E 04 1619   	call fn_draw_palette_with_border
 040B9F C3 40 09 04 1620   	jp dsl_palette_tool_loop
@@ -1932,7 +1932,7 @@ PC     Output      Line
 040BAD 20 F4       1626   	jr nz,dsl_draw_sprite_tool
 040BAF             1627   
 040BAF             1628   	; unselect palette color
-040BAF 21 C8 19 04 1629   	ld hl,current_pen
+040BAF 21 38 1A 04 1629   	ld hl,current_pen
 040BB3 4E          1630   	ld c,(hl)
 040BB4 CD EE 0E 04 1631   	call fn_draw_palette_without_border
 040BB8             1632   
@@ -1942,7 +1942,7 @@ PC     Output      Line
 040BBC C3 98 02 04 1636   	jp draw_sprite_loop
 040BC0             1637   
 040BC0             1638   dsl_dec_pen:
-040BC0 21 C8 19 04 1639   	ld hl,current_pen
+040BC0 21 38 1A 04 1639   	ld hl,current_pen
 040BC4 7E          1640   	ld a,(hl)
 040BC5 FE 00       1641   	cp 0
 040BC7 C8          1642   	ret z
@@ -1962,7 +1962,7 @@ PC     Output      Line
 040BD4 F1          1656   	pop af
 040BD5             1657   
 040BD5             1658   	; replace current pen value
-040BD5 21 C8 19 04 1659   	ld hl,current_pen
+040BD5 21 38 1A 04 1659   	ld hl,current_pen
 040BD9 77          1660   	ld (hl),a
 040BDA             1661   
 040BDA             1662   	; select palette color
@@ -1972,9 +1972,9 @@ PC     Output      Line
 040BE3 C3 40 09 04 1666   	jp dsl_palette_tool_loop
 040BE7             1667   
 040BE7             1668   dsl_inc_pen:
-040BE7 21 C8 19 04 1669   	ld hl,current_pen
+040BE7 21 38 1A 04 1669   	ld hl,current_pen
 040BEB 7E          1670   	ld a,(hl)
-040BEC 21 E7 1A 04 1671   	ld hl,colors_count
+040BEC 21 57 1B 04 1671   	ld hl,colors_count
 040BF0 4E          1672   	ld c,(hl)
 040BF1 0D          1673   	dec c
 040BF2 B9          1674   	cp c
@@ -1993,7 +1993,7 @@ PC     Output      Line
 040BFD F1          1687   	pop af
 040BFE             1688   
 040BFE             1689   	; replace current pen value
-040BFE 21 C8 19 04 1690   	ld hl,current_pen
+040BFE 21 38 1A 04 1690   	ld hl,current_pen
 040C02 77          1691   	ld (hl),a
 040C03             1692   
 040C03             1693   	; select palette color
@@ -2046,7 +2046,7 @@ PC     Output      Line
 040C38             1726   	vdu 4
 040C38 3E 04       0001M  		LD	A, function
 040C3A 49 D7       0002M  		RST.LIS	10h
-040C3C DD 21 B2 19 1727   	ld ix,x1
+040C3C DD 21 22 1A 1727   	ld ix,x1
        04          
 040C41 DD 7E 00    1728   	ld a,(ix + 0)
 040C44             1729   	vdu_a
@@ -2054,7 +2054,7 @@ PC     Output      Line
 040C46 DD 7E 01    1730   	ld a,(ix + 1)
 040C49             1731   	vdu_a
 040C49 49 D7       0001M  		RST.LIS	10h
-040C4B FD 21 B4 19 1732   	ld iy,y1
+040C4B FD 21 24 1A 1732   	ld iy,y1
        04          
 040C50 FD 7E 00    1733   	ld a,(iy + 0)
 040C53             1734   	vdu_a
@@ -2069,7 +2069,7 @@ PC     Output      Line
 040C5E             1739   	vdu 5
 040C5E 3E 05       0001M  		LD	A, function
 040C60 49 D7       0002M  		RST.LIS	10h
-040C62 DD 21 B6 19 1740   	ld ix,x2
+040C62 DD 21 26 1A 1740   	ld ix,x2
        04          
 040C67 DD 7E 00    1741   	ld a,(ix + 0)
 040C6A             1742   	vdu_a
@@ -2077,7 +2077,7 @@ PC     Output      Line
 040C6C DD 7E 01    1743   	ld a,(ix + 1)
 040C6F             1744   	vdu_a
 040C6F 49 D7       0001M  		RST.LIS	10h
-040C71 FD 21 B4 19 1745   	ld iy,y1
+040C71 FD 21 24 1A 1745   	ld iy,y1
        04          
 040C76 FD 7E 00    1746   	ld a,(iy + 0)
 040C79             1747   	vdu_a
@@ -2092,7 +2092,7 @@ PC     Output      Line
 040C84             1752   	vdu 5
 040C84 3E 05       0001M  		LD	A, function
 040C86 49 D7       0002M  		RST.LIS	10h
-040C88 DD 21 B6 19 1753   	ld ix,x2
+040C88 DD 21 26 1A 1753   	ld ix,x2
        04          
 040C8D DD 7E 00    1754   	ld a,(ix + 0)
 040C90             1755   	vdu_a
@@ -2100,7 +2100,7 @@ PC     Output      Line
 040C92 DD 7E 01    1756   	ld a,(ix + 1)
 040C95             1757   	vdu_a
 040C95 49 D7       0001M  		RST.LIS	10h
-040C97 FD 21 B8 19 1758   	ld iy,y2
+040C97 FD 21 28 1A 1758   	ld iy,y2
        04          
 040C9C FD 7E 00    1759   	ld a,(iy + 0)
 040C9F             1760   	vdu_a
@@ -2115,7 +2115,7 @@ PC     Output      Line
 040CAA             1765   	vdu 5
 040CAA 3E 05       0001M  		LD	A, function
 040CAC 49 D7       0002M  		RST.LIS	10h
-040CAE DD 21 B2 19 1766   	ld ix,x1
+040CAE DD 21 22 1A 1766   	ld ix,x1
        04          
 040CB3 DD 7E 00    1767   	ld a,(ix + 0)
 040CB6             1768   	vdu_a
@@ -2123,7 +2123,7 @@ PC     Output      Line
 040CB8 DD 7E 01    1769   	ld a,(ix + 1)
 040CBB             1770   	vdu_a
 040CBB 49 D7       0001M  		RST.LIS	10h
-040CBD FD 21 B8 19 1771   	ld iy,y2
+040CBD FD 21 28 1A 1771   	ld iy,y2
        04          
 040CC2 FD 7E 00    1772   	ld a,(iy + 0)
 040CC5             1773   	vdu_a
@@ -2138,7 +2138,7 @@ PC     Output      Line
 040CD0             1778   	vdu 5
 040CD0 3E 05       0001M  		LD	A, function
 040CD2 49 D7       0002M  		RST.LIS	10h
-040CD4 DD 21 B2 19 1779   	ld ix,x1
+040CD4 DD 21 22 1A 1779   	ld ix,x1
        04          
 040CD9 DD 7E 00    1780   	ld a,(ix + 0)
 040CDC             1781   	vdu_a
@@ -2146,7 +2146,7 @@ PC     Output      Line
 040CDE DD 7E 01    1782   	ld a,(ix + 1)
 040CE1             1783   	vdu_a
 040CE1 49 D7       0001M  		RST.LIS	10h
-040CE3 FD 21 B4 19 1784   	ld iy,y1
+040CE3 FD 21 24 1A 1784   	ld iy,y1
        04          
 040CE8 FD 7E 00    1785   	ld a,(iy + 0)
 040CEB             1786   	vdu_a
@@ -2159,9 +2159,9 @@ PC     Output      Line
 040CF3             1791   
 040CF3             1792   ; draw a filled rectangle
 040CF3             1793   fn_rectf:
-040CF3 DD 21 B2 19 1794   	ld ix,x1
+040CF3 DD 21 22 1A 1794   	ld ix,x1
        04          
-040CF8 FD 21 B4 19 1795   	ld iy,y1
+040CF8 FD 21 24 1A 1795   	ld iy,y1
        04          
 040CFD             1796   
 040CFD             1797   	vdu 25
@@ -2183,9 +2183,9 @@ PC     Output      Line
 040D17             1806   	vdu_a
 040D17 49 D7       0001M  		RST.LIS	10h
 040D19             1807   
-040D19 DD 21 B6 19 1808   	ld ix,x2
+040D19 DD 21 26 1A 1808   	ld ix,x2
        04          
-040D1E FD 21 B8 19 1809   	ld iy,y2
+040D1E FD 21 28 1A 1809   	ld iy,y2
        04          
 040D23             1810   
 040D23             1811   	vdu 25
@@ -2213,31 +2213,31 @@ PC     Output      Line
 040D40 11 00 00 00 1825   	ld de,$000000 ; reset deu
 040D44             1826   
 040D44             1827   	; calculate coordinates x of the resized pixel
-040D44 21 C2 19 04 1828   	ld hl,xpix
+040D44 21 32 1A 04 1828   	ld hl,xpix
 040D48 5E          1829   	ld e,(hl) ; E = xpix
-040D49 21 C6 19 04 1830   	ld hl,pixel_width
+040D49 21 36 1A 04 1830   	ld hl,pixel_width
 040D4D 56          1831   	ld d,(hl) ; D = pixel_width
 040D4E D5          1832   	push de
 040D4F E1          1833   	pop hl ; HL = DE
 040D50 ED 6C       1834   	mlt hl ; HL = xpix * pixel_width
-040D52 DD 21 BA 19 1835   	ld ix,xs1
+040D52 DD 21 2A 1A 1835   	ld ix,xs1
        04          
 040D57 DD 5E 00    1836   	ld e,(ix+0)
 040D5A DD 56 01    1837   	ld d,(ix+1)
 040D5D 13          1838   	inc de ; DE = xs1 + 1
 040D5E 19          1839   	add hl,de ; HL = (xpix * pixel_width) + xs1 + 1
-040D5F FD 21 B2 19 1840   	ld iy,x1
+040D5F FD 21 22 1A 1840   	ld iy,x1
        04          
 040D64 FD 75 00    1841   	ld (iy+0),l
 040D67 FD 74 01    1842   	ld (iy+1),h ; x1 = (xpix * pixel_width) + xs1 + 1
 040D6A E5          1843   	push hl
-040D6B 21 C6 19 04 1844   	ld hl,pixel_width
+040D6B 21 36 1A 04 1844   	ld hl,pixel_width
 040D6F 16 00       1845   	ld d,0
 040D71 5E          1846   	ld e,(hl)
 040D72 E1          1847   	pop hl
 040D73 19          1848   	add hl,de
 040D74 2B          1849   	dec hl
-040D75 FD 21 B6 19 1850   	ld iy,x2
+040D75 FD 21 26 1A 1850   	ld iy,x2
        04          
 040D7A FD 75 00    1851   	ld (iy+0),l
 040D7D FD 74 01    1852   	ld (iy+1),h ; x2 = x1 + pixel_width - 1
@@ -2245,31 +2245,31 @@ PC     Output      Line
 040D80 11 00 00 00 1854   	ld de,$000000 ; reset deu
 040D84             1855   
 040D84             1856   	; calculate coordinates y of the resized pixel
-040D84 21 C3 19 04 1857   	ld hl,ypix
+040D84 21 33 1A 04 1857   	ld hl,ypix
 040D88 5E          1858   	ld e,(hl) ; E = ypix
-040D89 21 C6 19 04 1859   	ld hl,pixel_width
+040D89 21 36 1A 04 1859   	ld hl,pixel_width
 040D8D 56          1860   	ld d,(hl) ; D = pixel_width
 040D8E D5          1861   	push de
 040D8F E1          1862   	pop hl ; HL = DE
 040D90 ED 6C       1863   	mlt hl ; HL = ypix * pixel_width
-040D92 DD 21 BC 19 1864   	ld ix,ys1
+040D92 DD 21 2C 1A 1864   	ld ix,ys1
        04          
 040D97 DD 5E 00    1865   	ld e,(ix+0)
 040D9A DD 56 01    1866   	ld d,(ix+1) ; ys1 = ypix * pixel_width
 040D9D 13          1867   	inc de ; DE = ys1 + 1
 040D9E 19          1868   	add hl,de ; HL = (ypix * pixel_width) + ys1 + 1
-040D9F FD 21 B4 19 1869   	ld iy,y1
+040D9F FD 21 24 1A 1869   	ld iy,y1
        04          
 040DA4 FD 75 00    1870   	ld (iy+0),l
 040DA7 FD 74 01    1871   	ld (iy+1),h ; y1 = (ypix * pixel_width) + ys1 + 1
 040DAA E5          1872   	push hl
-040DAB 21 C6 19 04 1873   	ld hl,pixel_width
+040DAB 21 36 1A 04 1873   	ld hl,pixel_width
 040DAF 16 00       1874   	ld d,0
 040DB1 5E          1875   	ld e,(hl)
 040DB2 E1          1876   	pop hl
 040DB3 19          1877   	add hl,de
 040DB4 2B          1878   	dec hl
-040DB5 FD 21 B8 19 1879   	ld iy,y2
+040DB5 FD 21 28 1A 1879   	ld iy,y2
        04          
 040DBA FD 75 00    1880   	ld (iy+0),l
 040DBD FD 74 01    1881   	ld (iy+1),h ; y2 = y1 + pixel_width - 1
@@ -2318,21 +2318,21 @@ PC     Output      Line
 040DEB 11 00 00 00 1913   	ld de,$000000 ; reset deu
 040DEF             1914   
 040DEF             1915   	; calculate the offset to add to the address
-040DEF 21 C3 19 04 1916   	ld hl,ypix
+040DEF 21 33 1A 04 1916   	ld hl,ypix
 040DF3 5E          1917   	ld e,(hl) ; E = ypix
-040DF4 21 C7 19 04 1918   	ld hl,spr_size
+040DF4 21 37 1A 04 1918   	ld hl,spr_size
 040DF8 56          1919   	ld d,(hl) ; D = sprsize
 040DF9 D5          1920   	push de
 040DFA E1          1921   	pop hl
 040DFB ED 6C       1922   	mlt hl ; HL = ypix * sprsize
 040DFD E5          1923   	push hl
-040DFE 21 C2 19 04 1924   	ld hl,xpix
+040DFE 21 32 1A 04 1924   	ld hl,xpix
 040E02 5E          1925   	ld e,(hl)
 040E03 16 00       1926   	ld d,0
 040E05 E1          1927   	pop hl
 040E06 19          1928   	add hl,de ; HL = (ypix * sprsize) + xpix
 040E07             1929   
-040E07 11 ED 1A 04 1930   	ld de,current_frame
+040E07 11 5D 1B 04 1930   	ld de,current_frame
 040E0B 1A          1931   	ld a,(de)
 040E0C FE 00       1932   	cp 0
 040E0E 28 16       1933   	jr z,gpc_end_loop
@@ -2340,7 +2340,7 @@ PC     Output      Line
 040E10 47          1935   	ld b,a
 040E11 E5          1936   	push hl
 040E12 11 00 00 00 1937   	ld de,$000000
-040E16 21 C7 19 04 1938   	ld hl,spr_size
+040E16 21 37 1A 04 1938   	ld hl,spr_size
 040E1A 5E          1939   	ld e,(hl)
 040E1B 56          1940   	ld d,(hl)
 040E1C D5          1941   	push de
@@ -2356,7 +2356,7 @@ PC     Output      Line
 040E26             1951   
 040E26             1952   gpc_end_loop:
 040E26             1953   	; add the offset to the address
-040E26 11 F6 1A 04 1954   	ld de,sprite_buffer
+040E26 11 66 1B 04 1954   	ld de,sprite_buffer
 040E2A 19          1955   	add hl,de ; HL = sprite_buffer + ((ypix * sprsize) + xpix)
 040E2B             1956   
 040E2B             1957   	; get pixel color value
@@ -2370,22 +2370,22 @@ PC     Output      Line
 040E2D 11 00 00 00 1965   	ld de,$000000 ; reset deu
 040E31             1966   
 040E31             1967   	; calculate the offset to add to the address
-040E31 21 C3 19 04 1968   	ld hl,ypix
+040E31 21 33 1A 04 1968   	ld hl,ypix
 040E35 5E          1969   	ld e,(hl) ; E = ypix
-040E36 21 C7 19 04 1970   	ld hl,spr_size
+040E36 21 37 1A 04 1970   	ld hl,spr_size
 040E3A 56          1971   	ld d,(hl) ; D = sprsize
 040E3B D5          1972   	push de
 040E3C E1          1973   	pop hl
 040E3D ED 6C       1974   	mlt hl ; HL = ypix * sprsize
 040E3F E5          1975   	push hl
-040E40 21 C2 19 04 1976   	ld hl,xpix
+040E40 21 32 1A 04 1976   	ld hl,xpix
 040E44 5E          1977   	ld e,(hl)
 040E45 16 00       1978   	ld d,0
 040E47 E1          1979   	pop hl
 040E48 19          1980   	add hl,de ; HL = (ypix * sprsize) + xpix
 040E49 F5          1981   	push af
 040E4A             1982   
-040E4A 11 ED 1A 04 1983   	ld de,current_frame
+040E4A 11 5D 1B 04 1983   	ld de,current_frame
 040E4E 1A          1984   	ld a,(de)
 040E4F FE 00       1985   	cp 0
 040E51 28 16       1986   	jr z,spc_end_loop
@@ -2393,7 +2393,7 @@ PC     Output      Line
 040E53 47          1988   	ld b,a
 040E54 E5          1989   	push hl
 040E55 11 00 00 00 1990   	ld de,$000000
-040E59 21 C7 19 04 1991   	ld hl,spr_size
+040E59 21 37 1A 04 1991   	ld hl,spr_size
 040E5D 5E          1992   	ld e,(hl)
 040E5E 56          1993   	ld d,(hl)
 040E5F D5          1994   	push de
@@ -2410,7 +2410,7 @@ PC     Output      Line
 040E69             2005   spc_end_loop:
 040E69             2006   
 040E69             2007   	; add the offset to the address
-040E69 11 F6 1A 04 2008   	ld de,sprite_buffer
+040E69 11 66 1B 04 2008   	ld de,sprite_buffer
 040E6D 19          2009   	add hl,de ; HL = sprite_buffer + ((ypix * sprsize) + xpix)
 040E6E             2010   
 040E6E             2011   	; set pixel color value
@@ -2420,22 +2420,22 @@ PC     Output      Line
 040E70 C9          2015   	ret
 040E71             2016   
 040E71             2017   fn_move_up:
-040E71 21 C3 19 04 2018   	ld hl,ypix
+040E71 21 33 1A 04 2018   	ld hl,ypix
 040E75 35          2019   	dec (hl)
 040E76 C9          2020   	ret
 040E77             2021   
 040E77             2022   fn_move_down:
-040E77 21 C3 19 04 2023   	ld hl,ypix
+040E77 21 33 1A 04 2023   	ld hl,ypix
 040E7B 34          2024   	inc (hl)
 040E7C C9          2025   	ret
 040E7D             2026   
 040E7D             2027   fn_move_left:
-040E7D 21 C2 19 04 2028   	ld hl,xpix
+040E7D 21 32 1A 04 2028   	ld hl,xpix
 040E81 35          2029   	dec (hl)
 040E82 C9          2030   	ret
 040E83             2031   
 040E83             2032   fn_move_right:
-040E83 21 C2 19 04 2033   	ld hl,xpix
+040E83 21 32 1A 04 2033   	ld hl,xpix
 040E87 34          2034   	inc (hl)
 040E88 C9          2035   	ret
 040E89             2036   
@@ -2458,7 +2458,7 @@ PC     Output      Line
 040E95 49 D7       0001M  		RST.LIS	10h
 040E97             2049   
 040E97             2050   	; store coordinates for a palette square
-040E97 DD 21 B2 19 2051   	ld ix,x1
+040E97 DD 21 22 1A 2051   	ld ix,x1
        04          
 040E9C E1          2052   	pop hl
 040E9D E5          2053   	push hl
@@ -2468,13 +2468,13 @@ PC     Output      Line
 040EA3 DD 75 00    2057   	ld (ix+0),l
 040EA6 DD 74 01    2058   	ld (ix+1),h
 040EA9             2059   
-040EA9 DD 21 B4 19 2060   	ld ix,y1
+040EA9 DD 21 24 1A 2060   	ld ix,y1
        04          
 040EAE 21 00 00 00 2061   	ld hl,0
 040EB2 DD 75 00    2062   	ld (ix+0),l
 040EB5 DD 74 01    2063   	ld (ix+1),h
 040EB8             2064   
-040EB8 DD 21 B6 19 2065   	ld ix,x2
+040EB8 DD 21 26 1A 2065   	ld ix,x2
        04          
 040EBD E1          2066   	pop hl
 040EBE 11 04 00 00 2067   	ld de,4
@@ -2482,7 +2482,7 @@ PC     Output      Line
 040EC3 DD 75 00    2069   	ld (ix+0),l
 040EC6 DD 74 01    2070   	ld (ix+1),h
 040EC9             2071   
-040EC9 DD 21 B8 19 2072   	ld ix,y2
+040EC9 DD 21 28 1A 2072   	ld ix,y2
        04          
 040ECE 21 0A 00 00 2073   	ld hl,10
 040ED2 DD 75 00    2074   	ld (ix+0),l
@@ -2529,7 +2529,7 @@ PC     Output      Line
 040EFA 49 D7       0001M  		RST.LIS	10h
 040EFC             2106   
 040EFC             2107   	; store coordinates for a palette square
-040EFC DD 21 B2 19 2108   	ld ix,x1
+040EFC DD 21 22 1A 2108   	ld ix,x1
        04          
 040F01 E1          2109   	pop hl
 040F02 E5          2110   	push hl
@@ -2539,13 +2539,13 @@ PC     Output      Line
 040F08 DD 75 00    2114   	ld (ix+0),l
 040F0B DD 74 01    2115   	ld (ix+1),h
 040F0E             2116   
-040F0E DD 21 B4 19 2117   	ld ix,y1
+040F0E DD 21 24 1A 2117   	ld ix,y1
        04          
 040F13 21 00 00 00 2118   	ld hl,0
 040F17 DD 75 00    2119   	ld (ix+0),l
 040F1A DD 74 01    2120   	ld (ix+1),h
 040F1D             2121   
-040F1D DD 21 B6 19 2122   	ld ix,x2
+040F1D DD 21 26 1A 2122   	ld ix,x2
        04          
 040F22 E1          2123   	pop hl
 040F23 11 04 00 00 2124   	ld de,4
@@ -2553,7 +2553,7 @@ PC     Output      Line
 040F28 DD 75 00    2126   	ld (ix+0),l
 040F2B DD 74 01    2127   	ld (ix+1),h
 040F2E             2128   
-040F2E DD 21 B8 19 2129   	ld ix,y2
+040F2E DD 21 28 1A 2129   	ld ix,y2
        04          
 040F33 21 0A 00 00 2130   	ld hl,10
 040F37 DD 75 00    2131   	ld (ix+0),l
@@ -2589,7 +2589,7 @@ PC     Output      Line
 040F54 49 D7       0002M  		RST.LIS	10h
 040F56             2154   
 040F56             2155   	; print text
-040F56 21 34 1A 04 2156   	ld hl,filename_label
+040F56 21 A4 1A 04 2156   	ld hl,filename_label
 040F5A 01 00 00 00 2157   	ld bc,0
 040F5E AF          2158   	xor a
 040F5F 49 DF       2159   	rst.lis $18
@@ -2664,7 +2664,7 @@ PC     Output      Line
 040FCF             2222   
 040FCF             2223   it8l_poke_char:
 040FCF F1          2224   	pop af
-040FD0 21 3E 1A 04 2225   	ld hl,filename
+040FD0 21 AE 1A 04 2225   	ld hl,filename
 040FD4 06 00       2226   	ld b,0
 040FD6 09          2227   	add hl,bc
 040FD7 77          2228   	ld (hl),a
@@ -2684,7 +2684,7 @@ PC     Output      Line
 040FE5 49 D7       0002M  		RST.LIS	10h
 040FE7             2237   
 040FE7             2238   	; print text
-040FE7 21 3E 1A 04 2239   	ld hl,filename
+040FE7 21 AE 1A 04 2239   	ld hl,filename
 040FEB 01 00 00 00 2240   	ld bc,0
 040FEF AF          2241   	xor a
 040FF0 49 DF       2242   	rst.lis $18
@@ -2700,7 +2700,7 @@ PC     Output      Line
 040FFB CA 6F 0F 04 2252   	jp z,it8_loop
 040FFF             2253   
 040FFF             2254   	; delete a character of the filename
-040FFF 21 3E 1A 04 2255   	ld hl,filename
+040FFF 21 AE 1A 04 2255   	ld hl,filename
 041003 06 00       2256   	ld b,0
 041005 09          2257   	add hl,bc
 041006 AF          2258   	xor a
@@ -2723,7 +2723,7 @@ PC     Output      Line
 041017 C5          2270   	push bc
 041018             2271   
 041018             2272   	; print text
-041018 21 63 1A 04 2273   	ld hl,spacechar
+041018 21 D3 1A 04 2273   	ld hl,spacechar
 04101C 01 00 00 00 2274   	ld bc,0
 041020 AF          2275   	xor a
 041021 49 DF       2276   	rst.lis $18
@@ -2758,7 +2758,7 @@ PC     Output      Line
 041040 49 D7       0002M  		RST.LIS	10h
 041042             2295   
 041042             2296   	; print text
-041042 21 65 1A 04 2297   	ld hl,void_filename
+041042 21 D5 1A 04 2297   	ld hl,void_filename
 041046 01 00 00 00 2298   	ld bc,0
 04104A AF          2299   	xor a
 04104B 49 DF       2300   	rst.lis $18
@@ -2785,7 +2785,7 @@ PC     Output      Line
 041068             2315   ; load a palette
 041068             2316   fn_load_palette:
 041068             2317   	; clear the filename on the screen
-041068 21 3E 1A 04 2318   	ld hl,filename
+041068 21 AE 1A 04 2318   	ld hl,filename
 04106C 06 10       2319   	ld b,FILENAME_LENGTH
 04106E AF          2320   	xor a
 04106F             2321   
@@ -2798,7 +2798,7 @@ PC     Output      Line
 041073 CD 4A 0F 04 2328   	call fn_input_text8
 041077             2329   
 041077             2330   	; set path to 'palettes/'
-041077 21 57 1A 04 2331   	ld hl,palette_path
+041077 21 C7 1A 04 2331   	ld hl,palette_path
 04107B             2332   	moscall mos_cd
 04107B 3E 03       0001M  		LD	A, function
 04107D 49 CF       0002M  		RST.LIS	08h
@@ -2808,7 +2808,7 @@ PC     Output      Line
 041081 C2 43 11 04 2336   	jp nz,lp_folder_error
 041085             2337   
 041085             2338   	; open the file for read
-041085 21 3E 1A 04 2339   	ld hl,filename
+041085 21 AE 1A 04 2339   	ld hl,filename
 041089 0E 01       2340   	ld c,fa_open_existing|fa_read
 04108B             2341   	moscall mos_fopen
 04108B 3E 0A       0001M  		LD	A, function
@@ -2822,7 +2822,7 @@ PC     Output      Line
 041095 4F          2348   	ld c,a
 041096             2349   
 041096             2350   	; get palette header
-041096 21 F6 3A 04 2351   	ld hl,header_buffer
+041096 21 66 3B 04 2351   	ld hl,header_buffer
 04109A 11 10 00 00 2352   	ld de,16
 04109E C5          2353   	push bc ; store filehandle
 04109F             2354   	moscall mos_fread
@@ -2834,8 +2834,8 @@ PC     Output      Line
 0410A7 C2 27 11 04 2358   	jp nz,lp_close_error
 0410AB             2359   
 0410AB             2360   	; compare loaded header with needed header
-0410AB 11 52 3E 04 2361   	ld de,header
-0410AF 21 F6 3A 04 2362   	ld hl,header_buffer
+0410AB 11 C2 3E 04 2361   	ld de,header
+0410AF 21 66 3B 04 2362   	ld hl,header_buffer
 0410B3 47          2363   	ld b,a
 0410B4             2364   
 0410B4             2365   lp_compare:
@@ -2852,7 +2852,7 @@ PC     Output      Line
 0410C0 C2 B4 10 04 2376   	jp nz,lp_compare
 0410C4             2377   
 0410C4             2378   	; prepare to read the number of colors
-0410C4 21 06 3B 04 2379   	ld hl,color_buffer
+0410C4 21 76 3B 04 2379   	ld hl,color_buffer
 0410C8             2380   
 0410C8             2381   lp_getcount:
 0410C8             2382   	; read a string for colors count
@@ -2904,7 +2904,7 @@ PC     Output      Line
 0410F9             2424   
 0410F9             2425   	; prepare to read color strings
 0410F9 11 00 00 00 2426   	ld de,#000000
-0410FD 21 09 3B 04 2427   	ld hl,palette_buffer
+0410FD 21 79 3B 04 2427   	ld hl,palette_buffer
 041101             2428   
 041101             2429   lp_load_pal_loop:
 041101 C5          2430   	push bc
@@ -2955,7 +2955,7 @@ PC     Output      Line
 04112F 49 CF       0002M  		RST.LIS	08h
 041131             2472   
 041131             2473   	; set path to home
-041131 21 60 1A 04 2474   	ld hl,back_path
+041131 21 D0 1A 04 2474   	ld hl,back_path
 041135             2475   	moscall mos_cd
 041135 3E 03       0001M  		LD	A, function
 041137 49 CF       0002M  		RST.LIS	08h
@@ -2987,7 +2987,7 @@ PC     Output      Line
 041158 C1          2499   	pop bc
 041159             2500   
 041159             2501   	; set path to home
-041159 21 60 1A 04 2502   	ld hl,back_path
+041159 21 D0 1A 04 2502   	ld hl,back_path
 04115D             2503   	moscall mos_cd
 04115D 3E 03       0001M  		LD	A, function
 04115F 49 CF       0002M  		RST.LIS	08h
@@ -2997,7 +2997,7 @@ PC     Output      Line
 041163 C2 43 11 04 2507   	jp nz,lp_folder_error
 041167             2508   
 041167             2509   	; read the number of colors we have in the palette
-041167 21 06 3B 04 2510   	ld hl,color_buffer
+041167 21 76 3B 04 2510   	ld hl,color_buffer
 04116B 7E          2511   	ld a,(hl)
 04116C 47          2512   	ld b,a
 04116D 23          2513   	inc hl
@@ -3019,7 +3019,7 @@ PC     Output      Line
 041184 78          2529   	ld a,b
 041185 D6 30       2530   	sub 48
 041187             2531   
-041187 21 E8 1A 04 2532   	ld hl,new_colors_count
+041187 21 58 1B 04 2532   	ld hl,new_colors_count
 04118B 77          2533   	ld (hl),a
 04118C             2534   
 04118C FE 00       2535   	cp 0
@@ -3047,7 +3047,7 @@ PC     Output      Line
 0411B9 ED 4C       2557   	mlt bc
 0411BB 81          2558   	add a,c
 0411BC             2559   
-0411BC 21 E8 1A 04 2560   	ld hl,new_colors_count
+0411BC 21 58 1B 04 2560   	ld hl,new_colors_count
 0411C0 77          2561   	ld (hl),a
 0411C1             2562   
 0411C1 FE 0A       2563   	cp 10
@@ -3060,12 +3060,12 @@ PC     Output      Line
 0411D3 C3 90 12 04 2570   	jp lp_data_error
 0411D7             2571   
 0411D7             2572   lp_two_colors:
-0411D7 21 E7 1A 04 2573   	ld hl,colors_count
+0411D7 21 57 1B 04 2573   	ld hl,colors_count
 0411DB 3E 02       2574   	ld a,2
 0411DD 77          2575   	ld (hl),a
 0411DE             2576   
 0411DE 47          2577   	ld b,a
-0411DF 21 C8 19 04 2578   	ld hl,current_pen
+0411DF 21 38 1A 04 2578   	ld hl,current_pen
 0411E3 7E          2579   	ld a,(hl)
 0411E4 B8          2580   	cp b
 0411E5 38 02       2581   	jr c,lptc_done
@@ -3073,19 +3073,19 @@ PC     Output      Line
 0411E8 70          2583   	ld (hl),b
 0411E9             2584   
 0411E9             2585   lptc_done:
-0411E9 21 E8 1A 04 2586   	ld hl,new_colors_count
+0411E9 21 58 1B 04 2586   	ld hl,new_colors_count
 0411ED 7E          2587   	ld a,(hl) ; real number of coulours
 0411EE 06 00       2588   	ld b,0 ; start wit color 0
-0411F0 21 09 3B 04 2589   	ld hl,palette_buffer ; palette will be got here
+0411F0 21 79 3B 04 2589   	ld hl,palette_buffer ; palette will be got here
 0411F4 C3 5B 12 04 2590   	jp lp_read_colors
 0411F8             2591   
 0411F8             2592   lp_four_colors:
-0411F8 21 E7 1A 04 2593   	ld hl,colors_count
+0411F8 21 57 1B 04 2593   	ld hl,colors_count
 0411FC 3E 04       2594   	ld a,4
 0411FE 77          2595   	ld (hl),a
 0411FF             2596   
 0411FF 47          2597   	ld b,a
-041200 21 C8 19 04 2598   	ld hl,current_pen
+041200 21 38 1A 04 2598   	ld hl,current_pen
 041204 7E          2599   	ld a,(hl)
 041205 B8          2600   	cp b
 041206 38 02       2601   	jr c,lpfc_done
@@ -3093,19 +3093,19 @@ PC     Output      Line
 041209 70          2603   	ld (hl),b
 04120A             2604   
 04120A             2605   lpfc_done:
-04120A 21 E8 1A 04 2606   	ld hl,new_colors_count
+04120A 21 58 1B 04 2606   	ld hl,new_colors_count
 04120E 7E          2607   	ld a,(hl) ; real number of coulours
 04120F 06 00       2608   	ld b,0 ; start wit color 0
-041211 21 09 3B 04 2609   	ld hl,palette_buffer ; palette will be got here
+041211 21 79 3B 04 2609   	ld hl,palette_buffer ; palette will be got here
 041215 C3 5B 12 04 2610   	jp lp_read_colors
 041219             2611   
 041219             2612   lp_sixteen_colors:
-041219 21 E7 1A 04 2613   	ld hl,colors_count
+041219 21 57 1B 04 2613   	ld hl,colors_count
 04121D 3E 10       2614   	ld a,16
 04121F 77          2615   	ld (hl),a
 041220             2616   
 041220 47          2617   	ld b,a
-041221 21 C8 19 04 2618   	ld hl,current_pen
+041221 21 38 1A 04 2618   	ld hl,current_pen
 041225 7E          2619   	ld a,(hl)
 041226 B8          2620   	cp b
 041227 38 02       2621   	jr c,lpsc_done
@@ -3113,19 +3113,19 @@ PC     Output      Line
 04122A 70          2623   	ld (hl),b
 04122B             2624   
 04122B             2625   lpsc_done:
-04122B 21 E8 1A 04 2626   	ld hl,new_colors_count
+04122B 21 58 1B 04 2626   	ld hl,new_colors_count
 04122F 7E          2627   	ld a,(hl) ; real number of coulours
 041230 06 00       2628   	ld b,0 ; start wit color 0
-041232 21 09 3B 04 2629   	ld hl,palette_buffer ; palette will be got here
+041232 21 79 3B 04 2629   	ld hl,palette_buffer ; palette will be got here
 041236 C3 5B 12 04 2630   	jp lp_read_colors
 04123A             2631   
 04123A             2632   lp_sixty_four_colors:
-04123A 21 E7 1A 04 2633   	ld hl,colors_count
+04123A 21 57 1B 04 2633   	ld hl,colors_count
 04123E 3E 40       2634   	ld a,64
 041240 77          2635   	ld (hl),a
 041241             2636   
 041241 47          2637   	ld b,a
-041242 21 C8 19 04 2638   	ld hl,current_pen
+041242 21 38 1A 04 2638   	ld hl,current_pen
 041246 7E          2639   	ld a,(hl)
 041247 B8          2640   	cp b
 041248 38 02       2641   	jr c,lpsfc_done
@@ -3133,10 +3133,10 @@ PC     Output      Line
 04124B 70          2643   	ld (hl),b
 04124C             2644   
 04124C             2645   lpsfc_done:
-04124C 21 E8 1A 04 2646   	ld hl,new_colors_count
+04124C 21 58 1B 04 2646   	ld hl,new_colors_count
 041250 7E          2647   	ld a,(hl) ; real number of coulours
 041251 06 00       2648   	ld b,0 ; start wit color 0
-041253 21 09 3B 04 2649   	ld hl,palette_buffer ; palette will be taken here
+041253 21 79 3B 04 2649   	ld hl,palette_buffer ; palette will be taken here
 041257 C3 5B 12 04 2650   	jp lp_read_colors
 04125B             2651   
 04125B             2652   lp_read_colors:
@@ -3145,21 +3145,21 @@ PC     Output      Line
 04125C CD A8 12 04 2655   	call lp_read_tint ; read red tint
 041260             2656   
 041260 E5          2657   	push hl
-041261 21 E9 1A 04 2658   	ld hl,red_tint
+041261 21 59 1B 04 2658   	ld hl,red_tint
 041265 77          2659   	ld (hl),a
 041266 E1          2660   	pop hl
 041267             2661   
 041267 CD A8 12 04 2662   	call lp_read_tint ; read green tint
 04126B             2663   
 04126B E5          2664   	push hl
-04126C 21 EA 1A 04 2665   	ld hl,green_tint
+04126C 21 5A 1B 04 2665   	ld hl,green_tint
 041270 77          2666   	ld (hl),a
 041271 E1          2667   	pop hl
 041272             2668   
 041272 CD A8 12 04 2669   	call lp_read_tint ; read blue tint
 041276             2670   
 041276 E5          2671   	push hl
-041277 21 EB 1A 04 2672   	ld hl,blue_tint
+041277 21 5B 1B 04 2672   	ld hl,blue_tint
 04127B 77          2673   	ld (hl),a
 04127C E1          2674   	pop hl
 04127D             2675   
@@ -3187,7 +3187,7 @@ PC     Output      Line
 041295 CD E1 16 04 2697   	call fn_print_file_error
 041299             2698   
 041299             2699   	; set path to home
-041299 21 60 1A 04 2700   	ld hl,back_path
+041299 21 D0 1A 04 2700   	ld hl,back_path
 04129D             2701   	moscall mos_cd
 04129D 3E 03       0001M  		LD	A, function
 04129F 49 CF       0002M  		RST.LIS	08h
@@ -3200,7 +3200,7 @@ PC     Output      Line
 0412A8             2708   
 0412A8             2709   lp_read_tint:
 0412A8 0E 00       2710   	ld c,0 ; number of chars readen for a single string number
-0412AA 11 4E 3E 04 2711   	ld de,temp_chars_buffer ; temp buffer for a string number
+0412AA 11 BE 3E 04 2711   	ld de,temp_chars_buffer ; temp buffer for a string number
 0412AE             2712   
 0412AE             2713   	; read next string number
 0412AE CD 18 13 04 2714   	call lprt_read_chars
@@ -3218,7 +3218,7 @@ PC     Output      Line
 0412C5 28 0A       2726   	jr z,lprt_two_int
 0412C7             2727   
 0412C7             2728   	; one int only
-0412C7 11 4E 3E 04 2729   	ld de,temp_chars_buffer
+0412C7 11 BE 3E 04 2729   	ld de,temp_chars_buffer
 0412CB 1A          2730   	ld a,(de)
 0412CC D6 30       2731   	sub 48
 0412CE C9          2732   	ret
@@ -3230,7 +3230,7 @@ PC     Output      Line
 0412D1             2738   ; two int
 0412D1             2739   lprt_two_int:
 0412D1 C5          2740   	push bc
-0412D2 11 4E 3E 04 2741   	ld de,temp_chars_buffer
+0412D2 11 BE 3E 04 2741   	ld de,temp_chars_buffer
 0412D6 1A          2742   	ld a,(de)
 0412D7 D6 30       2743   	sub 48
 0412D9 D5          2744   	push de
@@ -3250,7 +3250,7 @@ PC     Output      Line
 0412EC             2758   ; three int
 0412EC             2759   lprt_three_int:
 0412EC C5          2760   	push bc
-0412ED 11 4E 3E 04 2761   	ld de,temp_chars_buffer
+0412ED 11 BE 3E 04 2761   	ld de,temp_chars_buffer
 0412F1 1A          2762   	ld a,(de)
 0412F2 D6 30       2763   	sub 48
 0412F4 D5          2764   	push de
@@ -3321,17 +3321,17 @@ PC     Output      Line
 041341 3E FF       0001M  		LD	A, function
 041343 49 D7       0002M  		RST.LIS	10h
 041345             2826   
-041345 21 E9 1A 04 2827   	ld hl,red_tint
+041345 21 59 1B 04 2827   	ld hl,red_tint
 041349 7E          2828   	ld a,(hl)
 04134A             2829   	vdu_a
 04134A 49 D7       0001M  		RST.LIS	10h
 04134C             2830   
-04134C 21 EA 1A 04 2831   	ld hl,green_tint
+04134C 21 5A 1B 04 2831   	ld hl,green_tint
 041350 7E          2832   	ld a,(hl)
 041351             2833   	vdu_a
 041351 49 D7       0001M  		RST.LIS	10h
 041353             2834   
-041353 21 EB 1A 04 2835   	ld hl,blue_tint
+041353 21 5B 1B 04 2835   	ld hl,blue_tint
 041357 7E          2836   	ld a,(hl)
 041358             2837   	vdu_a
 041358 49 D7       0001M  		RST.LIS	10h
@@ -3349,7 +3349,7 @@ PC     Output      Line
 041360             2849   ; load a sprite, giving its full name, with extension
 041360             2850   fn_load_sprite:
 041360             2851   	; clear the filename on the screen
-041360 21 3E 1A 04 2852   	ld hl,filename
+041360 21 AE 1A 04 2852   	ld hl,filename
 041364 06 10       2853   	ld b,FILENAME_LENGTH
 041366 AF          2854   	xor a
 041367             2855   
@@ -3362,7 +3362,7 @@ PC     Output      Line
 04136B CD 4A 0F 04 2862   	call fn_input_text8
 04136F             2863   
 04136F             2864   	; set path to 'sprites/'
-04136F 21 4F 1A 04 2865   	ld hl,sprite_path
+04136F 21 BF 1A 04 2865   	ld hl,sprite_path
 041373             2866   	moscall mos_cd
 041373 3E 03       0001M  		LD	A, function
 041375 49 CF       0002M  		RST.LIS	08h
@@ -3372,7 +3372,7 @@ PC     Output      Line
 041379 C2 4A 14 04 2870   	jp nz,ls_folder_error
 04137D             2871   
 04137D             2872   	; open the file for read
-04137D 21 3E 1A 04 2873   	ld hl,filename
+04137D 21 AE 1A 04 2873   	ld hl,filename
 041381 0E 01       2874   	ld c,fa_open_existing|fa_read
 041383             2875   	moscall mos_fopen
 041383 3E 0A       0001M  		LD	A, function
@@ -3395,7 +3395,7 @@ PC     Output      Line
 041398 D2 25 14 04 2889   	jp nc,ls_close_error
 04139C             2890   
 04139C             2891   	; store colors count
-04139C 21 E7 1A 04 2892   	ld hl,colors_count
+04139C 21 57 1B 04 2892   	ld hl,colors_count
 0413A0 77          2893   	ld (hl),a
 0413A1             2894   
 0413A1             2895   	; redraw palette
@@ -3410,11 +3410,11 @@ PC     Output      Line
 0413AB DA 25 14 04 2902   	jp c,ls_close_error
 0413AF             2903   
 0413AF             2904   	; store frames count
-0413AF 21 EE 1A 04 2905   	ld hl,frames_count
+0413AF 21 5E 1B 04 2905   	ld hl,frames_count
 0413B3 77          2906   	ld (hl),a
 0413B4             2907   
 0413B4             2908   	; set last frame as current frame
-0413B4 21 ED 1A 04 2909   	ld hl,current_frame
+0413B4 21 5D 1B 04 2909   	ld hl,current_frame
 0413B8 3D          2910   	dec a
 0413B9 77          2911   	ld (hl),a
 0413BA             2912   
@@ -3425,14 +3425,14 @@ PC     Output      Line
 0413BE DA 25 14 04 2915   	jp c,ls_close_error
 0413C2             2916   
 0413C2             2917   	; store sprite size
-0413C2 21 C7 19 04 2918   	ld hl,spr_size
+0413C2 21 37 1A 04 2918   	ld hl,spr_size
 0413C6 77          2919   	ld (hl),a
 0413C7             2920   
 0413C7             2921   	; set 4x4 pixel width
 0413C7 FE 04       2922   	cp SPR44
 0413C9 20 09       2923   	jr nz,ls_next1
 0413CB             2924   
-0413CB 21 C6 19 04 2925   	ld hl,pixel_width
+0413CB 21 36 1A 04 2925   	ld hl,pixel_width
 0413CF 06 20       2926   	ld b,SPR44_width
 0413D1 70          2927   	ld (hl),b
 0413D2 18 21       2928   	jr ls_next4
@@ -3442,7 +3442,7 @@ PC     Output      Line
 0413D4 FE 08       2932   	cp SPR88
 0413D6 20 09       2933   	jr nz,ls_next2
 0413D8             2934   
-0413D8 21 C6 19 04 2935   	ld hl,pixel_width
+0413D8 21 36 1A 04 2935   	ld hl,pixel_width
 0413DC 06 10       2936   	ld b,SPR88_width
 0413DE 70          2937   	ld (hl),b
 0413DF 18 14       2938   	jr ls_next4
@@ -3453,14 +3453,14 @@ PC     Output      Line
 0413E1 FE 10       2943   	cp SPR1616
 0413E3 20 09       2944   	jr nz,ls_next3
 0413E5             2945   
-0413E5 21 C6 19 04 2946   	ld hl,pixel_width
+0413E5 21 36 1A 04 2946   	ld hl,pixel_width
 0413E9 06 08       2947   	ld b,SPR1616_width
 0413EB 70          2948   	ld (hl),b
 0413EC 18 07       2949   	jr ls_next4
 0413EE             2950   
 0413EE             2951   ls_next3:
 0413EE             2952   
-0413EE 21 C6 19 04 2953   	ld hl,pixel_width
+0413EE 21 36 1A 04 2953   	ld hl,pixel_width
 0413F2 06 04       2954   	ld b,SPR3232_width
 0413F4 70          2955   	ld (hl),b
 0413F5             2956   
@@ -3472,7 +3472,7 @@ PC     Output      Line
 0413FD E5          2962   	push hl
 0413FE             2963   
 0413FE             2964   	; get frames count
-0413FE 21 EE 1A 04 2965   	ld hl,frames_count
+0413FE 21 5E 1B 04 2965   	ld hl,frames_count
 041402 46          2966   	ld b,(hl)
 041403             2967   
 041403 E1          2968   	pop hl
@@ -3493,7 +3493,7 @@ PC     Output      Line
 04140F E5          2983   	push hl ; all frames length
 041410 E5          2984   	push hl
 041411 D1          2985   	pop de
-041412 21 F6 1A 04 2986   	ld hl,sprite_buffer
+041412 21 66 1B 04 2986   	ld hl,sprite_buffer
 041416             2987   	moscall mos_fread
 041416 3E 1A       0001M  		LD	A, function
 041418 49 CF       0002M  		RST.LIS	08h
@@ -3518,7 +3518,7 @@ PC     Output      Line
 04142D 49 CF       0002M  		RST.LIS	08h
 04142F             3005   
 04142F             3006   	; set path to home
-04142F 21 60 1A 04 3007   	ld hl,back_path
+04142F 21 D0 1A 04 3007   	ld hl,back_path
 041433             3008   	moscall mos_cd
 041433 3E 03       0001M  		LD	A, function
 041435 49 CF       0002M  		RST.LIS	08h
@@ -3529,10 +3529,10 @@ PC     Output      Line
 04143D             3013   
 04143D             3014   
 04143D             3015   	; reset current frame and coordinates of the drawing pixel
-04143D 21 C2 19 04 3016   	ld hl,xpix
+04143D 21 32 1A 04 3016   	ld hl,xpix
 041441 AF          3017   	xor a
 041442 77          3018   	ld (hl),a
-041443 21 C3 19 04 3019   	ld hl,ypix
+041443 21 33 1A 04 3019   	ld hl,ypix
 041447 77          3020   	ld (hl),a
 041448 18 25       3021   	jr ls_exit
 04144A             3022   
@@ -3548,7 +3548,7 @@ PC     Output      Line
 041454 49 CF       0002M  		RST.LIS	08h
 041456             3031   
 041456             3032   	; set path to home
-041456 21 60 1A 04 3033   	ld hl,back_path
+041456 21 D0 1A 04 3033   	ld hl,back_path
 04145A             3034   	moscall mos_cd
 04145A 3E 03       0001M  		LD	A, function
 04145C 49 CF       0002M  		RST.LIS	08h
@@ -3558,10 +3558,10 @@ PC     Output      Line
 041460 C2 4A 14 04 3038   	jp nz,ls_folder_error
 041464             3039   
 041464             3040   	; reset current frame and coordinates of the drawing pixel
-041464 21 C2 19 04 3041   	ld hl,xpix
+041464 21 32 1A 04 3041   	ld hl,xpix
 041468 AF          3042   	xor a
 041469 77          3043   	ld (hl),a
-04146A 21 C3 19 04 3044   	ld hl,ypix
+04146A 21 33 1A 04 3044   	ld hl,ypix
 04146E 77          3045   	ld (hl),a
 04146F             3046   
 04146F             3047   ls_exit:
@@ -3574,7 +3574,7 @@ PC     Output      Line
 04147C CD E1 16 04 3054   	call fn_print_file_error
 041480             3055   
 041480             3056   	; set path to home
-041480 21 60 1A 04 3057   	ld hl,back_path
+041480 21 D0 1A 04 3057   	ld hl,back_path
 041484             3058   	moscall mos_cd
 041484 3E 03       0001M  		LD	A, function
 041486 49 CF       0002M  		RST.LIS	08h
@@ -3588,7 +3588,7 @@ PC     Output      Line
 04148F             3066   ; save a sprite, giving its name
 04148F             3067   fn_save_sprite:
 04148F             3068   	; clear filename on the screen
-04148F 21 3E 1A 04 3069   	ld hl,filename
+04148F 21 AE 1A 04 3069   	ld hl,filename
 041493 06 10       3070   	ld b,FILENAME_LENGTH
 041495 AF          3071   	xor a
 041496             3072   
@@ -3601,7 +3601,7 @@ PC     Output      Line
 04149A CD 4A 0F 04 3079   	call fn_input_text8
 04149E             3080   
 04149E             3081   	; set path to sprite path
-04149E 21 4F 1A 04 3082   	ld hl,sprite_path
+04149E 21 BF 1A 04 3082   	ld hl,sprite_path
 0414A2             3083   	moscall mos_cd
 0414A2 3E 03       0001M  		LD	A, function
 0414A4 49 CF       0002M  		RST.LIS	08h
@@ -3614,7 +3614,7 @@ PC     Output      Line
 0414AE 28 08       3090   	jr z,ss_next
 0414B0             3091   
 0414B0             3092   	; set path to sprite path
-0414B0 21 4F 1A 04 3093   	ld hl,sprite_path
+0414B0 21 BF 1A 04 3093   	ld hl,sprite_path
 0414B4             3094   	moscall mos_cd
 0414B4 3E 03       0001M  		LD	A, function
 0414B6 49 CF       0002M  		RST.LIS	08h
@@ -3625,7 +3625,7 @@ PC     Output      Line
 0414BA C2 4A 15 04 3099   	jp nz,ss_folder_error
 0414BE             3100   
 0414BE             3101   	; open the file for write
-0414BE 21 3E 1A 04 3102   	ld hl,filename
+0414BE 21 AE 1A 04 3102   	ld hl,filename
 0414C2 0E 0A       3103   	ld c,fa_create_always|fa_write
 0414C4             3104   	moscall mos_fopen
 0414C4 3E 0A       0001M  		LD	A, function
@@ -3639,21 +3639,21 @@ PC     Output      Line
 0414CE 4F          3111   	ld c,a
 0414CF             3112   
 0414CF             3113   	; store colors count in the file
-0414CF 21 E7 1A 04 3114   	ld hl,colors_count
+0414CF 21 57 1B 04 3114   	ld hl,colors_count
 0414D3 46          3115   	ld b,(hl)
 0414D4             3116   	moscall mos_fputc
 0414D4 3E 0D       0001M  		LD	A, function
 0414D6 49 CF       0002M  		RST.LIS	08h
 0414D8             3117   
 0414D8             3118   	; store frames count in the file
-0414D8 21 EE 1A 04 3119   	ld hl,frames_count
+0414D8 21 5E 1B 04 3119   	ld hl,frames_count
 0414DC 46          3120   	ld b,(hl)
 0414DD             3121   	moscall mos_fputc
 0414DD 3E 0D       0001M  		LD	A, function
 0414DF 49 CF       0002M  		RST.LIS	08h
 0414E1             3122   
 0414E1             3123   	; store sprite size in the file
-0414E1 21 C7 19 04 3124   	ld hl,spr_size
+0414E1 21 37 1A 04 3124   	ld hl,spr_size
 0414E5 46          3125   	ld b,(hl)
 0414E6             3126   	moscall mos_fputc
 0414E6 3E 0D       0001M  		LD	A, function
@@ -3667,7 +3667,7 @@ PC     Output      Line
 0414F2 E5          3133   	push hl
 0414F3             3134   
 0414F3             3135   	; get frames count
-0414F3 21 EE 1A 04 3136   	ld hl,frames_count
+0414F3 21 5E 1B 04 3136   	ld hl,frames_count
 0414F7 46          3137   	ld b,(hl)
 0414F8             3138   
 0414F8 E1          3139   	pop hl
@@ -3687,7 +3687,7 @@ PC     Output      Line
 041504 E5          3153   	push hl
 041505 E5          3154   	push hl
 041506 D1          3155   	pop de
-041507 21 F6 1A 04 3156   	ld hl,sprite_buffer
+041507 21 66 1B 04 3156   	ld hl,sprite_buffer
 04150B             3157   	moscall mos_fwrite
 04150B 3E 1B       0001M  		LD	A, function
 04150D 49 CF       0002M  		RST.LIS	08h
@@ -3712,7 +3712,7 @@ PC     Output      Line
 041522 49 CF       0002M  		RST.LIS	08h
 041524             3175   
 041524             3176   	; set path to home
-041524 21 60 1A 04 3177   	ld hl,back_path
+041524 21 D0 1A 04 3177   	ld hl,back_path
 041528             3178   	moscall mos_cd
 041528 3E 03       0001M  		LD	A, function
 04152A 49 CF       0002M  		RST.LIS	08h
@@ -3722,15 +3722,15 @@ PC     Output      Line
 04152E C2 4A 15 04 3182   	jp nz,ss_folder_error
 041532             3183   
 041532             3184   	; reset current frame and coordinates of the drawing pixel
-041532 21 EE 1A 04 3185   	ld hl,frames_count
+041532 21 5E 1B 04 3185   	ld hl,frames_count
 041536 7E          3186   	ld a,(hl)
 041537 3D          3187   	dec a
-041538 21 ED 1A 04 3188   	ld hl,current_frame
+041538 21 5D 1B 04 3188   	ld hl,current_frame
 04153C 77          3189   	ld (hl),a
-04153D 21 C2 19 04 3190   	ld hl,xpix
+04153D 21 32 1A 04 3190   	ld hl,xpix
 041541 AF          3191   	xor a
 041542 77          3192   	ld (hl),a
-041543 21 C3 19 04 3193   	ld hl,ypix
+041543 21 33 1A 04 3193   	ld hl,ypix
 041547 77          3194   	ld (hl),a
 041548 18 30       3195   	jr ss_exit
 04154A             3196   
@@ -3746,7 +3746,7 @@ PC     Output      Line
 041554 49 CF       0002M  		RST.LIS	08h
 041556             3205   
 041556             3206   	; set path to home
-041556 21 60 1A 04 3207   	ld hl,back_path
+041556 21 D0 1A 04 3207   	ld hl,back_path
 04155A             3208   	moscall mos_cd
 04155A 3E 03       0001M  		LD	A, function
 04155C 49 CF       0002M  		RST.LIS	08h
@@ -3756,15 +3756,15 @@ PC     Output      Line
 041560 C2 4A 15 04 3212   	jp nz,ss_folder_error
 041564             3213   
 041564             3214   	; reset current frame and coordinates of the drawing pixel
-041564 21 EE 1A 04 3215   	ld hl,frames_count
+041564 21 5E 1B 04 3215   	ld hl,frames_count
 041568 7E          3216   	ld a,(hl)
 041569 3D          3217   	dec a
-04156A 21 ED 1A 04 3218   	ld hl,current_frame
+04156A 21 5D 1B 04 3218   	ld hl,current_frame
 04156E 77          3219   	ld (hl),a
-04156F 21 C2 19 04 3220   	ld hl,xpix
+04156F 21 32 1A 04 3220   	ld hl,xpix
 041573 AF          3221   	xor a
 041574 77          3222   	ld (hl),a
-041575 21 C3 19 04 3223   	ld hl,ypix
+041575 21 33 1A 04 3223   	ld hl,ypix
 041579 77          3224   	ld (hl),a
 04157A             3225   
 04157A             3226   ss_exit:
@@ -3777,7 +3777,7 @@ PC     Output      Line
 041587 CD E1 16 04 3233   	call fn_print_file_error
 04158B             3234   
 04158B             3235   	; set path to home
-04158B 21 60 1A 04 3236   	ld hl,back_path
+04158B 21 D0 1A 04 3236   	ld hl,back_path
 04158F             3237   	moscall mos_cd
 04158F 3E 03       0001M  		LD	A, function
 041591 49 CF       0002M  		RST.LIS	08h
@@ -3790,7 +3790,7 @@ PC     Output      Line
 04159A             3244   ; export sprite data in assembly language, giving its name
 04159A             3245   fn_export_sprite:
 04159A             3246   	; clear filename
-04159A 21 3E 1A 04 3247   	ld hl,filename
+04159A 21 AE 1A 04 3247   	ld hl,filename
 04159E 06 10       3248   	ld b,FILENAME_LENGTH
 0415A0 AF          3249   	xor a
 0415A1             3250   
@@ -3803,7 +3803,7 @@ PC     Output      Line
 0415A5 CD 4A 0F 04 3257   	call fn_input_text8
 0415A9             3258   
 0415A9             3259   	; set path to sprite path
-0415A9 21 4F 1A 04 3260   	ld hl,sprite_path
+0415A9 21 BF 1A 04 3260   	ld hl,sprite_path
 0415AD             3261   	moscall mos_cd
 0415AD 3E 03       0001M  		LD	A, function
 0415AF 49 CF       0002M  		RST.LIS	08h
@@ -3816,7 +3816,7 @@ PC     Output      Line
 0415B9 28 0E       3268   	jr z,es_next
 0415BB             3269   
 0415BB             3270   	; set path to sprite path
-0415BB 21 4F 1A 04 3271   	ld hl,sprite_path
+0415BB 21 BF 1A 04 3271   	ld hl,sprite_path
 0415BF             3272   	moscall mos_cd
 0415BF 3E 03       0001M  		LD	A, function
 0415C1 49 CF       0002M  		RST.LIS	08h
@@ -3827,7 +3827,7 @@ PC     Output      Line
 0415C9             3277   
 0415C9             3278   es_next:
 0415C9             3279   	; open the file for write
-0415C9 21 3E 1A 04 3280   	ld hl,filename
+0415C9 21 AE 1A 04 3280   	ld hl,filename
 0415CD 0E 0A       3281   	ld c,fa_create_always|fa_write
 0415CF             3282   	moscall mos_fopen
 0415CF 3E 0A       0001M  		LD	A, function
@@ -3843,7 +3843,7 @@ PC     Output      Line
 0415DA             3291   
 0415DA             3292   	; L = first frame
 0415DA 3E 00       3293   	ld a,0
-0415DC 21 F6 1A 04 3294   	ld hl,sprite_buffer
+0415DC 21 66 1B 04 3294   	ld hl,sprite_buffer
 0415E0 11 00 00 00 3295   	ld de,$000000
 0415E4             3296   
 0415E4             3297   es_frames_repeat:
@@ -3955,7 +3955,7 @@ PC     Output      Line
 041654             3375   
 041654 D1          3376   	pop de
 041655 14          3377   	inc d
-041656 3A C7 19 04 3378   	ld a,(spr_size)
+041656 3A 37 1A 04 3378   	ld a,(spr_size)
 04165A BA          3379   	cp d
 04165B F5          3380   	push af
 04165C C4 7A 19 04 3381   	call nz,fn_comma
@@ -3973,7 +3973,7 @@ PC     Output      Line
 04166F 49 CF       0002M  		RST.LIS	08h
 041671             3390   
 041671 1C          3391   	inc e
-041672 3A C7 19 04 3392   	ld a,(spr_size)
+041672 3A 37 1A 04 3392   	ld a,(spr_size)
 041676 BB          3393   	cp e
 041677 C2 21 16 04 3394   	jp nz,es_repeat
 04167B             3395   
@@ -3994,7 +3994,7 @@ PC     Output      Line
 04168C D1          3406   	pop de
 04168D F1          3407   	pop af
 04168E 3C          3408   	inc a
-04168F DD 21 EE 1A 3409   	ld ix,frames_count
+04168F DD 21 5E 1B 3409   	ld ix,frames_count
        04          
 041694 DD BE 00    3410   	cp (ix+0)
 041697 C2 E4 15 04 3411   	jp nz,es_frames_repeat
@@ -4005,7 +4005,7 @@ PC     Output      Line
 04169D 49 CF       0002M  		RST.LIS	08h
 04169F             3415   
 04169F             3416   	; set path to home
-04169F 21 60 1A 04 3417   	ld hl,back_path
+04169F 21 D0 1A 04 3417   	ld hl,back_path
 0416A3             3418   	moscall mos_cd
 0416A3 3E 03       0001M  		LD	A, function
 0416A5 49 CF       0002M  		RST.LIS	08h
@@ -4015,15 +4015,15 @@ PC     Output      Line
 0416A9 C2 C5 16 04 3422   	jp nz,es_folder_error
 0416AD             3423   
 0416AD             3424   	; reset current frame and coordinates of the drawing pixel
-0416AD 21 EE 1A 04 3425   	ld hl,frames_count
+0416AD 21 5E 1B 04 3425   	ld hl,frames_count
 0416B1 7E          3426   	ld a,(hl)
 0416B2 3D          3427   	dec a
-0416B3 21 ED 1A 04 3428   	ld hl,current_frame
+0416B3 21 5D 1B 04 3428   	ld hl,current_frame
 0416B7 77          3429   	ld (hl),a
-0416B8 21 C2 19 04 3430   	ld hl,xpix
+0416B8 21 32 1A 04 3430   	ld hl,xpix
 0416BC AF          3431   	xor a
 0416BD 77          3432   	ld (hl),a
-0416BE 21 C3 19 04 3433   	ld hl,ypix
+0416BE 21 33 1A 04 3433   	ld hl,ypix
 0416C2 77          3434   	ld (hl),a
 0416C3 18 08       3435   	jr es_exit
 0416C5             3436   
@@ -4039,7 +4039,7 @@ PC     Output      Line
 0416CE CD E1 16 04 3446   	call fn_print_file_error
 0416D2             3447   
 0416D2             3448   	; set path to home
-0416D2 21 60 1A 04 3449   	ld hl,back_path
+0416D2 21 D0 1A 04 3449   	ld hl,back_path
 0416D6             3450   	moscall mos_cd
 0416D6 3E 03       0001M  		LD	A, function
 0416D8 49 CF       0002M  		RST.LIS	08h
@@ -4067,7 +4067,7 @@ PC     Output      Line
 0416EF 49 D7       0002M  		RST.LIS	10h
 0416F1             3465   
 0416F1             3466   	; print text
-0416F1 21 7F 1A 04 3467   	ld hl,file_error
+0416F1 21 EF 1A 04 3467   	ld hl,file_error
 0416F5 01 00 00 00 3468   	ld bc,0
 0416F9 AF          3469   	xor a
 0416FA 49 DF       3470   	rst.lis $18
@@ -4086,7 +4086,7 @@ PC     Output      Line
 04170A 49 D7       0002M  		RST.LIS	10h
 04170C             3478   
 04170C             3479   	; print text
-04170C 21 65 1A 04 3480   	ld hl,void_filename
+04170C 21 D5 1A 04 3480   	ld hl,void_filename
 041710 01 00 00 00 3481   	ld bc,0
 041714 AF          3482   	xor a
 041715 49 DF       3483   	rst.lis $18
@@ -4111,7 +4111,7 @@ PC     Output      Line
 041726 49 D7       0002M  		RST.LIS	10h
 041728             3495   
 041728             3496   	; print text
-041728 21 99 1A 04 3497   	ld hl,folder_error
+041728 21 09 1B 04 3497   	ld hl,folder_error
 04172C 01 00 00 00 3498   	ld bc,0
 041730 AF          3499   	xor a
 041731 49 DF       3500   	rst.lis $18
@@ -4130,7 +4130,7 @@ PC     Output      Line
 041741 49 D7       0002M  		RST.LIS	10h
 041743             3508   
 041743             3509   	; print text
-041743 21 65 1A 04 3510   	ld hl,void_filename
+041743 21 D5 1A 04 3510   	ld hl,void_filename
 041747 01 00 00 00 3511   	ld bc,0
 04174B AF          3512   	xor a
 04174C 49 DF       3513   	rst.lis $18
@@ -4155,7 +4155,7 @@ PC     Output      Line
 04175D 49 D7       0002M  		RST.LIS	10h
 04175F             3525   
 04175F             3526   	; print text
-04175F 21 B3 1A 04 3527   	ld hl,header_error
+04175F 21 23 1B 04 3527   	ld hl,header_error
 041763 01 00 00 00 3528   	ld bc,0
 041767 AF          3529   	xor a
 041768 49 DF       3530   	rst.lis $18
@@ -4174,7 +4174,7 @@ PC     Output      Line
 041778 49 D7       0002M  		RST.LIS	10h
 04177A             3538   
 04177A             3539   	; print text
-04177A 21 65 1A 04 3540   	ld hl,void_filename
+04177A 21 D5 1A 04 3540   	ld hl,void_filename
 04177E 01 00 00 00 3541   	ld bc,0
 041782 AF          3542   	xor a
 041783 49 DF       3543   	rst.lis $18
@@ -4199,7 +4199,7 @@ PC     Output      Line
 041794 49 D7       0002M  		RST.LIS	10h
 041796             3555   
 041796             3556   	; print text
-041796 21 CD 1A 04 3557   	ld hl,data_error
+041796 21 3D 1B 04 3557   	ld hl,data_error
 04179A 01 00 00 00 3558   	ld bc,0
 04179E AF          3559   	xor a
 04179F 49 DF       3560   	rst.lis $18
@@ -4218,7 +4218,7 @@ PC     Output      Line
 0417AF 49 D7       0002M  		RST.LIS	10h
 0417B1             3568   
 0417B1             3569   	; print text
-0417B1 21 65 1A 04 3570   	ld hl,void_filename
+0417B1 21 D5 1A 04 3570   	ld hl,void_filename
 0417B5 01 00 00 00 3571   	ld bc,0
 0417B9 AF          3572   	xor a
 0417BA 49 DF       3573   	rst.lis $18
@@ -4233,16 +4233,16 @@ PC     Output      Line
 0417C1             3582   rs_loop:
 0417C1 C5          3583   	push bc
 0417C2             3584   
-0417C2 21 C2 19 04 3585   	ld hl,xpix
+0417C2 21 32 1A 04 3585   	ld hl,xpix
 0417C6 70          3586   	ld (hl),b
-0417C7 21 C3 19 04 3587   	ld hl,ypix
+0417C7 21 33 1A 04 3587   	ld hl,ypix
 0417CB 71          3588   	ld (hl),c
 0417CC CD D5 0D 04 3589   	call fn_draw_pixel_without_border
 0417D0             3590   
 0417D0 C1          3591   	pop bc
 0417D1             3592   
 0417D1 04          3593   	inc b
-0417D2 21 C7 19 04 3594   	ld hl,spr_size
+0417D2 21 37 1A 04 3594   	ld hl,spr_size
 0417D6 7E          3595   	ld a,(hl)
 0417D7 B8          3596   	cp b
 0417D8 28 04       3597   	jr z,rs_next_line
@@ -4251,7 +4251,7 @@ PC     Output      Line
 0417DE             3600   rs_next_line:
 0417DE 06 00       3601   	ld b,0
 0417E0 0C          3602   	inc c
-0417E1 21 C7 19 04 3603   	ld hl,spr_size
+0417E1 21 37 1A 04 3603   	ld hl,spr_size
 0417E5 7E          3604   	ld a,(hl)
 0417E6 B9          3605   	cp c
 0417E7 28 04       3606   	jr z,rs_end
@@ -4259,20 +4259,20 @@ PC     Output      Line
 0417ED             3608   
 0417ED             3609   rs_end:
 0417ED AF          3610   	xor a
-0417EE 21 C2 19 04 3611   	ld hl,xpix
+0417EE 21 32 1A 04 3611   	ld hl,xpix
 0417F2 77          3612   	ld (hl),a
-0417F3 21 C3 19 04 3613   	ld hl,ypix
+0417F3 21 33 1A 04 3613   	ld hl,ypix
 0417F7 77          3614   	ld (hl),a
 0417F8 CD C1 0D 04 3615   	call fn_draw_pixel_with_border
 0417FC             3616   
 0417FC C9          3617   	ret
 0417FD             3618   
 0417FD             3619   fn_change_frame:
-0417FD 21 ED 1A 04 3620   	ld hl,current_frame
+0417FD 21 5D 1B 04 3620   	ld hl,current_frame
 041801 7E          3621   	ld a,(hl)
 041802 3C          3622   	inc a
 041803 C6 30       3623   	add a,48
-041805 21 EF 1A 04 3624   	ld hl,current_frame_ascii
+041805 21 5F 1B 04 3624   	ld hl,current_frame_ascii
 041809 77          3625   	ld (hl),a
 04180A             3626   
 04180A             3627   	; locate 21,3
@@ -4287,7 +4287,7 @@ PC     Output      Line
 041814 49 D7       0002M  		RST.LIS	10h
 041816             3631   
 041816             3632   	; print text
-041816 21 EF 1A 04 3633   	ld hl,current_frame_ascii
+041816 21 5F 1B 04 3633   	ld hl,current_frame_ascii
 04181A 01 00 00 00 3634   	ld bc,0
 04181E AF          3635   	xor a
 04181F 49 DF       3636   	rst.lis $18
@@ -4295,10 +4295,10 @@ PC     Output      Line
 041821 C9          3638   	ret
 041822             3639   
 041822             3640   fn_change_frames_count:
-041822 21 EE 1A 04 3641   	ld hl,frames_count
+041822 21 5E 1B 04 3641   	ld hl,frames_count
 041826 7E          3642   	ld a,(hl)
 041827 C6 30       3643   	add a,48
-041829 21 F1 1A 04 3644   	ld hl,frames_count_ascii
+041829 21 61 1B 04 3644   	ld hl,frames_count_ascii
 04182D 77          3645   	ld (hl),a
 04182E             3646   
 04182E             3647   	; locate 23,3
@@ -4313,7 +4313,7 @@ PC     Output      Line
 041838 49 D7       0002M  		RST.LIS	10h
 04183A             3651   
 04183A             3652   	; print text
-04183A 21 F1 1A 04 3653   	ld hl,frames_count_ascii
+04183A 21 61 1B 04 3653   	ld hl,frames_count_ascii
 04183E 01 00 00 00 3654   	ld bc,0
 041842 AF          3655   	xor a
 041843 49 DF       3656   	rst.lis $18
@@ -4322,7 +4322,7 @@ PC     Output      Line
 041846             3659   
 041846             3660   ; slowdown (wait delay)
 041846             3661   fn_slowdown:
-041846 DD 21 F3 1A 3662   	ld ix,keydata
+041846 DD 21 63 1B 3662   	ld ix,keydata
        04          
 04184B DD 7E 02    3663   	ld a,(ix+2)
 04184E E6 02       3664   	and 2
@@ -4357,7 +4357,7 @@ PC     Output      Line
 041871 49 D7       0002M  		RST.LIS	10h
 041873             3684   
 041873             3685   	; print text
-041873 21 12 1A 04 3686   	ld hl,spr_descr
+041873 21 82 1A 04 3686   	ld hl,spr_descr
 041877 01 00 00 00 3687   	ld bc,0
 04187B AF          3688   	xor a
 04187C 49 DF       3689   	rst.lis $18
@@ -4374,14 +4374,14 @@ PC     Output      Line
 041888 49 D7       0002M  		RST.LIS	10h
 04188A             3695   
 04188A             3696   	; check for sprite size...
-04188A 21 C7 19 04 3697   	ld hl,spr_size
+04188A 21 37 1A 04 3697   	ld hl,spr_size
 04188E 7E          3698   	ld a,(hl)
 04188F             3699   
 04188F FE 04       3700   	cp 4
 041891 20 0C       3701   	jr nz,ssd_8x8
 041893             3702   
 041893             3703   	; print text 4x4
-041893 21 1C 1A 04 3704   	ld hl,spr_descr1
+041893 21 8C 1A 04 3704   	ld hl,spr_descr1
 041897 01 00 00 00 3705   	ld bc,0
 04189B AF          3706   	xor a
 04189C 49 DF       3707   	rst.lis $18
@@ -4392,7 +4392,7 @@ PC     Output      Line
 0418A1 20 0C       3712   	jr nz,ssd_16x16
 0418A3             3713   
 0418A3             3714   	; print text 8x8
-0418A3 21 22 1A 04 3715   	ld hl,spr_descr2
+0418A3 21 92 1A 04 3715   	ld hl,spr_descr2
 0418A7 01 00 00 00 3716   	ld bc,0
 0418AB AF          3717   	xor a
 0418AC 49 DF       3718   	rst.lis $18
@@ -4403,7 +4403,7 @@ PC     Output      Line
 0418B1 20 0C       3723   	jr nz,ssd_32x32
 0418B3             3724   
 0418B3             3725   	; print text 16x16
-0418B3 21 28 1A 04 3726   	ld hl,spr_descr3
+0418B3 21 98 1A 04 3726   	ld hl,spr_descr3
 0418B7 01 00 00 00 3727   	ld bc,0
 0418BB AF          3728   	xor a
 0418BC 49 DF       3729   	rst.lis $18
@@ -4411,7 +4411,7 @@ PC     Output      Line
 0418BF             3731   
 0418BF             3732   ssd_32x32:
 0418BF             3733   	; print text 32x32
-0418BF 21 2E 1A 04 3734   	ld hl,spr_descr4
+0418BF 21 9E 1A 04 3734   	ld hl,spr_descr4
 0418C3 01 00 00 00 3735   	ld bc,0
 0418C7 AF          3736   	xor a
 0418C8 49 DF       3737   	rst.lis $18
@@ -4455,7 +4455,7 @@ PC     Output      Line
 0418FB C9          3773   	RET
 0418FC             3774   
 0418FC             3775   fn_create_sprite_folder:
-0418FC 21 4F 1A 04 3776   	ld hl,sprite_path
+0418FC 21 BF 1A 04 3776   	ld hl,sprite_path
 041900             3777   	moscall mos_mkdir
 041900 3E 07       0001M  		LD	A, function
 041902 49 CF       0002M  		RST.LIS	08h
@@ -4483,7 +4483,7 @@ PC     Output      Line
 041914 49 D7       0001M  		RST.LIS	10h
 041916 F1          3795   	pop af
 041917 E5          3796   	push hl
-041918 21 E7 1A 04 3797   	ld hl,colors_count
+041918 21 57 1B 04 3797   	ld hl,colors_count
 04191C BE          3798   	cp (hl)
 04191D E1          3799   	pop hl
 04191E 38 0B       3800   	jr c,fndtppl_zap
@@ -4501,7 +4501,7 @@ PC     Output      Line
 04192B             3807   
 04192B             3808   fndtppl_zap:
 04192B             3809   	; store coordinates for a palette square
-04192B DD 21 B2 19 3810   	ld ix,x1
+04192B DD 21 22 1A 3810   	ld ix,x1
        04          
 041930 E1          3811   	pop hl
 041931 E5          3812   	push hl
@@ -4511,13 +4511,13 @@ PC     Output      Line
 041937 DD 75 00    3816   	ld (ix+0),l
 04193A DD 74 01    3817   	ld (ix+1),h
 04193D             3818   
-04193D DD 21 B4 19 3819   	ld ix,y1
+04193D DD 21 24 1A 3819   	ld ix,y1
        04          
 041942 21 00 00 00 3820   	ld hl,0
 041946 DD 75 00    3821   	ld (ix+0),l
 041949 DD 74 01    3822   	ld (ix+1),h
 04194C             3823   
-04194C DD 21 B6 19 3824   	ld ix,x2
+04194C DD 21 26 1A 3824   	ld ix,x2
        04          
 041951 E1          3825   	pop hl
 041952 11 04 00 00 3826   	ld de,4
@@ -4525,7 +4525,7 @@ PC     Output      Line
 041957 DD 75 00    3828   	ld (ix+0),l
 04195A DD 74 01    3829   	ld (ix+1),h
 04195D             3830   
-04195D DD 21 B8 19 3831   	ld ix,y2
+04195D DD 21 28 1A 3831   	ld ix,y2
        04          
 041962 21 0A 00 00 3832   	ld hl,10
 041966 DD 75 00    3833   	ld (ix+0),l
@@ -4574,423 +4574,502 @@ PC     Output      Line
 041990 D5          3874   	push de
 041991 E5          3875   	push hl
 041992             3876   
-041992 7D          3877   	ld a,l
-041993 21 E9 1A 04 3878   	ld hl,red_tint
-041997 71          3879   	ld (hl),c
-041998 21 EA 1A 04 3880   	ld hl,green_tint
-04199C 73          3881   	ld (hl),e
-04199D 21 EB 1A 04 3882   	ld hl,blue_tint
-0419A1 77          3883   	ld (hl),a
-0419A2             3884   
-0419A2 CD 34 13 04 3885   	call lp_set_tint
-0419A6             3886   
-0419A6 E1          3887   	pop hl
-0419A7 D1          3888   	pop de
-0419A8 C1          3889   	pop bc
-0419A9 F1          3890   	pop af
-0419AA C9          3891   	ret
-0419AB             3892   
-0419AB             3893   ; read rgb tints for the color in b
-0419AB             3894   fn_get_color:
-0419AB             3895   	; todo...
-0419AB 0E 00       3896   	ld c,0
-0419AD 1E 00       3897   	ld e,0
-0419AF 2E 00       3898   	ld l,0
-0419B1 C9          3899   	ret
-0419B2             3900   
-0419B2             3901   ;======================================================================
-0419B2             3902   
-0419B2             3903   ; coordinates for rectangles
-0419B2             3904   x1:
-0419B2 00 00       3905   	dw $0000
-0419B4             3906   y1:
-0419B4 00 00       3907   	dw $0000
-0419B6             3908   x2:
-0419B6 00 00       3909   	dw $0000
-0419B8             3910   y2:
-0419B8 00 00       3911   	dw $0000
-0419BA             3912   
-0419BA             3913   ; coordinates of the edited sprite
-0419BA             3914   xs1:
-0419BA 5F 00       3915   	dw 95
-0419BC             3916   ys1:
-0419BC 37 00       3917   	dw 55
-0419BE             3918   xs2:
-0419BE E0 00       3919   	dw 224
-0419C0             3920   ys2:
-0419C0 B8 00       3921   	dw 184
-0419C2             3922   
-0419C2             3923   ; coordinates of active pixels to draw
-0419C2             3924   xpix:
-0419C2 00          3925   	db 0
-0419C3             3926   ypix:
-0419C3 00          3927   	db 0
-0419C4             3928   
-0419C4             3929   ; memorized coordinates of active pixels to draw
-0419C4             3930   memxpix:
-0419C4 00          3931   	db 0
-0419C5             3932   memypix:
-0419C5 00          3933   	db 0
-0419C6             3934   
-0419C6             3935   ; width of a pixel in the sprite
-0419C6             3936   pixel_width:
-0419C6 00          3937   	db 0
-0419C7             3938   
-0419C7             3939   ; sprite size, in resized pixels
-0419C7             3940   spr_size:
-0419C7 00          3941   	db 0
-0419C8             3942   
-0419C8             3943   ; pen color (0-63)
-0419C8             3944   current_pen:
-0419C8 00          3945   	db 0
-0419C9             3946   
-0419C9             3947   ; texts for 1st menu
-0419C9             3948   title:
-0419C9 53 50 52 2D 3949   	db "SPR-EDIT",0
+041992 C5          3877   	push bc
+041993             3878   
+041993             3879   	; store rgb tints
+041993 7D          3880   	ld a,l
+041994 21 59 1B 04 3881   	ld hl,red_tint
+041998 71          3882   	ld (hl),c
+041999 21 5A 1B 04 3883   	ld hl,green_tint
+04199D 73          3884   	ld (hl),e
+04199E 21 5B 1B 04 3885   	ld hl,blue_tint
+0419A2 77          3886   	ld (hl),a
+0419A3             3887   
+0419A3 C1          3888   	pop bc
+0419A4             3889   
+0419A4             3890   	; point to palette rgb color
+0419A4 21 D6 42 04 3891   	ld hl,rgb_palette
+0419A8 11 00 00 00 3892   	ld de,#000000
+0419AC 58          3893   	ld e,b
+0419AD 16 03       3894   	ld d,3
+0419AF ED 5C       3895   	mlt de
+0419B1 19          3896   	add hl,de ; hl -> rgb colors
+0419B2             3897   
+0419B2             3898   	; store rgb tints into the palette
+0419B2 11 59 1B 04 3899   	ld de,red_tint
+0419B6 1A          3900   	ld a,(de)
+0419B7 77          3901   	ld (hl),a
+0419B8 23          3902   	inc hl
+0419B9 11 5A 1B 04 3903   	ld de,green_tint
+0419BD 1A          3904   	ld a,(de)
+0419BE 77          3905   	ld (hl),a
+0419BF 23          3906   	inc hl
+0419C0 11 5B 1B 04 3907   	ld de,blue_tint
+0419C4 1A          3908   	ld a,(de)
+0419C5 77          3909   	ld (hl),a
+0419C6             3910   
+0419C6 C5          3911   	push bc
+0419C7             3912   	vdu 19
+0419C7 3E 13       0001M  		LD	A, function
+0419C9 49 D7       0002M  		RST.LIS	10h
+0419CB C1          3913   	pop bc
+0419CC 78          3914   	ld a,b
+0419CD             3915   	vdu_a
+0419CD 49 D7       0001M  		RST.LIS	10h
+0419CF             3916   	vdu 255
+0419CF 3E FF       0001M  		LD	A, function
+0419D1 49 D7       0002M  		RST.LIS	10h
+0419D3             3917   
+0419D3 21 59 1B 04 3918   	ld hl,red_tint
+0419D7 7E          3919   	ld a,(hl)
+0419D8             3920   	vdu_a
+0419D8 49 D7       0001M  		RST.LIS	10h
+0419DA             3921   
+0419DA 21 5A 1B 04 3922   	ld hl,green_tint
+0419DE 7E          3923   	ld a,(hl)
+0419DF             3924   	vdu_a
+0419DF 49 D7       0001M  		RST.LIS	10h
+0419E1             3925   
+0419E1 21 5B 1B 04 3926   	ld hl,blue_tint
+0419E5 7E          3927   	ld a,(hl)
+0419E6             3928   	vdu_a
+0419E6 49 D7       0001M  		RST.LIS	10h
+0419E8             3929   
+0419E8 E1          3930   	pop hl
+0419E9 D1          3931   	pop de
+0419EA C1          3932   	pop bc
+0419EB F1          3933   	pop af
+0419EC C9          3934   	ret
+0419ED             3935   
+0419ED             3936   ; read rgb tints for the color in b
+0419ED             3937   fn_get_color:
+0419ED C5          3938   	push bc
+0419EE             3939   
+0419EE             3940   	; point to palette rgb color
+0419EE 21 D6 42 04 3941   	ld hl,rgb_palette
+0419F2 11 00 00 00 3942   	ld de,#000000
+0419F6 58          3943   	ld e,b
+0419F7 16 03       3944   	ld d,3
+0419F9 ED 5C       3945   	mlt de
+0419FB 19          3946   	add hl,de ; hl -> rgb colors
+0419FC             3947   
+0419FC             3948   	; store rgb tints
+0419FC 11 59 1B 04 3949   	ld de,red_tint
+041A00 7E          3950   	ld a,(hl)
+041A01 12          3951   	ld (de),a
+041A02 23          3952   	inc hl
+041A03 11 5A 1B 04 3953   	ld de,green_tint
+041A07 7E          3954   	ld a,(hl)
+041A08 12          3955   	ld (de),a
+041A09 23          3956   	inc hl
+041A0A 11 5B 1B 04 3957   	ld de,blue_tint
+041A0E 7E          3958   	ld a,(hl)
+041A0F 12          3959   	ld (de),a
+041A10             3960   
+041A10 21 59 1B 04 3961   	ld hl,red_tint
+041A14 4E          3962   	ld c,(hl)
+041A15 21 5A 1B 04 3963   	ld hl,green_tint
+041A19 5E          3964   	ld e,(hl)
+041A1A 21 5B 1B 04 3965   	ld hl,blue_tint
+041A1E 7E          3966   	ld a,(hl)
+041A1F 6F          3967   	ld l,a
+041A20             3968   
+041A20 C1          3969   	pop bc
+041A21 C9          3970   	ret
+041A22             3971   
+041A22             3972   ;======================================================================
+041A22             3973   
+041A22             3974   ; coordinates for rectangles
+041A22             3975   x1:
+041A22 00 00       3976   	dw $0000
+041A24             3977   y1:
+041A24 00 00       3978   	dw $0000
+041A26             3979   x2:
+041A26 00 00       3980   	dw $0000
+041A28             3981   y2:
+041A28 00 00       3982   	dw $0000
+041A2A             3983   
+041A2A             3984   ; coordinates of the edited sprite
+041A2A             3985   xs1:
+041A2A 5F 00       3986   	dw 95
+041A2C             3987   ys1:
+041A2C 37 00       3988   	dw 55
+041A2E             3989   xs2:
+041A2E E0 00       3990   	dw 224
+041A30             3991   ys2:
+041A30 B8 00       3992   	dw 184
+041A32             3993   
+041A32             3994   ; coordinates of active pixels to draw
+041A32             3995   xpix:
+041A32 00          3996   	db 0
+041A33             3997   ypix:
+041A33 00          3998   	db 0
+041A34             3999   
+041A34             4000   ; memorized coordinates of active pixels to draw
+041A34             4001   memxpix:
+041A34 00          4002   	db 0
+041A35             4003   memypix:
+041A35 00          4004   	db 0
+041A36             4005   
+041A36             4006   ; width of a pixel in the sprite
+041A36             4007   pixel_width:
+041A36 00          4008   	db 0
+041A37             4009   
+041A37             4010   ; sprite size, in resized pixels
+041A37             4011   spr_size:
+041A37 00          4012   	db 0
+041A38             4013   
+041A38             4014   ; pen color (0-63)
+041A38             4015   current_pen:
+041A38 00          4016   	db 0
+041A39             4017   
+041A39             4018   ; texts for 1st menu
+041A39             4019   title:
+041A39 53 50 52 2D 4020   	db "SPR-EDIT",0
        45 44 49 54 
        00          
-0419D2             3950   
-0419D2             3951   menu1:
-0419D2 46 31 2E 20 3952   	db "F1. 4x4 Sprite",0
+041A42             4021   
+041A42             4022   menu1:
+041A42 46 31 2E 20 4023   	db "F1. 4x4 Sprite",0
        34 78 34 20 
        53 70 72 69 
        74 65 00    
-0419E1             3953   menu2:
-0419E1 46 32 2E 20 3954   	db "F2. 8x8 Sprite",0
+041A51             4024   menu2:
+041A51 46 32 2E 20 4025   	db "F2. 8x8 Sprite",0
        38 78 38 20 
        53 70 72 69 
        74 65 00    
-0419F0             3955   menu3:
-0419F0 46 33 2E 20 3956   	db "F3. 16x16 Sprite",0
+041A60             4026   menu3:
+041A60 46 33 2E 20 4027   	db "F3. 16x16 Sprite",0
        31 36 78 31 
        36 20 53 70 
        72 69 74 65 
        00          
-041A01             3957   menu4:
-041A01 46 34 2E 20 3958   	db "F4. 32x32 Sprite",0
+041A71             4028   menu4:
+041A71 46 34 2E 20 4029   	db "F4. 32x32 Sprite",0
        33 32 78 33 
        32 20 53 70 
        72 69 74 65 
        00          
-041A12             3959   
-041A12             3960   ; descriptions of sprites
-041A12             3961   spr_descr:
-041A12 46 72 61 6D 3962   	db "Frame:1/1",0
+041A82             4030   
+041A82             4031   ; descriptions of sprites
+041A82             4032   spr_descr:
+041A82 46 72 61 6D 4033   	db "Frame:1/1",0
        65 3A 31 2F 
        31 00       
-041A1C             3963   spr_descr1:
-041A1C 34 78 34 20 3964   	db "4x4  ",0
+041A8C             4034   spr_descr1:
+041A8C 34 78 34 20 4035   	db "4x4  ",0
        20 00       
-041A22             3965   spr_descr2:
-041A22 38 78 38 20 3966   	db "8x8  ",0
+041A92             4036   spr_descr2:
+041A92 38 78 38 20 4037   	db "8x8  ",0
        20 00       
-041A28             3967   spr_descr3:
-041A28 31 36 78 31 3968   	db "16x16",0
+041A98             4038   spr_descr3:
+041A98 31 36 78 31 4039   	db "16x16",0
        36 00       
-041A2E             3969   spr_descr4:
-041A2E 33 32 78 33 3970   	db "32x32",0
+041A9E             4040   spr_descr4:
+041A9E 33 32 78 33 4041   	db "32x32",0
        32 00       
-041A34             3971   
-041A34             3972   ; label before filename
-041A34             3973   filename_label:
-041A34 46 69 6C 65 3974   	db "Filename:",0
+041AA4             4042   
+041AA4             4043   ; label before filename
+041AA4             4044   filename_label:
+041AA4 46 69 6C 65 4045   	db "Filename:",0
        6E 61 6D 65 
        3A 00       
-041A3E             3975   
-041A3E             3976   ; filename without extension
-041A3E             3977   filename:
-041A3E             3978   	ds 17
-041A4F             3979   
-041A4F             3980   sprite_path:
-041A4F 73 70 72 69 3981   	db "sprites",0
+041AAE             4046   
+041AAE             4047   ; filename without extension
+041AAE             4048   filename:
+041AAE             4049   	ds 17
+041ABF             4050   
+041ABF             4051   sprite_path:
+041ABF 73 70 72 69 4052   	db "sprites",0
        74 65 73 00 
-041A57             3982   
-041A57             3983   palette_path:
-041A57 70 61 6C 65 3984   	db "palettes",0
+041AC7             4053   
+041AC7             4054   palette_path:
+041AC7 70 61 6C 65 4055   	db "palettes",0
        74 74 65 73 
        00          
-041A60             3985   
-041A60             3986   back_path:
-041A60 2E 2E 00    3987   	db "..",0
-041A63             3988   
-041A63             3989   ; single space char to print
-041A63             3990   spacechar:
-041A63 20 00       3991   	db " ",0
-041A65             3992   
-041A65             3993   ; spaces to remove filename label
-041A65             3994   void_filename:
-041A65 20 20 20 20 3995   	db "                         ",0
+041AD0             4056   
+041AD0             4057   back_path:
+041AD0 2E 2E 00    4058   	db "..",0
+041AD3             4059   
+041AD3             4060   ; single space char to print
+041AD3             4061   spacechar:
+041AD3 20 00       4062   	db " ",0
+041AD5             4063   
+041AD5             4064   ; spaces to remove filename label
+041AD5             4065   void_filename:
+041AD5 20 20 20 20 4066   	db "                         ",0
        20 20 20 20 
        20 20 20 20 
        20 20 20 20 
        20 20 20 20 
        20 20 20 20 
        20 00       
-041A7F             3996   
-041A7F             3997   ; file error message
-041A7F             3998   file_error:
-041A7F 46 69 6C 65 3999   	db "File error !             ",0
+041AEF             4067   
+041AEF             4068   ; file error message
+041AEF             4069   file_error:
+041AEF 46 69 6C 65 4070   	db "File error !             ",0
        20 65 72 72 
        6F 72 20 21 
        20 20 20 20 
        20 20 20 20 
        20 20 20 20 
        20 00       
-041A99             4000   
-041A99             4001   ; folder error message
-041A99             4002   folder_error:
-041A99 46 6F 6C 64 4003   	db "Folder error !           ",0
+041B09             4071   
+041B09             4072   ; folder error message
+041B09             4073   folder_error:
+041B09 46 6F 6C 64 4074   	db "Folder error !           ",0
        65 72 20 65 
        72 72 6F 72 
        20 21 20 20 
        20 20 20 20 
        20 20 20 20 
        20 00       
-041AB3             4004   
-041AB3             4005   ; header error message
-041AB3             4006   header_error:
-041AB3 48 65 61 64 4007   	db "Header error !           ",0
+041B23             4075   
+041B23             4076   ; header error message
+041B23             4077   header_error:
+041B23 48 65 61 64 4078   	db "Header error !           ",0
        65 72 20 65 
        72 72 6F 72 
        20 21 20 20 
        20 20 20 20 
        20 20 20 20 
        20 00       
-041ACD             4008   
-041ACD             4009   ; data error message
-041ACD             4010   data_error:
-041ACD 44 61 74 61 4011   	db "Data error !             ",0
+041B3D             4079   
+041B3D             4080   ; data error message
+041B3D             4081   data_error:
+041B3D 44 61 74 61 4082   	db "Data error !             ",0
        20 65 72 72 
        6F 72 20 21 
        20 20 20 20 
        20 20 20 20 
        20 20 20 20 
        20 00       
-041AE7             4012   
-041AE7             4013   ; number of colors
-041AE7             4014   colors_count:
-041AE7 00          4015   	db 0
-041AE8             4016   
-041AE8             4017   ; real number of colors
-041AE8             4018   new_colors_count:
-041AE8 00          4019   	db 0
-041AE9             4020   
-041AE9             4021   red_tint:
-041AE9 00          4022   	db 0
-041AEA             4023   
-041AEA             4024   green_tint:
-041AEA 00          4025   	db 0
-041AEB             4026   
-041AEB             4027   blue_tint:
-041AEB 00          4028   	db 0
-041AEC             4029   
-041AEC             4030   error_flag:
-041AEC 00          4031   	db 0
-041AED             4032   
-041AED             4033   ; current frame
-041AED             4034   current_frame:
-041AED 00          4035   	db 0
-041AEE             4036   
-041AEE             4037   ; frames count
-041AEE             4038   frames_count:
-041AEE 00          4039   	db 0
-041AEF             4040   
-041AEF             4041   current_frame_ascii:
-041AEF 30 00       4042   	db '0',0
-041AF1             4043   
-041AF1             4044   frames_count_ascii:
-041AF1 30 00       4045   	db '0',0
-041AF3             4046   
-041AF3             4047   ; keycode, keydown & keymods are stored here
-041AF3             4048   keydata:
-041AF3 00 00 00    4049   	db 0,0,0
-041AF6             4050   
-041AF6             4051   ; buffer for the current sprite
-041AF6             4052   sprite_buffer:
-041AF6             4053   	ds BUFFER_SIZE
-043AF6             4054   
-043AF6             4055   header_buffer:
-043AF6             4056   	ds HEADER_BUFFER_SIZE
-043B06             4057   
-043B06             4058   color_buffer:
-043B06 00 00 00    4059   	db 0,0,0
-043B09             4060   
-043B09             4061   palette_buffer:
-043B09             4062   	ds MAX_PAL_DATA + 1
-043E4E             4063   
-043E4E             4064   temp_chars_buffer:
-043E4E 00 00 00 00 4065   	db 0,0,0,0
-043E52             4066   
-043E52             4067   header:
-043E52 4A 41 53 43 4068   	db "JASC-PAL",13,10
+041B57             4083   
+041B57             4084   ; number of colors
+041B57             4085   colors_count:
+041B57 00          4086   	db 0
+041B58             4087   
+041B58             4088   ; real number of colors
+041B58             4089   new_colors_count:
+041B58 00          4090   	db 0
+041B59             4091   
+041B59             4092   red_tint:
+041B59 00          4093   	db 0
+041B5A             4094   
+041B5A             4095   green_tint:
+041B5A 00          4096   	db 0
+041B5B             4097   
+041B5B             4098   blue_tint:
+041B5B 00          4099   	db 0
+041B5C             4100   
+041B5C             4101   error_flag:
+041B5C 00          4102   	db 0
+041B5D             4103   
+041B5D             4104   ; current frame
+041B5D             4105   current_frame:
+041B5D 00          4106   	db 0
+041B5E             4107   
+041B5E             4108   ; frames count
+041B5E             4109   frames_count:
+041B5E 00          4110   	db 0
+041B5F             4111   
+041B5F             4112   current_frame_ascii:
+041B5F 30 00       4113   	db '0',0
+041B61             4114   
+041B61             4115   frames_count_ascii:
+041B61 30 00       4116   	db '0',0
+041B63             4117   
+041B63             4118   ; keycode, keydown & keymods are stored here
+041B63             4119   keydata:
+041B63 00 00 00    4120   	db 0,0,0
+041B66             4121   
+041B66             4122   ; buffer for the current sprite
+041B66             4123   sprite_buffer:
+041B66             4124   	ds BUFFER_SIZE
+043B66             4125   
+043B66             4126   header_buffer:
+043B66             4127   	ds HEADER_BUFFER_SIZE
+043B76             4128   
+043B76             4129   color_buffer:
+043B76 00 00 00    4130   	db 0,0,0
+043B79             4131   
+043B79             4132   palette_buffer:
+043B79             4133   	ds MAX_PAL_DATA + 1
+043EBE             4134   
+043EBE             4135   temp_chars_buffer:
+043EBE 00 00 00 00 4136   	db 0,0,0,0
+043EC2             4137   
+043EC2             4138   header:
+043EC2 4A 41 53 43 4139   	db "JASC-PAL",13,10
        2D 50 41 4C 
        0D 0A       
-043E5C 30 31 30 30 4069   	db "0100",13,10
+043ECC 30 31 30 30 4140   	db "0100",13,10
        0D 0A       
-043E62             4070   
-043E62             4071   ; buffer to perform some operations
-043E62             4072   swap_sprite_buffer:
-043E62             4073   	ds ONE_FRAME_BUFFER_SIZE
-044262             4074   
-044262             4075   asm_line:
-044262 44 42 20    4076   	DB "DB "
-044265             4077   
-044265             4078   asm_line_length:
-044265 03          4079   	DB 3
-044266             4080   
-044266             4081   rgb_palette:
-044266 00 00 00    4082   	db $00,$00,$00
-044269 AA 00 00    4083   	db $AA,$00,$00
-04426C 00 AA 00    4084   	db $00,$AA,$00
-04426F AA AA 00    4085   	db $AA,$AA,$00
-044272 00 00 AA    4086   	db $00,$00,$AA
-044275 AA 00 AA    4087   	db $AA,$00,$AA
-044278 00 AA AA    4088   	db $00,$AA,$AA
-04427B AA AA AA    4089   	db $AA,$AA,$AA
-04427E             4090   
-04427E 55 55 55    4091   	db $55,$55,$55
-044281 FF 00 00    4092   	db $FF,$00,$00
-044284 00 FF 00    4093   	db $00,$FF,$00
-044287 FF FF 00    4094   	db $FF,$FF,$00
-04428A 00 00 FF    4095   	db $00,$00,$FF
-04428D FF 00 FF    4096   	db $FF,$00,$FF
-044290 00 FF FF    4097   	db $00,$FF,$FF
-044293 FF FF FF    4098   	db $FF,$FF,$FF
-044296             4099   
-044296 00 00 55    4100   	db $00,$00,$55
-044299 00 55 00    4101   	db $00,$55,$00
-04429C 00 55 55    4102   	db $00,$55,$55
-04429F 00 55 AA    4103   	db $00,$55,$AA
-0442A2 00 55 FF    4104   	db $00,$55,$FF
-0442A5 00 AA 55    4105   	db $00,$AA,$55
-0442A8 00 AA FF    4106   	db $00,$AA,$FF
-0442AB 00 FF 55    4107   	db $00,$FF,$55
-0442AE             4108   
-0442AE 00 FF AA    4109   	db $00,$FF,$AA
-0442B1 55 00 00    4110   	db $55,$00,$00
-0442B4 55 00 55    4111   	db $55,$00,$55
-0442B7 55 00 AA    4112   	db $55,$00,$AA
-0442BA 55 00 FF    4113   	db $55,$00,$FF
-0442BD 55 55 00    4114   	db $55,$55,$00
-0442C0 55 55 AA    4115   	db $55,$55,$AA
-0442C3 55 55 FF    4116   	db $55,$55,$FF
-0442C6             4117   
-0442C6 55 AA 00    4118   	db $55,$AA,$00
-0442C9 55 AA 55    4119   	db $55,$AA,$55
-0442CC 55 AA AA    4120   	db $55,$AA,$AA
-0442CF 55 AA FF    4121   	db $55,$AA,$FF
-0442D2 55 FF 00    4122   	db $55,$FF,$00
-0442D5 55 FF 55    4123   	db $55,$FF,$55
-0442D8 55 FF AA    4124   	db $55,$FF,$AA
-0442DB 55 FF FF    4125   	db $55,$FF,$FF
-0442DE             4126   
-0442DE AA 00 55    4127   	db $AA,$00,$55
-0442E1 AA 00 FF    4128   	db $AA,$00,$FF
-0442E4 AA 55 00    4129   	db $AA,$55,$00
-0442E7 AA 55 55    4130   	db $AA,$55,$55
-0442EA AA 55 AA    4131   	db $AA,$55,$AA
-0442ED AA 55 FF    4132   	db $AA,$55,$FF
-0442F0 AA AA 55    4133   	db $AA,$AA,$55
-0442F3 AA AA FF    4134   	db $AA,$AA,$FF
-0442F6             4135   
-0442F6 AA FF 00    4136   	db $AA,$FF,$00
-0442F9 AA FF 55    4137   	db $AA,$FF,$55
-0442FC AA FF AA    4138   	db $AA,$FF,$AA
-0442FF AA FF FF    4139   	db $AA,$FF,$FF
-044302 FF 00 55    4140   	db $FF,$00,$55
-044305 FF 00 AA    4141   	db $FF,$00,$AA
-044308 FF 55 00    4142   	db $FF,$55,$00
-04430B FF 55 55    4143   	db $FF,$55,$55
-04430E             4144   
-04430E FF 55 AA    4145   	db $FF,$55,$AA
-044311 FF 55 FF    4146   	db $FF,$55,$FF
-044314 FF AA 00    4147   	db $FF,$AA,$00
-044317 FF AA 55    4148   	db $FF,$AA,$55
-04431A FF AA AA    4149   	db $FF,$AA,$AA
-04431D FF AA FF    4150   	db $FF,$AA,$FF
-044320 FF FF 55    4151   	db $FF,$FF,$55
-044323 FF FF AA    4152   	db $FF,$FF,$AA
-044326             4153   
-044326             4154   ; sprite structure:
-044326             4155   ; =================
-044326             4156   ; colors_count  :   byte
-044326             4157   ; frames count	:	byte
-044326             4158   ; spr size		:	byte
-044326             4159   ; data			:   width x height bytes of colors
-044326             4160   
-044326             4161   ; ===============================================
-044326             4162   
-044326             4163   ;=================
-044326             4164   ; Debug functions
-044326             4165   ;=================
-044326             4166   ; A = byte to debug
-044326             4167   debug_byte:
-044326 F5          4168   	PUSH AF
-044327 C5          4169   	PUSH BC
-044328 D5          4170   	PUSH DE
-044329 E5          4171   	PUSH HL
-04432A 21 00 00 00 4172   	LD HL,$000000
-04432E 6F          4173   	LD L,A
-04432F 11 6B 43 04 4174   	LD DE,debug_text
-044333 D5          4175   	PUSH DE
-044334 CD 71 43 04 4176   	CALL num2dec
-044338 E1          4177   	POP HL
-044339 23          4178   	INC HL
-04433A 23          4179   	INC HL
-04433B 01 03 00 00 4180   	LD BC,3
-04433F 3E 00       4181   	LD A,0
-044341 49 DF       4182   	RST.LIS $18
-044343 E1          4183   	POP HL
-044344 D1          4184   	POP DE
-044345 C1          4185   	POP BC
-044346 F1          4186   	POP AF
-044347 C9          4187   	RET
-044348             4188   
-044348             4189   ; HL = word to debug
-044348             4190   debug_word:
-044348 F5          4191   	PUSH AF
-044349 C5          4192   	PUSH BC
-04434A D5          4193   	PUSH DE
-04434B E5          4194   	PUSH HL
-04434C 11 00 00 00 4195   	LD DE,$000000 ; remove HLU
-044350 5D          4196   	LD E,L
-044351 54          4197   	LD D,H
-044352 D5          4198   	PUSH DE
-044353 E1          4199   	POP HL
-044354 11 6B 43 04 4200   	LD DE,debug_text
-044358 D5          4201   	PUSH DE
-044359 CD 71 43 04 4202   	CALL num2dec
-04435D E1          4203   	POP HL
-04435E 01 05 00 00 4204   	LD BC,5
-044362 3E 00       4205   	LD A,0
-044364 49 DF       4206   	RST.LIS $18
-044366 E1          4207   	POP HL
-044367 D1          4208   	POP DE
-044368 C1          4209   	POP BC
-044369 F1          4210   	POP AF
-04436A C9          4211   	RET
-04436B             4212   
-04436B             4213   debug_text:
-04436B             4214   	DS 6,0
-044371             4215   
-044371             4216   ; 16 bits number to string
-044371             4217   num2dec:
-044371 01 F0 D8 FF 4218   	LD BC,-10000
-044375 CD 92 43 04 4219   	CALL num1
-044379 01 18 FC FF 4220   	LD BC,-1000
-04437D CD 92 43 04 4221   	CALL num1
-044381 01 9C FF FF 4222   	LD BC,-100
-044385 CD 92 43 04 4223   	CALL num1
-044389 01 F6 FF FF 4224   	LD BC,-10
-04438D CD 92 43 04 4225   	CALL num1
-044391 48          4226   	LD C,B
-044392             4227   
-044392 3E 2F       4228   num1: LD A,'0'-1
-044394 3C          4229   num2: INC A
-044395 09          4230   	ADD HL,BC
-044396 38 FC       4231   	JR C,num2
-044398 ED 42       4232   	SBC HL,BC
-04439A             4233   
-04439A 12          4234   	LD (DE),A
-04439B 13          4235   	INC DE
-04439C C9          4236   	RET
+043ED2             4141   
+043ED2             4142   ; buffer to perform some operations
+043ED2             4143   swap_sprite_buffer:
+043ED2             4144   	ds ONE_FRAME_BUFFER_SIZE
+0442D2             4145   
+0442D2             4146   asm_line:
+0442D2 44 42 20    4147   	DB "DB "
+0442D5             4148   
+0442D5             4149   asm_line_length:
+0442D5 03          4150   	DB 3
+0442D6             4151   
+0442D6             4152   rgb_palette:
+0442D6 00 00 00    4153   	db $00,$00,$00
+0442D9 AA 00 00    4154   	db $AA,$00,$00
+0442DC 00 AA 00    4155   	db $00,$AA,$00
+0442DF AA AA 00    4156   	db $AA,$AA,$00
+0442E2 00 00 AA    4157   	db $00,$00,$AA
+0442E5 AA 00 AA    4158   	db $AA,$00,$AA
+0442E8 00 AA AA    4159   	db $00,$AA,$AA
+0442EB AA AA AA    4160   	db $AA,$AA,$AA
+0442EE             4161   
+0442EE 55 55 55    4162   	db $55,$55,$55
+0442F1 FF 00 00    4163   	db $FF,$00,$00
+0442F4 00 FF 00    4164   	db $00,$FF,$00
+0442F7 FF FF 00    4165   	db $FF,$FF,$00
+0442FA 00 00 FF    4166   	db $00,$00,$FF
+0442FD FF 00 FF    4167   	db $FF,$00,$FF
+044300 00 FF FF    4168   	db $00,$FF,$FF
+044303 FF FF FF    4169   	db $FF,$FF,$FF
+044306             4170   
+044306 00 00 55    4171   	db $00,$00,$55
+044309 00 55 00    4172   	db $00,$55,$00
+04430C 00 55 55    4173   	db $00,$55,$55
+04430F 00 55 AA    4174   	db $00,$55,$AA
+044312 00 55 FF    4175   	db $00,$55,$FF
+044315 00 AA 55    4176   	db $00,$AA,$55
+044318 00 AA FF    4177   	db $00,$AA,$FF
+04431B 00 FF 55    4178   	db $00,$FF,$55
+04431E             4179   
+04431E 00 FF AA    4180   	db $00,$FF,$AA
+044321 55 00 00    4181   	db $55,$00,$00
+044324 55 00 55    4182   	db $55,$00,$55
+044327 55 00 AA    4183   	db $55,$00,$AA
+04432A 55 00 FF    4184   	db $55,$00,$FF
+04432D 55 55 00    4185   	db $55,$55,$00
+044330 55 55 AA    4186   	db $55,$55,$AA
+044333 55 55 FF    4187   	db $55,$55,$FF
+044336             4188   
+044336 55 AA 00    4189   	db $55,$AA,$00
+044339 55 AA 55    4190   	db $55,$AA,$55
+04433C 55 AA AA    4191   	db $55,$AA,$AA
+04433F 55 AA FF    4192   	db $55,$AA,$FF
+044342 55 FF 00    4193   	db $55,$FF,$00
+044345 55 FF 55    4194   	db $55,$FF,$55
+044348 55 FF AA    4195   	db $55,$FF,$AA
+04434B 55 FF FF    4196   	db $55,$FF,$FF
+04434E             4197   
+04434E AA 00 55    4198   	db $AA,$00,$55
+044351 AA 00 FF    4199   	db $AA,$00,$FF
+044354 AA 55 00    4200   	db $AA,$55,$00
+044357 AA 55 55    4201   	db $AA,$55,$55
+04435A AA 55 AA    4202   	db $AA,$55,$AA
+04435D AA 55 FF    4203   	db $AA,$55,$FF
+044360 AA AA 55    4204   	db $AA,$AA,$55
+044363 AA AA FF    4205   	db $AA,$AA,$FF
+044366             4206   
+044366 AA FF 00    4207   	db $AA,$FF,$00
+044369 AA FF 55    4208   	db $AA,$FF,$55
+04436C AA FF AA    4209   	db $AA,$FF,$AA
+04436F AA FF FF    4210   	db $AA,$FF,$FF
+044372 FF 00 55    4211   	db $FF,$00,$55
+044375 FF 00 AA    4212   	db $FF,$00,$AA
+044378 FF 55 00    4213   	db $FF,$55,$00
+04437B FF 55 55    4214   	db $FF,$55,$55
+04437E             4215   
+04437E FF 55 AA    4216   	db $FF,$55,$AA
+044381 FF 55 FF    4217   	db $FF,$55,$FF
+044384 FF AA 00    4218   	db $FF,$AA,$00
+044387 FF AA 55    4219   	db $FF,$AA,$55
+04438A FF AA AA    4220   	db $FF,$AA,$AA
+04438D FF AA FF    4221   	db $FF,$AA,$FF
+044390 FF FF 55    4222   	db $FF,$FF,$55
+044393 FF FF AA    4223   	db $FF,$FF,$AA
+044396             4224   
+044396             4225   ; sprite structure:
+044396             4226   ; =================
+044396             4227   ; colors_count  :   byte
+044396             4228   ; frames count	:	byte
+044396             4229   ; spr size		:	byte
+044396             4230   ; data			:   width x height bytes of colors
+044396             4231   
+044396             4232   ; ===============================================
+044396             4233   
+044396             4234   ;=================
+044396             4235   ; Debug functions
+044396             4236   ;=================
+044396             4237   ; A = byte to debug
+044396             4238   debug_byte:
+044396 F5          4239   	PUSH AF
+044397 C5          4240   	PUSH BC
+044398 D5          4241   	PUSH DE
+044399 E5          4242   	PUSH HL
+04439A 21 00 00 00 4243   	LD HL,$000000
+04439E 6F          4244   	LD L,A
+04439F 11 DB 43 04 4245   	LD DE,debug_text
+0443A3 D5          4246   	PUSH DE
+0443A4 CD E1 43 04 4247   	CALL num2dec
+0443A8 E1          4248   	POP HL
+0443A9 23          4249   	INC HL
+0443AA 23          4250   	INC HL
+0443AB 01 03 00 00 4251   	LD BC,3
+0443AF 3E 00       4252   	LD A,0
+0443B1 49 DF       4253   	RST.LIS $18
+0443B3 E1          4254   	POP HL
+0443B4 D1          4255   	POP DE
+0443B5 C1          4256   	POP BC
+0443B6 F1          4257   	POP AF
+0443B7 C9          4258   	RET
+0443B8             4259   
+0443B8             4260   ; HL = word to debug
+0443B8             4261   debug_word:
+0443B8 F5          4262   	PUSH AF
+0443B9 C5          4263   	PUSH BC
+0443BA D5          4264   	PUSH DE
+0443BB E5          4265   	PUSH HL
+0443BC 11 00 00 00 4266   	LD DE,$000000 ; remove HLU
+0443C0 5D          4267   	LD E,L
+0443C1 54          4268   	LD D,H
+0443C2 D5          4269   	PUSH DE
+0443C3 E1          4270   	POP HL
+0443C4 11 DB 43 04 4271   	LD DE,debug_text
+0443C8 D5          4272   	PUSH DE
+0443C9 CD E1 43 04 4273   	CALL num2dec
+0443CD E1          4274   	POP HL
+0443CE 01 05 00 00 4275   	LD BC,5
+0443D2 3E 00       4276   	LD A,0
+0443D4 49 DF       4277   	RST.LIS $18
+0443D6 E1          4278   	POP HL
+0443D7 D1          4279   	POP DE
+0443D8 C1          4280   	POP BC
+0443D9 F1          4281   	POP AF
+0443DA C9          4282   	RET
+0443DB             4283   
+0443DB             4284   debug_text:
+0443DB             4285   	DS 6,0
+0443E1             4286   
+0443E1             4287   ; 16 bits number to string
+0443E1             4288   num2dec:
+0443E1 01 F0 D8 FF 4289   	LD BC,-10000
+0443E5 CD 02 44 04 4290   	CALL num1
+0443E9 01 18 FC FF 4291   	LD BC,-1000
+0443ED CD 02 44 04 4292   	CALL num1
+0443F1 01 9C FF FF 4293   	LD BC,-100
+0443F5 CD 02 44 04 4294   	CALL num1
+0443F9 01 F6 FF FF 4295   	LD BC,-10
+0443FD CD 02 44 04 4296   	CALL num1
+044401 48          4297   	LD C,B
+044402             4298   
+044402 3E 2F       4299   num1: LD A,'0'-1
+044404 3C          4300   num2: INC A
+044405 09          4301   	ADD HL,BC
+044406 38 FC       4302   	JR C,num2
+044408 ED 42       4303   	SBC HL,BC
+04440A             4304   
+04440A 12          4305   	LD (DE),A
+04440B 13          4306   	INC DE
+04440C C9          4307   	RET
