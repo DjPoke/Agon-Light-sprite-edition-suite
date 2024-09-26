@@ -34,6 +34,12 @@ crunched_screen_filename:
 
 mode_value:
 	DB 0
+
+width_value:
+	DW 0
+
+height_value:
+	DW 0
 	
 colors_count:
 	DB 0
@@ -168,10 +174,10 @@ start:
 	VDU 15
 	
 	; load raw screen
-	;CALL load_raw_screen
+	CALL load_raw_screen
 
 	; load crunched screen
-	CALL load_crunched_screen
+	;CALL load_crunched_screen
 
 exit_program:
 	; wait for any key to be released
@@ -226,9 +232,47 @@ load_raw_screen:
 	; read the mode
 	MOSCALL mos_fgetc
 	JP C,lrs_error
-	
+
+	; store the mode
 	LD HL,mode_value
 	LD (HL),A
+	
+	; store the width of the screen
+	PUSH AF
+	
+	LD HL,width_by_mode
+	LD DE,#000000
+	LD E,A
+	LD D,2
+	MLT DE
+	ADD HL,DE
+	PUSH HL
+	POP IX
+	LD HL,width_value
+	LD A,(IX+0)
+	LD (HL),A
+	INC HL
+	LD A,(IX+1)
+	LD (HL),A
+
+	; store the height of the screen
+	POP AF	
+	PUSH AF
+	LD HL,height_by_mode
+	LD DE,#000000
+	LD E,A
+	LD D,2
+	MLT DE
+	ADD HL,DE
+	PUSH HL
+	POP IX
+	LD HL,height_value
+	LD A,(IX+0)
+	LD (HL),A
+	INC HL
+	LD A,(IX+1)
+	LD (HL),A
+	POP AF
 
 	; set the readen mode
 	PUSH BC
@@ -284,9 +328,8 @@ lrs_set_palette:
 	INC IX
 	INC IX
 	CALL set_color
-	DEC A
 	INC B
-	CP 0
+	CP B
 	JR NZ,lrs_set_palette
 
 	POP BC
@@ -436,8 +479,14 @@ lrs_loop2:
 	VDU 23
 	VDU 27
 	VDU $21
-	LD DE,320 ; width
-	LD HL,240 ; height
+	LD IX,width_value
+	LD IY,height_value
+	LD DE,$000000
+	LD HL,$000000
+	LD E,(IX+0)
+	LD D,(IX+1)
+	LD L,(IY+0)
+	LD H,(IY+1)
 	VDU_DE
 	VDU_HL
 	VDU 1 ; rgba2222
@@ -484,8 +533,46 @@ load_crunched_screen:
 	MOSCALL mos_fgetc
 	JP C,lcs_error
 	
+	; store the mode
 	LD HL,mode_value
 	LD (HL),A
+	
+	; store the width of the screen
+	PUSH AF
+	
+	LD HL,width_by_mode
+	LD DE,#000000
+	LD E,A
+	LD D,2
+	MLT DE
+	ADD HL,DE
+	PUSH HL
+	POP IX
+	LD HL,width_value
+	LD A,(IX+0)
+	LD (HL),A
+	INC HL
+	LD A,(IX+1)
+	LD (HL),A
+
+	; store the height of the screen
+	POP AF	
+	PUSH AF
+	LD HL,height_by_mode
+	LD DE,#000000
+	LD E,A
+	LD D,2
+	MLT DE
+	ADD HL,DE
+	PUSH HL
+	POP IX
+	LD HL,height_value
+	LD A,(IX+0)
+	LD (HL),A
+	INC HL
+	LD A,(IX+1)
+	LD (HL),A
+	POP AF
 
 	; set the readen mode
 	PUSH BC
@@ -541,10 +628,9 @@ lcs_set_palette:
 	INC IX
 	INC IX
 	CALL set_color
-	DEC A
-	INC B
-	CP 0
-	JR NZ,lcs_set_palette
+	INC B	
+	CP B
+	JR NC,lcs_set_palette
 
 	POP BC
 
@@ -663,7 +749,7 @@ set_color:
 
 	LD HL,blue_tint
 	LD A,(HL)
-	VDU_A
+	VDU_A	
 
 	POP HL
 	POP DE
@@ -672,6 +758,8 @@ set_color:
 	POP IX
 	ret
 
+; DE -> x
+; HL -> y
 ; A -> color
 plot_pixel:
 	PUSH AF
@@ -725,25 +813,23 @@ plot_pixel:
 	POP AF
 
 	INC DE
-	
+
 	PUSH HL
-	LD IX,width_by_mode
+	LD IX,width_value
 	LD L,(IX+0)
 	LD H,(IX+1)
-	EX DE,HL
 	OR A
 	SBC HL,DE
 	ADD HL,DE
-	EX DE,HL
 	POP HL
-	JR Z,pp_carriage_return
-	ret
-	
-pp_carriage_return:
+	RET NZ
+
 	LD DE,$000000
 	INC HL
-	ret
+	RET
 
+; DE -> x
+; HL -> y
 ; B -> count of pixels to draw
 ; A -> color
 plot_line:
