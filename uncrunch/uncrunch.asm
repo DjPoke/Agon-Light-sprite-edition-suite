@@ -16,6 +16,7 @@
 .FILLBYTE 0
 
 	INCLUDE "mos_api.inc"
+	INCLUDE "debug.inc"
 
 ; equ
 KEY_ESCAPE: EQU -113
@@ -31,6 +32,9 @@ not_crunched_screen_filename:
 crunched_screen_filename:
 	DB "screens/crunched.scn",0
 
+mode_value:
+	DB 0
+	
 colors_count:
 	DB 0
 
@@ -68,6 +72,58 @@ colors_by_mode:
 	DB 16
 	DB 4
 	DB 2
+
+width_by_mode:
+	DW 640
+	DW 640
+	DW 640
+	DW 640
+	DW 640
+	DW 640
+	DW 640
+	DW 0
+	DW 320
+	DW 320
+	DW 320
+	DW 320
+	DW 320
+	DW 320
+	DW 320
+	DW 320
+	DW 800
+	DW 800
+	DW 1024
+	DW 1024
+	DW 512
+	DW 512
+	DW 512
+	DW 512
+	
+height_by_mode:
+	DW 480
+	DW 480
+	DW 480
+	DW 240
+	DW 240
+	DW 240
+	DW 240
+	DW 0
+	DW 240
+	DW 240
+	DW 240
+	DW 240
+	DW 200
+	DW 200
+	DW 200
+	DW 200
+	DW 600
+	DW 600
+	DW 768
+	DW 768
+	DW 384
+	DW 384
+	DW 384
+	DW 384
 
 palette_rgb:
 	DS 192
@@ -110,12 +166,12 @@ start:
 	; set pen 15
 	VDU 17
 	VDU 15
-
+	
 	; load raw screen
-	CALL load_raw_screen
+	;CALL load_raw_screen
 
 	; load crunched screen
-	;CALL load_crunched_screen
+	CALL load_crunched_screen
 
 exit_program:
 	; wait for any key to be released
@@ -170,6 +226,9 @@ load_raw_screen:
 	; read the mode
 	MOSCALL mos_fgetc
 	JP C,lrs_error
+	
+	LD HL,mode_value
+	LD (HL),A
 
 	; set the readen mode
 	PUSH BC
@@ -186,7 +245,7 @@ load_raw_screen:
 	
 	; get colors count
 	LD HL,colors_by_mode
-	LD DE,#000000
+	LD DE,$000000
 	LD E,A
 	ADD HL,DE
 	LD A,(HL) ; number of colors
@@ -195,7 +254,7 @@ load_raw_screen:
 		
 	; read the palette
 	LD HL,palette_rgb
-	LD DE,#000000
+	LD DE,$000000
 	LD E,A
 	LD D,3
 	MLT DE
@@ -215,15 +274,15 @@ load_raw_screen:
 	
 	PUSH BC
 	LD B,0
-	LD HL,palette_rgb
+	LD IX,palette_rgb
 
 lrs_set_palette:
-	LD C,(HL)
-	INC HL
-	LD E,(HL)
-	INC HL
-	LD L,(HL)
-	INC HL
+	LD C,(IX+0)
+	LD E,(IX+1)
+	LD L,(IX+2)
+	INC IX
+	INC IX
+	INC IX
 	CALL set_color
 	DEC A
 	INC B
@@ -231,7 +290,7 @@ lrs_set_palette:
 	JR NZ,lrs_set_palette
 
 	POP BC
-
+	
 	; read crunched flag
 	MOSCALL mos_fgetc
 	JP C,lrs_error
@@ -424,6 +483,9 @@ load_crunched_screen:
 	; read the mode
 	MOSCALL mos_fgetc
 	JP C,lcs_error
+	
+	LD HL,mode_value
+	LD (HL),A
 
 	; set the readen mode
 	PUSH BC
@@ -440,7 +502,7 @@ load_crunched_screen:
 	
 	; get colors count
 	LD HL,colors_by_mode
-	LD DE,#000000
+	LD DE,$000000
 	LD E,A
 	ADD HL,DE
 	LD A,(HL) ; number of colors
@@ -449,7 +511,7 @@ load_crunched_screen:
 			
 	; read the palette
 	LD HL,palette_rgb
-	LD DE,#000000
+	LD DE,$000000
 	LD E,A
 	LD D,3
 	MLT DE
@@ -469,15 +531,15 @@ load_crunched_screen:
 	
 	PUSH BC
 	LD B,0
-	LD HL,palette_rgb
+	LD IX,palette_rgb
 	
 lcs_set_palette:
-	LD C,(HL)
-	INC HL
-	LD E,(HL)
-	INC HL
-	LD L,(HL)
-	INC HL
+	LD C,(IX+0)
+	LD E,(IX+1)
+	LD L,(IX+2)
+	INC IX
+	INC IX
+	INC IX
 	CALL set_color
 	DEC A
 	INC B
@@ -495,9 +557,9 @@ lcs_set_palette:
 	JP NZ,lcs_error
 
 	; read data on the sdcard, and uncrunch
-	LD DE,#000000 ; x screen
-	LD HL,#000000 ; y screen
-
+	LD DE,$000000 ; x screen
+	LD HL,$000000 ; y screen
+	
 lcs_loop:
 	MOSCALL mos_fgetc
 	JP C,lcs_exit
@@ -569,11 +631,13 @@ inkey_false:
 
 ; set color RGB (a = c,e,l)
 set_color:
+	PUSH IX
 	PUSH AF
 	PUSH BC
 	PUSH DE
 	PUSH HL
 
+	PUSH BC
 	PUSH HL
 	LD HL,red_tint
 	LD (HL),C
@@ -583,7 +647,6 @@ set_color:
 	LD HL,blue_tint
 	LD (HL),E
 	
-	PUSH BC
 	VDU 19
 	POP BC
 	LD A,B
@@ -602,10 +665,11 @@ set_color:
 	LD A,(HL)
 	VDU_A
 
-	pop hl
-	pop de
-	pop bc
-	pop af
+	POP HL
+	POP DE
+	POP BC
+	POP AF
+	POP IX
 	ret
 
 ; A -> color
@@ -652,6 +716,23 @@ plot_pixel:
 	POP AF
 
 	INC DE
+	
+	PUSH HL
+	LD IX,width_by_mode
+	LD L,(IX+0)
+	LD H,(IX+1)
+	EX DE,HL
+	OR A
+	SBC HL,DE
+	ADD HL,DE
+	EX DE,HL
+	POP HL
+	JR Z,pp_carriage_return
+	ret
+	
+pp_carriage_return:
+	LD DE,$000000
+	INC HL
 	ret
 
 ; B -> count of pixels to draw
@@ -667,78 +748,3 @@ plot_line:
 	POP BC
 	POP AF
 	ret
-	
-;=================
-; Debug functions
-;=================
-; A = byte to debug
-debug_byte:
-	PUSH AF
-	PUSH BC
-	PUSH DE
-	PUSH HL
-	LD HL,$000000
-	LD L,A
-	LD DE,debug_text
-	PUSH DE
-	CALL num2dec
-	POP HL
-	INC HL
-	INC HL
-	LD BC,3
-	LD A,0
-	RST.LIS $18
-	POP HL
-	POP DE
-	POP BC
-	POP AF
-	RET
-
-; HL = word to debug
-debug_word:
-	PUSH AF
-	PUSH BC
-	PUSH DE
-	PUSH HL
-	LD DE,$000000 ; remove HLU
-	LD E,L
-	LD D,H
-	PUSH DE
-	POP HL
-	LD DE,debug_text
-	PUSH DE
-	CALL num2dec
-	POP HL
-	LD BC,5
-	LD A,0
-	RST.LIS $18
-	POP HL
-	POP DE
-	POP BC
-	POP AF
-	RET
-
-debug_text:
-	DS 6
-
-; 16 bits number to string
-num2dec:
-	LD BC,-10000
-	CALL num1
-	LD BC,-1000
-	CALL num1
-	LD BC,-100
-	CALL num1
-	LD BC,-10
-	CALL num1
-	LD C,B
-
-num1: LD A,'0'-1
-num2: INC A
-	ADD HL,BC
-	JR C,num2
-	SBC HL,BC
-
-	LD (DE),A
-	INC DE
-	RET
