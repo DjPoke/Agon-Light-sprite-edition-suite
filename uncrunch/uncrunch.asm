@@ -69,6 +69,9 @@ colors_by_mode:
 	DB 4
 	DB 2
 
+palette_rgb:
+	DS 192
+
 ; start main program ============================
 start:
 	PUSH AF
@@ -109,10 +112,10 @@ start:
 	VDU 15
 
 	; load raw screen
-	;CALL load_raw_screen
+	CALL load_raw_screen
 
 	; load crunched screen
-	CALL load_crunched_screen
+	;CALL load_crunched_screen
 
 exit_program:
 	; wait for any key to be released
@@ -191,7 +194,7 @@ load_raw_screen:
 	LD (HL),A
 		
 	; read the palette
-	LD HL,$050000
+	LD HL,palette_rgb
 	LD DE,#000000
 	LD E,A
 	LD D,3
@@ -209,8 +212,10 @@ load_raw_screen:
 	LD A,(HL)
 	CP 0
 	JP Z,lrs_error
-
+	
 	PUSH BC
+	LD B,0
+	LD HL,palette_rgb
 
 lrs_set_palette:
 	LD C,(HL)
@@ -221,6 +226,7 @@ lrs_set_palette:
 	INC HL
 	CALL set_color
 	DEC A
+	INC B
 	CP 0
 	JR NZ,lrs_set_palette
 
@@ -241,7 +247,7 @@ lrs_set_palette:
 	LD HL,64000
 	OR A
 	SBC HL,DE
-	ADD HL,DE ; DE = 60000 ?
+	ADD HL,DE ; DE = 64000 ?
 	JP NZ,lrs_error
 	
 	; read data on the sdcard
@@ -266,7 +272,7 @@ lrs_set_palette:
 
 	; close the file
 	MOSCALL mos_fclose
-	
+
 	; clear buffer 64255
 	VDU 23
 	VDU 0
@@ -390,7 +396,7 @@ lrs_loop2:
 	VDU 0
 	VDU 0
 	VDU 0
-	VDU 0	
+	VDU 0
 	RET
 
 lrs_error:
@@ -440,9 +446,9 @@ load_crunched_screen:
 	LD A,(HL) ; number of colors
 	LD HL,colors_count
 	LD (HL),A
-		
+			
 	; read the palette
-	LD HL,$050000
+	LD HL,palette_rgb
 	LD DE,#000000
 	LD E,A
 	LD D,3
@@ -460,8 +466,10 @@ load_crunched_screen:
 	LD A,(HL)
 	CP 0
 	JP Z,lcs_error
-
+	
 	PUSH BC
+	LD B,0
+	LD HL,palette_rgb
 	
 lcs_set_palette:
 	LD C,(HL)
@@ -472,9 +480,10 @@ lcs_set_palette:
 	INC HL
 	CALL set_color
 	DEC A
+	INC B
 	CP 0
 	JR NZ,lcs_set_palette
-	
+
 	POP BC
 
 	; read crunched flag
@@ -574,9 +583,10 @@ set_color:
 	LD HL,blue_tint
 	LD (HL),E
 	
-	PUSH AF
+	PUSH BC
 	VDU 19
-	POP AF
+	POP BC
+	LD A,B
 	VDU_A
 	VDU 255
 	
