@@ -25,11 +25,11 @@ BITLOOKUP:
 	DB 10h,20h,40h,80h
 
 ; data
-screen_filename:
+not_crunched_screen_filename:
 	DB "screens/not_crunched.scn",0
-	
-loading_text:
-	DB "LOADING...",0
+
+crunched_screen_filename:
+	DB "screens/crunched.scn",0
 
 colors_count:
 	DB 0
@@ -82,7 +82,7 @@ start:
 	VDU 27
 	VDU 16
 
-	; set to mode 8
+	; set mode 8
 	VDU 22
 	VDU 8
 	
@@ -108,21 +108,11 @@ start:
 	VDU 17
 	VDU 15
 
-	; locate x,y
-	VDU 31
-	LD A,0
-	VDU_A
-	LD A,1
-	VDU_A
-
-	; print text
-	LD HL,loading_text
-	LD BC,0
-	XOR A
-	RST.LIS $18
-
 	; load raw screen
-	CALL load_raw_screen
+	;CALL load_raw_screen
+
+	; load crunched screen
+	CALL load_crunched_screen
 
 exit_program:
 	; wait for any key to be released
@@ -163,7 +153,7 @@ exit_program:
 ; load a raw screen
 load_raw_screen:
 	; open the file for read
-	LD HL,screen_filename
+	LD HL,not_crunched_screen_filename
 	LD C,fa_open_existing|fa_read
 	MOSCALL mos_fopen
 	
@@ -179,12 +169,17 @@ load_raw_screen:
 	JP C,lrs_error
 
 	; set the readen mode
+	PUSH BC
 	PUSH AF
 	VDU 22
 	POP AF
 	PUSH AF
 	VDU_A
+	VDU 23 ; hide cursor
+	VDU 1
+	VDU 0
 	POP AF
+	POP BC
 	
 	; get colors count
 	LD HL,colors_by_mode
@@ -201,11 +196,9 @@ load_raw_screen:
 	LD E,A
 	LD D,3
 	MLT DE
-	PUSH BC
 	PUSH DE
 	MOSCALL mos_fread
 	POP HL
-	POP BC
 	OR A
 	SBC HL,DE
 	ADD HL,DE
@@ -216,7 +209,9 @@ load_raw_screen:
 	LD A,(HL)
 	CP 0
 	JP Z,lrs_error
-	
+
+	PUSH BC
+
 lrs_set_palette:
 	LD C,(HL)
 	INC HL
@@ -229,13 +224,16 @@ lrs_set_palette:
 	CP 0
 	JR NZ,lrs_set_palette
 
+	POP BC
+
 	; read crunched flag
 	MOSCALL mos_fgetc
 	JP C,lrs_error
 	
+	; not crunched file flag
 	CP 0
 	JP NZ,lrs_error
-	
+
 	; read data on the sdcard
 	LD HL,$050000
 	LD DE,64000
@@ -268,7 +266,7 @@ lrs_set_palette:
 
 	; close the file
 	MOSCALL mos_fclose
-
+	
 	; clear buffer 64255
 	VDU 23
 	VDU 0
@@ -392,7 +390,7 @@ lrs_loop2:
 	VDU 0
 	VDU 0
 	VDU 0
-	VDU 0
+	VDU 0	
 	RET
 
 lrs_error:
@@ -401,6 +399,129 @@ lrs_error:
 	RET
 
 lrs_exit:
+	RET
+
+; load a crunched screen
+load_crunched_screen:
+	; open the file for read
+	LD HL,crunched_screen_filename
+	LD C,fa_open_existing|fa_read
+	MOSCALL mos_fopen
+	
+	; exit on error
+	CP 0
+	RET Z
+	
+	; filehandle -> C
+	LD C,A
+
+	; read the mode
+	MOSCALL mos_fgetc
+	JP C,lcs_error
+
+	; set the readen mode
+	PUSH BC
+	PUSH AF
+	VDU 22
+	POP AF
+	PUSH AF
+	VDU_A
+	VDU 23 ; hide cursor
+	VDU 1
+	VDU 0
+	POP AF
+	POP BC
+	
+	; get colors count
+	LD HL,colors_by_mode
+	LD DE,#000000
+	LD E,A
+	ADD HL,DE
+	LD A,(HL) ; number of colors
+	LD HL,colors_count
+	LD (HL),A
+		
+	; read the palette
+	LD HL,$050000
+	LD DE,#000000
+	LD E,A
+	LD D,3
+	MLT DE
+	PUSH DE
+	MOSCALL mos_fread
+	POP HL
+	OR A
+	SBC HL,DE
+	ADD HL,DE
+	JP NZ,lcs_error
+	
+	; set the palette
+	LD HL,colors_count
+	LD A,(HL)
+	CP 0
+	JP Z,lcs_error
+
+	PUSH BC
+	
+lcs_set_palette:
+	LD C,(HL)
+	INC HL
+	LD E,(HL)
+	INC HL
+	LD L,(HL)
+	INC HL
+	CALL set_color
+	DEC A
+	CP 0
+	JR NZ,lcs_set_palette
+	
+	POP BC
+
+	; read crunched flag
+	MOSCALL mos_fgetc
+	JP C,lcs_error
+
+	; crunched file flag
+	CP 1
+	JP NZ,lcs_error
+
+	; read data on the sdcard, and uncrunch
+	LD DE,#000000 ; x screen
+	LD HL,#000000 ; y screen
+
+lcs_loop:
+	MOSCALL mos_fgetc
+	JP C,lcs_exit
+
+	; case > 0
+	CP 1
+	CALL Z,plot_pixel
+	JP Z,lcs_loop
+	
+	; case 0,0
+	MOSCALL mos_fgetc
+	JP C,lcs_exit
+
+	CP 0
+	CALL Z,plot_pixel
+	JP Z,lcs_loop
+
+	; case command, count, value
+	LD B,A
+
+	MOSCALL mos_fgetc
+	JP C,lcs_exit
+
+	CALL Z,plot_line
+	JP lcs_loop
+
+lcs_error:
+	VDU 7
+	MOSCALL mos_fclose
+	RET
+
+lcs_exit:
+	MOSCALL mos_fclose
 	RET
 	
 ; input: HL = negative key to check
@@ -477,6 +598,66 @@ set_color:
 	pop af
 	ret
 
+; A -> color
+plot_pixel:
+	PUSH AF
+	PUSH BC
+	PUSH DE
+	PUSH HL
+
+	PUSH AF
+	VDU 18
+	VDU 0
+	POP AF
+	VDU_A
+
+	VDU 25
+	VDU 0
+
+	POP HL
+	POP DE
+	POP BC
+	POP AF
+	PUSH AF
+	PUSH BC
+	PUSH DE
+	PUSH HL
+	
+	VDU_DE
+
+	POP HL
+	POP DE
+	POP BC
+	POP AF
+	PUSH AF
+	PUSH BC
+	PUSH DE
+	PUSH HL
+	
+	VDU_HL
+
+	POP HL
+	POP DE
+	POP BC
+	POP AF
+
+	INC DE
+	ret
+
+; B -> count of pixels to draw
+; A -> color
+plot_line:
+	PUSH AF
+	PUSH BC
+	PUSH DE
+	PUSH HL
+
+	POP HL
+	POP DE
+	POP BC
+	POP AF
+	ret
+	
 ;=================
 ; Debug functions
 ;=================

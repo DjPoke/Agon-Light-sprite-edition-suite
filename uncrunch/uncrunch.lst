@@ -8,7 +8,7 @@ PC     Output      Line
 040000             0007   .ASSUME ADL=1
 040000             0008   .ORG $040000
 040000             0009   
-040000 C3 8D 00 04 0010   	JP start
+040000 C3 97 00 04 0010   	JP start
 040004             0011   
 040004             0012   ; MOS header
 040004 00 00 00 00 0013   .ALIGN 64
@@ -261,7 +261,7 @@ PC     Output      Line
 040049 10 20 40 80 0025   	DB 10h,20h,40h,80h
 04004D             0026   
 04004D             0027   ; data
-04004D             0028   screen_filename:
+04004D             0028   not_crunched_screen_filename:
 04004D 73 63 72 65 0029   	DB "screens/not_crunched.scn",0
        65 6E 73 2F 
        6E 6F 74 5F 
@@ -270,729 +270,960 @@ PC     Output      Line
        2E 73 63 6E 
        00          
 040066             0030   
-040066             0031   loading_text:
-040066 4C 4F 41 44 0032   	DB "LOADING...",0
-       49 4E 47 2E 
-       2E 2E 00    
-040071             0033   
-040071             0034   colors_count:
-040071 00          0035   	DB 0
-040072             0036   
-040072             0037   red_tint:
-040072 00          0038   	DB 0
-040073             0039   
-040073             0040   green_tint:
-040073 00          0041   	DB 0
-040074             0042   
-040074             0043   blue_tint:
-040074 00          0044   	DB 0
-040075             0045   
-040075             0046   colors_by_mode:
-040075 10          0047   	DB 16
-040076 04          0048   	DB 4
-040077 02          0049   	DB 2
-040078 40          0050   	DB 64
-040079 10          0051   	DB 16
-04007A 04          0052   	DB 4
-04007B 02          0053   	DB 2
-04007C 10          0054   	DB 16
-04007D 40          0055   	DB 64
-04007E 10          0056   	DB 16
-04007F 04          0057   	DB 4
-040080 02          0058   	DB 2
-040081 40          0059   	DB 64
-040082 10          0060   	DB 16
-040083 04          0061   	DB 4
-040084 02          0062   	DB 2
-040085 04          0063   	DB 4
-040086 02          0064   	DB 2
-040087 02          0065   	DB 2
-040088 04          0066   	DB 4
-040089 40          0067   	DB 64
-04008A 10          0068   	DB 16
-04008B 04          0069   	DB 4
-04008C 02          0070   	DB 2
-04008D             0071   
-04008D             0072   ; start main program ============================
-04008D             0073   start:
-04008D F5          0074   	PUSH AF
-04008E C5          0075   	PUSH BC
-04008F D5          0076   	PUSH DE
-040090 DD E5       0077   	PUSH IX
-040092 FD E5       0078   	PUSH IY
-040094             0079   
-040094             0080   	; reset sprites and bitmaps data
-040094             0081   	VDU 23
-040094 3E 17       0001M  		LD	A, function
-040096 49 D7       0002M  		RST.LIS	10h
-040098             0082   	VDU 27
-040098 3E 1B       0001M  		LD	A, function
-04009A 49 D7       0002M  		RST.LIS	10h
-04009C             0083   	VDU 16
-04009C 3E 10       0001M  		LD	A, function
-04009E 49 D7       0002M  		RST.LIS	10h
-0400A0             0084   
-0400A0             0085   	; set to mode 8
-0400A0             0086   	VDU 22
-0400A0 3E 16       0001M  		LD	A, function
-0400A2 49 D7       0002M  		RST.LIS	10h
-0400A4             0087   	VDU 8
-0400A4 3E 08       0001M  		LD	A, function
-0400A6 49 D7       0002M  		RST.LIS	10h
-0400A8             0088   
-0400A8             0089   	; set black paper color
-0400A8             0090   	VDU 17
-0400A8 3E 11       0001M  		LD	A, function
-0400AA 49 D7       0002M  		RST.LIS	10h
-0400AC             0091   	VDU 128
-0400AC 3E 80       0001M  		LD	A, function
-0400AE 49 D7       0002M  		RST.LIS	10h
-0400B0             0092   
-0400B0             0093   	; clear screen
-0400B0             0094   	VDU 12
-0400B0 3E 0C       0001M  		LD	A, function
-0400B2 49 D7       0002M  		RST.LIS	10h
-0400B4             0095   
-0400B4             0096   	; hide cursor
-0400B4             0097   	VDU 23
-0400B4 3E 17       0001M  		LD	A, function
-0400B6 49 D7       0002M  		RST.LIS	10h
-0400B8             0098   	VDU 1
-0400B8 3E 01       0001M  		LD	A, function
-0400BA 49 D7       0002M  		RST.LIS	10h
-0400BC             0099   	VDU 0
-0400BC 3E 00       0001M  		LD	A, function
-0400BE 49 D7       0002M  		RST.LIS	10h
-0400C0             0100   
-0400C0             0101   	; disable logical screen
-0400C0             0102   	VDU 23
-0400C0 3E 17       0001M  		LD	A, function
-0400C2 49 D7       0002M  		RST.LIS	10h
-0400C4             0103   	VDU 0
-0400C4 3E 00       0001M  		LD	A, function
-0400C6 49 D7       0002M  		RST.LIS	10h
-0400C8             0104   	VDU $C0
-0400C8 3E C0       0001M  		LD	A, function
-0400CA 49 D7       0002M  		RST.LIS	10h
-0400CC             0105   	VDU 0
-0400CC 3E 00       0001M  		LD	A, function
-0400CE 49 D7       0002M  		RST.LIS	10h
-0400D0             0106   
-0400D0             0107   	; set pen 15
-0400D0             0108   	VDU 17
-0400D0 3E 11       0001M  		LD	A, function
-0400D2 49 D7       0002M  		RST.LIS	10h
-0400D4             0109   	VDU 15
-0400D4 3E 0F       0001M  		LD	A, function
-0400D6 49 D7       0002M  		RST.LIS	10h
-0400D8             0110   
-0400D8             0111   	; locate x,y
-0400D8             0112   	VDU 31
-0400D8 3E 1F       0001M  		LD	A, function
-0400DA 49 D7       0002M  		RST.LIS	10h
-0400DC 3E 00       0113   	LD A,0
-0400DE             0114   	VDU_A
-0400DE 49 D7       0001M  		RST.LIS	10h
-0400E0 3E 01       0115   	LD A,1
-0400E2             0116   	VDU_A
-0400E2 49 D7       0001M  		RST.LIS	10h
-0400E4             0117   
-0400E4             0118   	; print text
-0400E4 21 66 00 04 0119   	LD HL,loading_text
-0400E8 01 00 00 00 0120   	LD BC,0
-0400EC AF          0121   	XOR A
-0400ED 49 DF       0122   	RST.LIS $18
-0400EF             0123   
-0400EF             0124   	; load raw screen
-0400EF CD 33 01 04 0125   	CALL load_raw_screen
-0400F3             0126   
-0400F3             0127   exit_program:
-0400F3             0128   	; wait for any key to be released
-0400F3 21 8F FF FF 0129   	LD HL,KEY_ESCAPE
-0400F7 CD 31 03 04 0130   	CALL inkey
-0400FB FE 01       0131   	CP 1
-0400FD 20 F4       0132   	JR NZ,exit_program
-0400FF             0133   
-0400FF             0134   	; reset to mode 1
-0400FF             0135   	VDU 22
-0400FF 3E 16       0001M  		LD	A, function
-040101 49 D7       0002M  		RST.LIS	10h
-040103             0136   	VDU 1
-040103 3E 01       0001M  		LD	A, function
-040105 49 D7       0002M  		RST.LIS	10h
-040107             0137   
-040107             0138   	; enable logical screen
-040107             0139   	VDU 23
-040107 3E 17       0001M  		LD	A, function
-040109 49 D7       0002M  		RST.LIS	10h
-04010B             0140   	VDU 0
-04010B 3E 00       0001M  		LD	A, function
-04010D 49 D7       0002M  		RST.LIS	10h
-04010F             0141   	VDU $C0
-04010F 3E C0       0001M  		LD	A, function
-040111 49 D7       0002M  		RST.LIS	10h
-040113             0142   	VDU 1
-040113 3E 01       0001M  		LD	A, function
-040115 49 D7       0002M  		RST.LIS	10h
-040117             0143   
-040117             0144   	; position the texte cursor at home
-040117             0145   	VDU 30
-040117 3E 1E       0001M  		LD	A, function
-040119 49 D7       0002M  		RST.LIS	10h
-04011B             0146   
-04011B             0147   	; show cursor
-04011B             0148   	VDU 23
-04011B 3E 17       0001M  		LD	A, function
-04011D 49 D7       0002M  		RST.LIS	10h
-04011F             0149   	VDU 1
-04011F 3E 01       0001M  		LD	A, function
-040121 49 D7       0002M  		RST.LIS	10h
-040123             0150   	VDU 1
-040123 3E 01       0001M  		LD	A, function
-040125 49 D7       0002M  		RST.LIS	10h
-040127             0151   
-040127 FD E1       0152   	POP IY
-040129 DD E1       0153   	POP IX
-04012B D1          0154   	POP DE
-04012C C1          0155   	POP BC
-04012D F1          0156   	POP AF
-04012E 21 00 00 00 0157   	LD HL,0
-040132             0158   
-040132 C9          0159   	RET
-040133             0160   
-040133             0161   ; ===============================================
-040133             0162   
-040133             0163   ; load a raw screen
-040133             0164   load_raw_screen:
-040133             0165   	; open the file for read
-040133 21 4D 00 04 0166   	LD HL,screen_filename
-040137 0E 01       0167   	LD C,fa_open_existing|fa_read
-040139             0168   	MOSCALL mos_fopen
-040139 3E 0A       0001M  		LD	A, function
-04013B 49 CF       0002M  		RST.LIS	08h
-04013D             0169   
-04013D             0170   	; exit on error
-04013D FE 00       0171   	CP 0
-04013F C8          0172   	RET Z
-040140             0173   
-040140             0174   	; filehandle -> C
-040140 4F          0175   	LD C,A
-040141             0176   
-040141             0177   	; read the mode
-040141             0178   	MOSCALL mos_fgetc
-040141 3E 0C       0001M  		LD	A, function
-040143 49 CF       0002M  		RST.LIS	08h
-040145 DA 27 03 04 0179   	JP C,lrs_error
-040149             0180   
-040149             0181   	; set the readen mode
-040149 F5          0182   	PUSH AF
-04014A             0183   	VDU 22
-04014A 3E 16       0001M  		LD	A, function
+040066             0031   crunched_screen_filename:
+040066 73 63 72 65 0032   	DB "screens/crunched.scn",0
+       65 6E 73 2F 
+       63 72 75 6E 
+       63 68 65 64 
+       2E 73 63 6E 
+       00          
+04007B             0033   
+04007B             0034   colors_count:
+04007B 00          0035   	DB 0
+04007C             0036   
+04007C             0037   red_tint:
+04007C 00          0038   	DB 0
+04007D             0039   
+04007D             0040   green_tint:
+04007D 00          0041   	DB 0
+04007E             0042   
+04007E             0043   blue_tint:
+04007E 00          0044   	DB 0
+04007F             0045   
+04007F             0046   colors_by_mode:
+04007F 10          0047   	DB 16
+040080 04          0048   	DB 4
+040081 02          0049   	DB 2
+040082 40          0050   	DB 64
+040083 10          0051   	DB 16
+040084 04          0052   	DB 4
+040085 02          0053   	DB 2
+040086 10          0054   	DB 16
+040087 40          0055   	DB 64
+040088 10          0056   	DB 16
+040089 04          0057   	DB 4
+04008A 02          0058   	DB 2
+04008B 40          0059   	DB 64
+04008C 10          0060   	DB 16
+04008D 04          0061   	DB 4
+04008E 02          0062   	DB 2
+04008F 04          0063   	DB 4
+040090 02          0064   	DB 2
+040091 02          0065   	DB 2
+040092 04          0066   	DB 4
+040093 40          0067   	DB 64
+040094 10          0068   	DB 16
+040095 04          0069   	DB 4
+040096 02          0070   	DB 2
+040097             0071   
+040097             0072   ; start main program ============================
+040097             0073   start:
+040097 F5          0074   	PUSH AF
+040098 C5          0075   	PUSH BC
+040099 D5          0076   	PUSH DE
+04009A DD E5       0077   	PUSH IX
+04009C FD E5       0078   	PUSH IY
+04009E             0079   
+04009E             0080   	; reset sprites and bitmaps data
+04009E             0081   	VDU 23
+04009E 3E 17       0001M  		LD	A, function
+0400A0 49 D7       0002M  		RST.LIS	10h
+0400A2             0082   	VDU 27
+0400A2 3E 1B       0001M  		LD	A, function
+0400A4 49 D7       0002M  		RST.LIS	10h
+0400A6             0083   	VDU 16
+0400A6 3E 10       0001M  		LD	A, function
+0400A8 49 D7       0002M  		RST.LIS	10h
+0400AA             0084   
+0400AA             0085   	; set mode 8
+0400AA             0086   	VDU 22
+0400AA 3E 16       0001M  		LD	A, function
+0400AC 49 D7       0002M  		RST.LIS	10h
+0400AE             0087   	VDU 8
+0400AE 3E 08       0001M  		LD	A, function
+0400B0 49 D7       0002M  		RST.LIS	10h
+0400B2             0088   
+0400B2             0089   	; set black paper color
+0400B2             0090   	VDU 17
+0400B2 3E 11       0001M  		LD	A, function
+0400B4 49 D7       0002M  		RST.LIS	10h
+0400B6             0091   	VDU 128
+0400B6 3E 80       0001M  		LD	A, function
+0400B8 49 D7       0002M  		RST.LIS	10h
+0400BA             0092   
+0400BA             0093   	; clear screen
+0400BA             0094   	VDU 12
+0400BA 3E 0C       0001M  		LD	A, function
+0400BC 49 D7       0002M  		RST.LIS	10h
+0400BE             0095   
+0400BE             0096   	; hide cursor
+0400BE             0097   	VDU 23
+0400BE 3E 17       0001M  		LD	A, function
+0400C0 49 D7       0002M  		RST.LIS	10h
+0400C2             0098   	VDU 1
+0400C2 3E 01       0001M  		LD	A, function
+0400C4 49 D7       0002M  		RST.LIS	10h
+0400C6             0099   	VDU 0
+0400C6 3E 00       0001M  		LD	A, function
+0400C8 49 D7       0002M  		RST.LIS	10h
+0400CA             0100   
+0400CA             0101   	; disable logical screen
+0400CA             0102   	VDU 23
+0400CA 3E 17       0001M  		LD	A, function
+0400CC 49 D7       0002M  		RST.LIS	10h
+0400CE             0103   	VDU 0
+0400CE 3E 00       0001M  		LD	A, function
+0400D0 49 D7       0002M  		RST.LIS	10h
+0400D2             0104   	VDU $C0
+0400D2 3E C0       0001M  		LD	A, function
+0400D4 49 D7       0002M  		RST.LIS	10h
+0400D6             0105   	VDU 0
+0400D6 3E 00       0001M  		LD	A, function
+0400D8 49 D7       0002M  		RST.LIS	10h
+0400DA             0106   
+0400DA             0107   	; set pen 15
+0400DA             0108   	VDU 17
+0400DA 3E 11       0001M  		LD	A, function
+0400DC 49 D7       0002M  		RST.LIS	10h
+0400DE             0109   	VDU 15
+0400DE 3E 0F       0001M  		LD	A, function
+0400E0 49 D7       0002M  		RST.LIS	10h
+0400E2             0110   
+0400E2             0111   	; load raw screen
+0400E2             0112   	;CALL load_raw_screen
+0400E2             0113   
+0400E2             0114   	; load crunched screen
+0400E2 CD 2E 03 04 0115   	CALL load_crunched_screen
+0400E6             0116   
+0400E6             0117   exit_program:
+0400E6             0118   	; wait for any key to be released
+0400E6 21 8F FF FF 0119   	LD HL,KEY_ESCAPE
+0400EA CD FC 03 04 0120   	CALL inkey
+0400EE FE 01       0121   	CP 1
+0400F0 20 F4       0122   	JR NZ,exit_program
+0400F2             0123   
+0400F2             0124   	; reset to mode 1
+0400F2             0125   	VDU 22
+0400F2 3E 16       0001M  		LD	A, function
+0400F4 49 D7       0002M  		RST.LIS	10h
+0400F6             0126   	VDU 1
+0400F6 3E 01       0001M  		LD	A, function
+0400F8 49 D7       0002M  		RST.LIS	10h
+0400FA             0127   
+0400FA             0128   	; enable logical screen
+0400FA             0129   	VDU 23
+0400FA 3E 17       0001M  		LD	A, function
+0400FC 49 D7       0002M  		RST.LIS	10h
+0400FE             0130   	VDU 0
+0400FE 3E 00       0001M  		LD	A, function
+040100 49 D7       0002M  		RST.LIS	10h
+040102             0131   	VDU $C0
+040102 3E C0       0001M  		LD	A, function
+040104 49 D7       0002M  		RST.LIS	10h
+040106             0132   	VDU 1
+040106 3E 01       0001M  		LD	A, function
+040108 49 D7       0002M  		RST.LIS	10h
+04010A             0133   
+04010A             0134   	; position the texte cursor at home
+04010A             0135   	VDU 30
+04010A 3E 1E       0001M  		LD	A, function
+04010C 49 D7       0002M  		RST.LIS	10h
+04010E             0136   
+04010E             0137   	; show cursor
+04010E             0138   	VDU 23
+04010E 3E 17       0001M  		LD	A, function
+040110 49 D7       0002M  		RST.LIS	10h
+040112             0139   	VDU 1
+040112 3E 01       0001M  		LD	A, function
+040114 49 D7       0002M  		RST.LIS	10h
+040116             0140   	VDU 1
+040116 3E 01       0001M  		LD	A, function
+040118 49 D7       0002M  		RST.LIS	10h
+04011A             0141   
+04011A FD E1       0142   	POP IY
+04011C DD E1       0143   	POP IX
+04011E D1          0144   	POP DE
+04011F C1          0145   	POP BC
+040120 F1          0146   	POP AF
+040121 21 00 00 00 0147   	LD HL,0
+040125             0148   
+040125 C9          0149   	RET
+040126             0150   
+040126             0151   ; ===============================================
+040126             0152   
+040126             0153   ; load a raw screen
+040126             0154   load_raw_screen:
+040126             0155   	; open the file for read
+040126 21 4D 00 04 0156   	LD HL,not_crunched_screen_filename
+04012A 0E 01       0157   	LD C,fa_open_existing|fa_read
+04012C             0158   	MOSCALL mos_fopen
+04012C 3E 0A       0001M  		LD	A, function
+04012E 49 CF       0002M  		RST.LIS	08h
+040130             0159   
+040130             0160   	; exit on error
+040130 FE 00       0161   	CP 0
+040132 C8          0162   	RET Z
+040133             0163   
+040133             0164   	; filehandle -> C
+040133 4F          0165   	LD C,A
+040134             0166   
+040134             0167   	; read the mode
+040134             0168   	MOSCALL mos_fgetc
+040134 3E 0C       0001M  		LD	A, function
+040136 49 CF       0002M  		RST.LIS	08h
+040138 DA 24 03 04 0169   	JP C,lrs_error
+04013C             0170   
+04013C             0171   	; set the readen mode
+04013C C5          0172   	PUSH BC
+04013D F5          0173   	PUSH AF
+04013E             0174   	VDU 22
+04013E 3E 16       0001M  		LD	A, function
+040140 49 D7       0002M  		RST.LIS	10h
+040142 F1          0175   	POP AF
+040143 F5          0176   	PUSH AF
+040144             0177   	VDU_A
+040144 49 D7       0001M  		RST.LIS	10h
+040146             0178   	VDU 23 ; hide cursor
+040146 3E 17       0001M  		LD	A, function
+040148 49 D7       0002M  		RST.LIS	10h
+04014A             0179   	VDU 1
+04014A 3E 01       0001M  		LD	A, function
 04014C 49 D7       0002M  		RST.LIS	10h
-04014E F1          0184   	POP AF
-04014F F5          0185   	PUSH AF
-040150             0186   	VDU_A
-040150 49 D7       0001M  		RST.LIS	10h
-040152 F1          0187   	POP AF
-040153             0188   
-040153             0189   	; get colors count
-040153 21 75 00 04 0190   	LD HL,colors_by_mode
-040157 11 00 00 00 0191   	LD DE,#000000
-04015B 5F          0192   	LD E,A
-04015C 19          0193   	ADD HL,DE
-04015D 7E          0194   	LD A,(HL) ; number of colors
-04015E 21 71 00 04 0195   	LD HL,colors_count
-040162 77          0196   	LD (HL),A
-040163             0197   
-040163             0198   	; read the palette
-040163 21 00 00 05 0199   	LD HL,$050000
-040167 11 00 00 00 0200   	LD DE,#000000
-04016B 5F          0201   	LD E,A
-04016C 16 03       0202   	LD D,3
-04016E ED 5C       0203   	MLT DE
-040170 C5          0204   	PUSH BC
-040171 D5          0205   	PUSH DE
-040172             0206   	MOSCALL mos_fread
+04014E             0180   	VDU 0
+04014E 3E 00       0001M  		LD	A, function
+040150 49 D7       0002M  		RST.LIS	10h
+040152 F1          0181   	POP AF
+040153 C1          0182   	POP BC
+040154             0183   
+040154             0184   	; get colors count
+040154 21 7F 00 04 0185   	LD HL,colors_by_mode
+040158 11 00 00 00 0186   	LD DE,#000000
+04015C 5F          0187   	LD E,A
+04015D 19          0188   	ADD HL,DE
+04015E 7E          0189   	LD A,(HL) ; number of colors
+04015F 21 7B 00 04 0190   	LD HL,colors_count
+040163 77          0191   	LD (HL),A
+040164             0192   
+040164             0193   	; read the palette
+040164 21 00 00 05 0194   	LD HL,$050000
+040168 11 00 00 00 0195   	LD DE,#000000
+04016C 5F          0196   	LD E,A
+04016D 16 03       0197   	LD D,3
+04016F ED 5C       0198   	MLT DE
+040171 D5          0199   	PUSH DE
+040172             0200   	MOSCALL mos_fread
 040172 3E 1A       0001M  		LD	A, function
 040174 49 CF       0002M  		RST.LIS	08h
-040176 E1          0207   	POP HL
-040177 C1          0208   	POP BC
-040178 B7          0209   	OR A
-040179 ED 52       0210   	SBC HL,DE
-04017B 19          0211   	ADD HL,DE
-04017C C2 27 03 04 0212   	JP NZ,lrs_error
-040180             0213   
-040180             0214   	; set the palette
-040180 21 71 00 04 0215   	LD HL,colors_count
-040184 7E          0216   	LD A,(HL)
-040185 FE 00       0217   	CP 0
-040187 CA 27 03 04 0218   	JP Z,lrs_error
-04018B             0219   
-04018B             0220   lrs_set_palette:
-04018B 4E          0221   	LD C,(HL)
-04018C 23          0222   	INC HL
-04018D 5E          0223   	LD E,(HL)
-04018E 23          0224   	INC HL
-04018F 6E          0225   	LD L,(HL)
-040190 23          0226   	INC HL
-040191 CD 62 03 04 0227   	CALL set_color
-040195 3D          0228   	DEC A
-040196 FE 00       0229   	CP 0
-040198 20 F1       0230   	JR NZ,lrs_set_palette
-04019A             0231   
-04019A             0232   	; read crunched flag
-04019A             0233   	MOSCALL mos_fgetc
-04019A 3E 0C       0001M  		LD	A, function
-04019C 49 CF       0002M  		RST.LIS	08h
-04019E DA 27 03 04 0234   	JP C,lrs_error
-0401A2             0235   
-0401A2 FE 00       0236   	CP 0
-0401A4 C2 27 03 04 0237   	JP NZ,lrs_error
-0401A8             0238   
-0401A8             0239   	; read data on the sdcard
-0401A8 21 00 00 05 0240   	LD HL,$050000
-0401AC 11 00 FA 00 0241   	LD DE,64000
-0401B0             0242   	MOSCALL mos_fread
-0401B0 3E 1A       0001M  		LD	A, function
-0401B2 49 CF       0002M  		RST.LIS	08h
-0401B4 21 00 FA 00 0243   	LD HL,64000
-0401B8 B7          0244   	OR A
-0401B9 ED 52       0245   	SBC HL,DE
-0401BB 19          0246   	ADD HL,DE ; DE = 60000 ?
-0401BC C2 27 03 04 0247   	JP NZ,lrs_error
-0401C0             0248   
-0401C0             0249   	; read data on the sdcard
-0401C0 21 00 FA 05 0250   	LD HL,$05FA00
-0401C4 11 00 06 00 0251   	LD DE,1536
-0401C8             0252   	MOSCALL mos_fread
-0401C8 3E 1A       0001M  		LD	A, function
-0401CA 49 CF       0002M  		RST.LIS	08h
-0401CC 21 00 06 00 0253   	LD HL,1536
-0401D0 B7          0254   	OR A
-0401D1 ED 52       0255   	SBC HL,DE
-0401D3 19          0256   	ADD HL,DE ; DE = 1536 ?
-0401D4 C2 27 03 04 0257   	JP NZ,lrs_error
-0401D8             0258   
-0401D8             0259   	; read data on the sdcard
-0401D8 21 00 00 06 0260   	LD HL,$060000
-0401DC 11 00 2C 00 0261   	LD DE,11264
-0401E0             0262   	MOSCALL mos_fread
-0401E0 3E 1A       0001M  		LD	A, function
-0401E2 49 CF       0002M  		RST.LIS	08h
-0401E4 21 00 2C 00 0263   	LD HL,11264
-0401E8 B7          0264   	OR A
-0401E9 ED 52       0265   	SBC HL,DE
-0401EB 19          0266   	ADD HL,DE ; DE = 11264 ?
-0401EC C2 27 03 04 0267   	JP NZ,lrs_error
-0401F0             0268   
-0401F0             0269   	; close the file
-0401F0             0270   	MOSCALL mos_fclose
-0401F0 3E 0B       0001M  		LD	A, function
-0401F2 49 CF       0002M  		RST.LIS	08h
-0401F4             0271   
-0401F4 C3 F4 01 04 0272   xx: jp xx
-0401F8             0273   
-0401F8             0274   	; clear buffer 64255
-0401F8             0275   	VDU 23
-0401F8 3E 17       0001M  		LD	A, function
-0401FA 49 D7       0002M  		RST.LIS	10h
-0401FC             0276   	VDU 0
-0401FC 3E 00       0001M  		LD	A, function
-0401FE 49 D7       0002M  		RST.LIS	10h
-040200             0277   	VDU $A0
-040200 3E A0       0001M  		LD	A, function
-040202 49 D7       0002M  		RST.LIS	10h
-040204             0278   	VDU $FF ; buffer number (16 bits)
-040204 3E FF       0001M  		LD	A, function
-040206 49 D7       0002M  		RST.LIS	10h
-040208             0279   	VDU $FA
-040208 3E FA       0001M  		LD	A, function
-04020A 49 D7       0002M  		RST.LIS	10h
-04020C             0280   	VDU 2 ; command
-04020C 3E 02       0001M  		LD	A, function
-04020E 49 D7       0002M  		RST.LIS	10h
-040210             0281   
-040210             0282   	; coordinates to draw a piece of screen
-040210 21 00 00 05 0283   	LD HL,$050000 ; start address
-040214 FD 21 00 01 0284   	LD IY,256 ; 256 blocks of 256 bytes for the 1st RAM part
+040176 E1          0201   	POP HL
+040177 B7          0202   	OR A
+040178 ED 52       0203   	SBC HL,DE
+04017A 19          0204   	ADD HL,DE
+04017B C2 24 03 04 0205   	JP NZ,lrs_error
+04017F             0206   
+04017F             0207   	; set the palette
+04017F 21 7B 00 04 0208   	LD HL,colors_count
+040183 7E          0209   	LD A,(HL)
+040184 FE 00       0210   	CP 0
+040186 CA 24 03 04 0211   	JP Z,lrs_error
+04018A             0212   
+04018A C5          0213   	PUSH BC
+04018B             0214   
+04018B             0215   lrs_set_palette:
+04018B 4E          0216   	LD C,(HL)
+04018C 23          0217   	INC HL
+04018D 5E          0218   	LD E,(HL)
+04018E 23          0219   	INC HL
+04018F 6E          0220   	LD L,(HL)
+040190 23          0221   	INC HL
+040191 CD 2D 04 04 0222   	CALL set_color
+040195 3D          0223   	DEC A
+040196 FE 00       0224   	CP 0
+040198 20 F1       0225   	JR NZ,lrs_set_palette
+04019A             0226   
+04019A C1          0227   	POP BC
+04019B             0228   
+04019B             0229   	; read crunched flag
+04019B             0230   	MOSCALL mos_fgetc
+04019B 3E 0C       0001M  		LD	A, function
+04019D 49 CF       0002M  		RST.LIS	08h
+04019F DA 24 03 04 0231   	JP C,lrs_error
+0401A3             0232   
+0401A3             0233   	; not crunched file flag
+0401A3 FE 00       0234   	CP 0
+0401A5 C2 24 03 04 0235   	JP NZ,lrs_error
+0401A9             0236   
+0401A9             0237   	; read data on the sdcard
+0401A9 21 00 00 05 0238   	LD HL,$050000
+0401AD 11 00 FA 00 0239   	LD DE,64000
+0401B1             0240   	MOSCALL mos_fread
+0401B1 3E 1A       0001M  		LD	A, function
+0401B3 49 CF       0002M  		RST.LIS	08h
+0401B5 21 00 FA 00 0241   	LD HL,64000
+0401B9 B7          0242   	OR A
+0401BA ED 52       0243   	SBC HL,DE
+0401BC 19          0244   	ADD HL,DE ; DE = 60000 ?
+0401BD C2 24 03 04 0245   	JP NZ,lrs_error
+0401C1             0246   
+0401C1             0247   	; read data on the sdcard
+0401C1 21 00 FA 05 0248   	LD HL,$05FA00
+0401C5 11 00 06 00 0249   	LD DE,1536
+0401C9             0250   	MOSCALL mos_fread
+0401C9 3E 1A       0001M  		LD	A, function
+0401CB 49 CF       0002M  		RST.LIS	08h
+0401CD 21 00 06 00 0251   	LD HL,1536
+0401D1 B7          0252   	OR A
+0401D2 ED 52       0253   	SBC HL,DE
+0401D4 19          0254   	ADD HL,DE ; DE = 1536 ?
+0401D5 C2 24 03 04 0255   	JP NZ,lrs_error
+0401D9             0256   
+0401D9             0257   	; read data on the sdcard
+0401D9 21 00 00 06 0258   	LD HL,$060000
+0401DD 11 00 2C 00 0259   	LD DE,11264
+0401E1             0260   	MOSCALL mos_fread
+0401E1 3E 1A       0001M  		LD	A, function
+0401E3 49 CF       0002M  		RST.LIS	08h
+0401E5 21 00 2C 00 0261   	LD HL,11264
+0401E9 B7          0262   	OR A
+0401EA ED 52       0263   	SBC HL,DE
+0401EC 19          0264   	ADD HL,DE ; DE = 11264 ?
+0401ED C2 24 03 04 0265   	JP NZ,lrs_error
+0401F1             0266   
+0401F1             0267   	; close the file
+0401F1             0268   	MOSCALL mos_fclose
+0401F1 3E 0B       0001M  		LD	A, function
+0401F3 49 CF       0002M  		RST.LIS	08h
+0401F5             0269   
+0401F5             0270   	; clear buffer 64255
+0401F5             0271   	VDU 23
+0401F5 3E 17       0001M  		LD	A, function
+0401F7 49 D7       0002M  		RST.LIS	10h
+0401F9             0272   	VDU 0
+0401F9 3E 00       0001M  		LD	A, function
+0401FB 49 D7       0002M  		RST.LIS	10h
+0401FD             0273   	VDU $A0
+0401FD 3E A0       0001M  		LD	A, function
+0401FF 49 D7       0002M  		RST.LIS	10h
+040201             0274   	VDU $FF ; buffer number (16 bits)
+040201 3E FF       0001M  		LD	A, function
+040203 49 D7       0002M  		RST.LIS	10h
+040205             0275   	VDU $FA
+040205 3E FA       0001M  		LD	A, function
+040207 49 D7       0002M  		RST.LIS	10h
+040209             0276   	VDU 2 ; command
+040209 3E 02       0001M  		LD	A, function
+04020B 49 D7       0002M  		RST.LIS	10h
+04020D             0277   
+04020D             0278   	; coordinates to draw a piece of screen
+04020D 21 00 00 05 0279   	LD HL,$050000 ; start address
+040211 FD 21 00 01 0280   	LD IY,256 ; 256 blocks of 256 bytes for the 1st RAM part
        00          
-040219             0285   
-040219             0286   lrs_upload_block:
-040219             0287   	; upload data to the buffer
-040219             0288   	VDU 23
-040219 3E 17       0001M  		LD	A, function
-04021B 49 D7       0002M  		RST.LIS	10h
-04021D             0289   	VDU 0
-04021D 3E 00       0001M  		LD	A, function
-04021F 49 D7       0002M  		RST.LIS	10h
-040221             0290   	VDU $A0
-040221 3E A0       0001M  		LD	A, function
-040223 49 D7       0002M  		RST.LIS	10h
-040225             0291   	VDU $FF ; buffer number (16 bits)
-040225 3E FF       0001M  		LD	A, function
-040227 49 D7       0002M  		RST.LIS	10h
-040229             0292   	VDU $FA
-040229 3E FA       0001M  		LD	A, function
-04022B 49 D7       0002M  		RST.LIS	10h
-04022D             0293   	VDU 0 ; command
-04022D 3E 00       0001M  		LD	A, function
-04022F 49 D7       0002M  		RST.LIS	10h
-040231 11 00 01 00 0294   	LD DE,256 ; 256 bytes
-040235             0295   	VDU_DE
-040235 7B          0001M  		LD A,E
-040236 49 D7       0002M  		RST.LIS	10h
-040238 7A          0003M  		LD A,D
-040239 49 D7       0004M  		RST.LIS	10h
-04023B             0296   
-04023B C5          0297   	PUSH BC
-04023C DD E5       0298   	PUSH IX
-04023E 01 00 01 00 0299   	LD BC,256
-040242             0300   lrs_loop:
-040242 7E          0301   	LD A,(HL) ; rgba2222 color
-040243             0302   	VDU_A
-040243 49 D7       0001M  		RST.LIS	10h
-040245 23          0303   	INC HL
-040246 0B          0304   	DEC BC
-040247 78          0305   	LD A,B
-040248 B1          0306   	OR C
-040249 C2 42 02 04 0307   	JP NZ,lrs_loop
-04024D DD E1       0308   	POP IX
-04024F C1          0309   	POP BC
-040250             0310   
-040250             0311   	; next block of 256 bytes
-040250 FD 2B       0312   	DEC IY
-040252 FD E5       0313   	PUSH IY
-040254 D1          0314   	POP DE
-040255 7A          0315   	LD A,D
-040256 B3          0316   	OR E
-040257 FE 00       0317   	CP 0
-040259 C2 19 02 04 0318   	JP NZ,lrs_upload_block
-04025D             0319   
-04025D             0320   	; second part
-04025D             0321   	; coordinates to draw a piece of screen
-04025D 21 00 00 06 0322   	LD HL,$060000 ; start address
-040261 FD 21 2C 00 0323   	LD IY,44 ; 44 blocks of 256 bytes for the 2nd RAM part
+040216             0281   
+040216             0282   lrs_upload_block:
+040216             0283   	; upload data to the buffer
+040216             0284   	VDU 23
+040216 3E 17       0001M  		LD	A, function
+040218 49 D7       0002M  		RST.LIS	10h
+04021A             0285   	VDU 0
+04021A 3E 00       0001M  		LD	A, function
+04021C 49 D7       0002M  		RST.LIS	10h
+04021E             0286   	VDU $A0
+04021E 3E A0       0001M  		LD	A, function
+040220 49 D7       0002M  		RST.LIS	10h
+040222             0287   	VDU $FF ; buffer number (16 bits)
+040222 3E FF       0001M  		LD	A, function
+040224 49 D7       0002M  		RST.LIS	10h
+040226             0288   	VDU $FA
+040226 3E FA       0001M  		LD	A, function
+040228 49 D7       0002M  		RST.LIS	10h
+04022A             0289   	VDU 0 ; command
+04022A 3E 00       0001M  		LD	A, function
+04022C 49 D7       0002M  		RST.LIS	10h
+04022E 11 00 01 00 0290   	LD DE,256 ; 256 bytes
+040232             0291   	VDU_DE
+040232 7B          0001M  		LD A,E
+040233 49 D7       0002M  		RST.LIS	10h
+040235 7A          0003M  		LD A,D
+040236 49 D7       0004M  		RST.LIS	10h
+040238             0292   
+040238 C5          0293   	PUSH BC
+040239 DD E5       0294   	PUSH IX
+04023B 01 00 01 00 0295   	LD BC,256
+04023F             0296   lrs_loop:
+04023F 7E          0297   	LD A,(HL) ; rgba2222 color
+040240             0298   	VDU_A
+040240 49 D7       0001M  		RST.LIS	10h
+040242 23          0299   	INC HL
+040243 0B          0300   	DEC BC
+040244 78          0301   	LD A,B
+040245 B1          0302   	OR C
+040246 C2 3F 02 04 0303   	JP NZ,lrs_loop
+04024A DD E1       0304   	POP IX
+04024C C1          0305   	POP BC
+04024D             0306   
+04024D             0307   	; next block of 256 bytes
+04024D FD 2B       0308   	DEC IY
+04024F FD E5       0309   	PUSH IY
+040251 D1          0310   	POP DE
+040252 7A          0311   	LD A,D
+040253 B3          0312   	OR E
+040254 FE 00       0313   	CP 0
+040256 C2 16 02 04 0314   	JP NZ,lrs_upload_block
+04025A             0315   
+04025A             0316   	; second part
+04025A             0317   	; coordinates to draw a piece of screen
+04025A 21 00 00 06 0318   	LD HL,$060000 ; start address
+04025E FD 21 2C 00 0319   	LD IY,44 ; 44 blocks of 256 bytes for the 2nd RAM part
        00          
-040266             0324   
-040266             0325   lrs_upload_block2:
-040266             0326   	; upload data to the buffer
-040266             0327   	VDU 23
-040266 3E 17       0001M  		LD	A, function
-040268 49 D7       0002M  		RST.LIS	10h
-04026A             0328   	VDU 0
-04026A 3E 00       0001M  		LD	A, function
-04026C 49 D7       0002M  		RST.LIS	10h
-04026E             0329   	VDU $A0
-04026E 3E A0       0001M  		LD	A, function
-040270 49 D7       0002M  		RST.LIS	10h
-040272             0330   	VDU $FF ; buffer number (16 bits)
-040272 3E FF       0001M  		LD	A, function
-040274 49 D7       0002M  		RST.LIS	10h
-040276             0331   	VDU $FA
-040276 3E FA       0001M  		LD	A, function
-040278 49 D7       0002M  		RST.LIS	10h
-04027A             0332   	VDU 0 ; command
-04027A 3E 00       0001M  		LD	A, function
-04027C 49 D7       0002M  		RST.LIS	10h
-04027E 11 00 01 00 0333   	LD DE,256 ; 256 bytes
-040282             0334   	VDU_DE
-040282 7B          0001M  		LD A,E
-040283 49 D7       0002M  		RST.LIS	10h
-040285 7A          0003M  		LD A,D
-040286 49 D7       0004M  		RST.LIS	10h
-040288             0335   
-040288 C5          0336   	PUSH BC
-040289 DD E5       0337   	PUSH IX
-04028B 01 00 01 00 0338   	LD BC,256
-04028F             0339   lrs_loop2:
-04028F 7E          0340   	LD A,(HL) ; rgba2222 color
-040290             0341   	VDU_A
-040290 49 D7       0001M  		RST.LIS	10h
-040292 23          0342   	INC HL
-040293 0B          0343   	DEC BC
-040294 78          0344   	LD A,B
-040295 B1          0345   	OR C
-040296 C2 8F 02 04 0346   	JP NZ,lrs_loop2
-04029A DD E1       0347   	POP IX
-04029C C1          0348   	POP BC
-04029D             0349   
-04029D             0350   	; next block of 256 bytes
-04029D FD 2B       0351   	DEC IY
-04029F FD E5       0352   	PUSH IY
-0402A1 D1          0353   	POP DE
-0402A2 7A          0354   	LD A,D
-0402A3 B3          0355   	OR E
-0402A4 FE 00       0356   	CP 0
-0402A6 C2 66 02 04 0357   	JP NZ,lrs_upload_block2
-0402AA             0358   
-0402AA             0359   	; consolidate buffer 0
-0402AA             0360   	VDU 23
-0402AA 3E 17       0001M  		LD	A, function
-0402AC 49 D7       0002M  		RST.LIS	10h
-0402AE             0361   	VDU 0
-0402AE 3E 00       0001M  		LD	A, function
-0402B0 49 D7       0002M  		RST.LIS	10h
-0402B2             0362   	VDU $A0
-0402B2 3E A0       0001M  		LD	A, function
-0402B4 49 D7       0002M  		RST.LIS	10h
-0402B6             0363   	VDU $FF ; buffer number (16 bits)
-0402B6 3E FF       0001M  		LD	A, function
-0402B8 49 D7       0002M  		RST.LIS	10h
-0402BA             0364   	VDU $FA
-0402BA 3E FA       0001M  		LD	A, function
-0402BC 49 D7       0002M  		RST.LIS	10h
-0402BE             0365   	VDU 14 ; command
-0402BE 3E 0E       0001M  		LD	A, function
-0402C0 49 D7       0002M  		RST.LIS	10h
-0402C2             0366   
-0402C2             0367   	; set buffer 64255 as bitmap (bitmap 255)
-0402C2             0368   	VDU 23
-0402C2 3E 17       0001M  		LD	A, function
-0402C4 49 D7       0002M  		RST.LIS	10h
-0402C6             0369   	VDU 27
-0402C6 3E 1B       0001M  		LD	A, function
-0402C8 49 D7       0002M  		RST.LIS	10h
-0402CA             0370   	VDU $20
-0402CA 3E 20       0001M  		LD	A, function
-0402CC 49 D7       0002M  		RST.LIS	10h
-0402CE             0371   	VDU $FF ; bitmap number (16 bits)
-0402CE 3E FF       0001M  		LD	A, function
-0402D0 49 D7       0002M  		RST.LIS	10h
-0402D2             0372   	VDU $FA
-0402D2 3E FA       0001M  		LD	A, function
-0402D4 49 D7       0002M  		RST.LIS	10h
-0402D6             0373   
-0402D6             0374   	; set buffer 64255 attributes
-0402D6             0375   	VDU 23
-0402D6 3E 17       0001M  		LD	A, function
-0402D8 49 D7       0002M  		RST.LIS	10h
-0402DA             0376   	VDU 27
-0402DA 3E 1B       0001M  		LD	A, function
-0402DC 49 D7       0002M  		RST.LIS	10h
-0402DE             0377   	VDU $21
-0402DE 3E 21       0001M  		LD	A, function
-0402E0 49 D7       0002M  		RST.LIS	10h
-0402E2 11 40 01 00 0378   	LD DE,320 ; width
-0402E6 21 F0 00 00 0379   	LD HL,240 ; height
-0402EA             0380   	VDU_DE
-0402EA 7B          0001M  		LD A,E
-0402EB 49 D7       0002M  		RST.LIS	10h
-0402ED 7A          0003M  		LD A,D
-0402EE 49 D7       0004M  		RST.LIS	10h
-0402F0             0381   	VDU_HL
-0402F0 7D          0001M  		LD A,L
-0402F1 49 D7       0002M  		RST.LIS	10h
-0402F3 7C          0003M  		LD A,H
-0402F4 49 D7       0004M  		RST.LIS	10h
-0402F6             0382   	VDU 1 ; rgba2222
-0402F6 3E 01       0001M  		LD	A, function
-0402F8 49 D7       0002M  		RST.LIS	10h
-0402FA             0383   
-0402FA             0384   	; select bitmap 255
-0402FA             0385   	VDU 23
-0402FA 3E 17       0001M  		LD	A, function
-0402FC 49 D7       0002M  		RST.LIS	10h
-0402FE             0386   	VDU 27
-0402FE 3E 1B       0001M  		LD	A, function
-040300 49 D7       0002M  		RST.LIS	10h
-040302             0387   	VDU 0
-040302 3E 00       0001M  		LD	A, function
-040304 49 D7       0002M  		RST.LIS	10h
-040306             0388   	VDU 255
-040306 3E FF       0001M  		LD	A, function
-040308 49 D7       0002M  		RST.LIS	10h
-04030A             0389   
-04030A             0390   	; draw bitmap 255 at coordinates 0,0
-04030A             0391   	VDU 23
-04030A 3E 17       0001M  		LD	A, function
-04030C 49 D7       0002M  		RST.LIS	10h
-04030E             0392   	VDU 27
-04030E 3E 1B       0001M  		LD	A, function
-040310 49 D7       0002M  		RST.LIS	10h
-040312             0393   	VDU 3
-040312 3E 03       0001M  		LD	A, function
-040314 49 D7       0002M  		RST.LIS	10h
-040316             0394   	VDU 0
-040316 3E 00       0001M  		LD	A, function
-040318 49 D7       0002M  		RST.LIS	10h
-04031A             0395   	VDU 0
-04031A 3E 00       0001M  		LD	A, function
-04031C 49 D7       0002M  		RST.LIS	10h
-04031E             0396   	VDU 0
-04031E 3E 00       0001M  		LD	A, function
-040320 49 D7       0002M  		RST.LIS	10h
-040322             0397   	VDU 0
-040322 3E 00       0001M  		LD	A, function
-040324 49 D7       0002M  		RST.LIS	10h
-040326 C9          0398   	RET
-040327             0399   
-040327             0400   lrs_error:
-040327             0401   	VDU 7
-040327 3E 07       0001M  		LD	A, function
-040329 49 D7       0002M  		RST.LIS	10h
-04032B             0402   	MOSCALL mos_fclose
-04032B 3E 0B       0001M  		LD	A, function
-04032D 49 CF       0002M  		RST.LIS	08h
-04032F C9          0403   	RET
-040330             0404   
-040330             0405   lrs_exit:
-040330 C9          0406   	RET
-040331             0407   
-040331             0408   ; input: HL = negative key to check
-040331             0409   inkey:
-040331             0410   	MOSCALL	mos_getkbmap
-040331 3E 1E       0001M  		LD	A, function
-040333 49 CF       0002M  		RST.LIS	08h
-040335 23          0411   	INC	HL
-040336 7D          0412   	LD	A, L
-040337 ED 44       0413   	NEG
-040339 4F          0414   	LD	C, A
-04033A 3E 01       0415   	LD	A, 1
-04033C FA 60 03 04 0416   	JP	M,inkey_false ; < -128 ?
-040340             0417   
-040340 21 45 00 04 0418   	LD	HL,BITLOOKUP
-040344 11 00 00 00 0419   	LD	DE,0
-040348 79          0420   	LD	A,C
-040349 E6 07       0421   	AND	00000111b
-04034B 5F          0422   	LD	E,A
-04034C 19          0423   	ADD	HL,DE
-04034D 46          0424   	LD	B,(HL)
-04034E             0425   
-04034E 79          0426   	LD	A,C
-04034F E6 78       0427   	AND	01111000b
-040351 0F          0428   	RRCA
-040352 0F          0429   	RRCA
-040353 0F          0430   	RRCA
-040354 5F          0431   	LD	E, A
-040355 DD 19       0432   	ADD	IX,DE
-040357 DD 7E 00    0433   	LD	A,(IX+0)
-04035A A0          0434   	AND	B
-04035B 28 03       0435   	JR Z,inkey_false
-04035D 3E 01       0436   	LD A,1
-04035F C9          0437   	RET
-040360             0438   inkey_false:
-040360 AF          0439   	XOR A
-040361 C9          0440   	RET
-040362             0441   
-040362             0442   ; set color RGB (a = c,e,l)
-040362             0443   set_color:
-040362 F5          0444   	PUSH AF
-040363 C5          0445   	PUSH BC
-040364 D5          0446   	PUSH DE
-040365 E5          0447   	PUSH HL
-040366             0448   
-040366 E5          0449   	PUSH HL
-040367 21 72 00 04 0450   	LD HL,red_tint
-04036B 71          0451   	LD (HL),C
-04036C 21 73 00 04 0452   	LD HL,green_tint
-040370 73          0453   	LD (HL),E
-040371 D1          0454   	POP DE
-040372 21 74 00 04 0455   	LD HL,blue_tint
-040376 73          0456   	LD (HL),E
-040377             0457   
-040377 F5          0458   	PUSH AF
-040378             0459   	VDU 19
-040378 3E 13       0001M  		LD	A, function
-04037A 49 D7       0002M  		RST.LIS	10h
-04037C F1          0460   	POP AF
-04037D             0461   	VDU_A
-04037D 49 D7       0001M  		RST.LIS	10h
-04037F             0462   	VDU 255
-04037F 3E FF       0001M  		LD	A, function
-040381 49 D7       0002M  		RST.LIS	10h
-040383             0463   
-040383 21 72 00 04 0464   	LD HL,red_tint
-040387 7E          0465   	LD A,(HL)
-040388             0466   	VDU_A
-040388 49 D7       0001M  		RST.LIS	10h
-04038A             0467   
-04038A 21 73 00 04 0468   	LD HL,green_tint
-04038E 7E          0469   	LD A,(HL)
-04038F             0470   	VDU_A
-04038F 49 D7       0001M  		RST.LIS	10h
-040391             0471   
-040391 21 74 00 04 0472   	LD HL,blue_tint
-040395 7E          0473   	LD A,(HL)
-040396             0474   	VDU_A
-040396 49 D7       0001M  		RST.LIS	10h
-040398             0475   
-040398 E1          0476   	pop hl
-040399 D1          0477   	pop de
-04039A C1          0478   	pop bc
-04039B F1          0479   	pop af
-04039C C9          0480   	ret
-04039D             0481   
-04039D             0482   ;=================
-04039D             0483   ; Debug functions
-04039D             0484   ;=================
-04039D             0485   ; A = byte to debug
-04039D             0486   debug_byte:
-04039D F5          0487   	PUSH AF
-04039E C5          0488   	PUSH BC
-04039F D5          0489   	PUSH DE
-0403A0 E5          0490   	PUSH HL
-0403A1 21 00 00 00 0491   	LD HL,$000000
-0403A5 6F          0492   	LD L,A
-0403A6 11 E2 03 04 0493   	LD DE,debug_text
-0403AA D5          0494   	PUSH DE
-0403AB CD E8 03 04 0495   	CALL num2dec
-0403AF E1          0496   	POP HL
-0403B0 23          0497   	INC HL
-0403B1 23          0498   	INC HL
-0403B2 01 03 00 00 0499   	LD BC,3
-0403B6 3E 00       0500   	LD A,0
-0403B8 49 DF       0501   	RST.LIS $18
-0403BA E1          0502   	POP HL
-0403BB D1          0503   	POP DE
-0403BC C1          0504   	POP BC
-0403BD F1          0505   	POP AF
-0403BE C9          0506   	RET
-0403BF             0507   
-0403BF             0508   ; HL = word to debug
-0403BF             0509   debug_word:
-0403BF F5          0510   	PUSH AF
-0403C0 C5          0511   	PUSH BC
-0403C1 D5          0512   	PUSH DE
-0403C2 E5          0513   	PUSH HL
-0403C3 11 00 00 00 0514   	LD DE,$000000 ; remove HLU
-0403C7 5D          0515   	LD E,L
-0403C8 54          0516   	LD D,H
-0403C9 D5          0517   	PUSH DE
-0403CA E1          0518   	POP HL
-0403CB 11 E2 03 04 0519   	LD DE,debug_text
-0403CF D5          0520   	PUSH DE
-0403D0 CD E8 03 04 0521   	CALL num2dec
-0403D4 E1          0522   	POP HL
-0403D5 01 05 00 00 0523   	LD BC,5
-0403D9 3E 00       0524   	LD A,0
-0403DB 49 DF       0525   	RST.LIS $18
-0403DD E1          0526   	POP HL
-0403DE D1          0527   	POP DE
-0403DF C1          0528   	POP BC
-0403E0 F1          0529   	POP AF
-0403E1 C9          0530   	RET
-0403E2             0531   
-0403E2             0532   debug_text:
-0403E2             0533   	DS 6
-0403E8             0534   
-0403E8             0535   ; 16 bits number to string
-0403E8             0536   num2dec:
-0403E8 01 F0 D8 FF 0537   	LD BC,-10000
-0403EC CD 09 04 04 0538   	CALL num1
-0403F0 01 18 FC FF 0539   	LD BC,-1000
-0403F4 CD 09 04 04 0540   	CALL num1
-0403F8 01 9C FF FF 0541   	LD BC,-100
-0403FC CD 09 04 04 0542   	CALL num1
-040400 01 F6 FF FF 0543   	LD BC,-10
-040404 CD 09 04 04 0544   	CALL num1
-040408 48          0545   	LD C,B
-040409             0546   
-040409 3E 2F       0547   num1: LD A,'0'-1
-04040B 3C          0548   num2: INC A
-04040C 09          0549   	ADD HL,BC
-04040D 38 FC       0550   	JR C,num2
-04040F ED 42       0551   	SBC HL,BC
-040411             0552   
-040411 12          0553   	LD (DE),A
-040412 13          0554   	INC DE
-040413 C9          0555   	RET
+040263             0320   
+040263             0321   lrs_upload_block2:
+040263             0322   	; upload data to the buffer
+040263             0323   	VDU 23
+040263 3E 17       0001M  		LD	A, function
+040265 49 D7       0002M  		RST.LIS	10h
+040267             0324   	VDU 0
+040267 3E 00       0001M  		LD	A, function
+040269 49 D7       0002M  		RST.LIS	10h
+04026B             0325   	VDU $A0
+04026B 3E A0       0001M  		LD	A, function
+04026D 49 D7       0002M  		RST.LIS	10h
+04026F             0326   	VDU $FF ; buffer number (16 bits)
+04026F 3E FF       0001M  		LD	A, function
+040271 49 D7       0002M  		RST.LIS	10h
+040273             0327   	VDU $FA
+040273 3E FA       0001M  		LD	A, function
+040275 49 D7       0002M  		RST.LIS	10h
+040277             0328   	VDU 0 ; command
+040277 3E 00       0001M  		LD	A, function
+040279 49 D7       0002M  		RST.LIS	10h
+04027B 11 00 01 00 0329   	LD DE,256 ; 256 bytes
+04027F             0330   	VDU_DE
+04027F 7B          0001M  		LD A,E
+040280 49 D7       0002M  		RST.LIS	10h
+040282 7A          0003M  		LD A,D
+040283 49 D7       0004M  		RST.LIS	10h
+040285             0331   
+040285 C5          0332   	PUSH BC
+040286 DD E5       0333   	PUSH IX
+040288 01 00 01 00 0334   	LD BC,256
+04028C             0335   lrs_loop2:
+04028C 7E          0336   	LD A,(HL) ; rgba2222 color
+04028D             0337   	VDU_A
+04028D 49 D7       0001M  		RST.LIS	10h
+04028F 23          0338   	INC HL
+040290 0B          0339   	DEC BC
+040291 78          0340   	LD A,B
+040292 B1          0341   	OR C
+040293 C2 8C 02 04 0342   	JP NZ,lrs_loop2
+040297 DD E1       0343   	POP IX
+040299 C1          0344   	POP BC
+04029A             0345   
+04029A             0346   	; next block of 256 bytes
+04029A FD 2B       0347   	DEC IY
+04029C FD E5       0348   	PUSH IY
+04029E D1          0349   	POP DE
+04029F 7A          0350   	LD A,D
+0402A0 B3          0351   	OR E
+0402A1 FE 00       0352   	CP 0
+0402A3 C2 63 02 04 0353   	JP NZ,lrs_upload_block2
+0402A7             0354   
+0402A7             0355   	; consolidate buffer 0
+0402A7             0356   	VDU 23
+0402A7 3E 17       0001M  		LD	A, function
+0402A9 49 D7       0002M  		RST.LIS	10h
+0402AB             0357   	VDU 0
+0402AB 3E 00       0001M  		LD	A, function
+0402AD 49 D7       0002M  		RST.LIS	10h
+0402AF             0358   	VDU $A0
+0402AF 3E A0       0001M  		LD	A, function
+0402B1 49 D7       0002M  		RST.LIS	10h
+0402B3             0359   	VDU $FF ; buffer number (16 bits)
+0402B3 3E FF       0001M  		LD	A, function
+0402B5 49 D7       0002M  		RST.LIS	10h
+0402B7             0360   	VDU $FA
+0402B7 3E FA       0001M  		LD	A, function
+0402B9 49 D7       0002M  		RST.LIS	10h
+0402BB             0361   	VDU 14 ; command
+0402BB 3E 0E       0001M  		LD	A, function
+0402BD 49 D7       0002M  		RST.LIS	10h
+0402BF             0362   
+0402BF             0363   	; set buffer 64255 as bitmap (bitmap 255)
+0402BF             0364   	VDU 23
+0402BF 3E 17       0001M  		LD	A, function
+0402C1 49 D7       0002M  		RST.LIS	10h
+0402C3             0365   	VDU 27
+0402C3 3E 1B       0001M  		LD	A, function
+0402C5 49 D7       0002M  		RST.LIS	10h
+0402C7             0366   	VDU $20
+0402C7 3E 20       0001M  		LD	A, function
+0402C9 49 D7       0002M  		RST.LIS	10h
+0402CB             0367   	VDU $FF ; bitmap number (16 bits)
+0402CB 3E FF       0001M  		LD	A, function
+0402CD 49 D7       0002M  		RST.LIS	10h
+0402CF             0368   	VDU $FA
+0402CF 3E FA       0001M  		LD	A, function
+0402D1 49 D7       0002M  		RST.LIS	10h
+0402D3             0369   
+0402D3             0370   	; set buffer 64255 attributes
+0402D3             0371   	VDU 23
+0402D3 3E 17       0001M  		LD	A, function
+0402D5 49 D7       0002M  		RST.LIS	10h
+0402D7             0372   	VDU 27
+0402D7 3E 1B       0001M  		LD	A, function
+0402D9 49 D7       0002M  		RST.LIS	10h
+0402DB             0373   	VDU $21
+0402DB 3E 21       0001M  		LD	A, function
+0402DD 49 D7       0002M  		RST.LIS	10h
+0402DF 11 40 01 00 0374   	LD DE,320 ; width
+0402E3 21 F0 00 00 0375   	LD HL,240 ; height
+0402E7             0376   	VDU_DE
+0402E7 7B          0001M  		LD A,E
+0402E8 49 D7       0002M  		RST.LIS	10h
+0402EA 7A          0003M  		LD A,D
+0402EB 49 D7       0004M  		RST.LIS	10h
+0402ED             0377   	VDU_HL
+0402ED 7D          0001M  		LD A,L
+0402EE 49 D7       0002M  		RST.LIS	10h
+0402F0 7C          0003M  		LD A,H
+0402F1 49 D7       0004M  		RST.LIS	10h
+0402F3             0378   	VDU 1 ; rgba2222
+0402F3 3E 01       0001M  		LD	A, function
+0402F5 49 D7       0002M  		RST.LIS	10h
+0402F7             0379   
+0402F7             0380   	; select bitmap 255
+0402F7             0381   	VDU 23
+0402F7 3E 17       0001M  		LD	A, function
+0402F9 49 D7       0002M  		RST.LIS	10h
+0402FB             0382   	VDU 27
+0402FB 3E 1B       0001M  		LD	A, function
+0402FD 49 D7       0002M  		RST.LIS	10h
+0402FF             0383   	VDU 0
+0402FF 3E 00       0001M  		LD	A, function
+040301 49 D7       0002M  		RST.LIS	10h
+040303             0384   	VDU 255
+040303 3E FF       0001M  		LD	A, function
+040305 49 D7       0002M  		RST.LIS	10h
+040307             0385   
+040307             0386   	; draw bitmap 255 at coordinates 0,0
+040307             0387   	VDU 23
+040307 3E 17       0001M  		LD	A, function
+040309 49 D7       0002M  		RST.LIS	10h
+04030B             0388   	VDU 27
+04030B 3E 1B       0001M  		LD	A, function
+04030D 49 D7       0002M  		RST.LIS	10h
+04030F             0389   	VDU 3
+04030F 3E 03       0001M  		LD	A, function
+040311 49 D7       0002M  		RST.LIS	10h
+040313             0390   	VDU 0
+040313 3E 00       0001M  		LD	A, function
+040315 49 D7       0002M  		RST.LIS	10h
+040317             0391   	VDU 0
+040317 3E 00       0001M  		LD	A, function
+040319 49 D7       0002M  		RST.LIS	10h
+04031B             0392   	VDU 0
+04031B 3E 00       0001M  		LD	A, function
+04031D 49 D7       0002M  		RST.LIS	10h
+04031F             0393   	VDU 0
+04031F 3E 00       0001M  		LD	A, function
+040321 49 D7       0002M  		RST.LIS	10h
+040323 C9          0394   	RET
+040324             0395   
+040324             0396   lrs_error:
+040324             0397   	VDU 7
+040324 3E 07       0001M  		LD	A, function
+040326 49 D7       0002M  		RST.LIS	10h
+040328             0398   	MOSCALL mos_fclose
+040328 3E 0B       0001M  		LD	A, function
+04032A 49 CF       0002M  		RST.LIS	08h
+04032C C9          0399   	RET
+04032D             0400   
+04032D             0401   lrs_exit:
+04032D C9          0402   	RET
+04032E             0403   
+04032E             0404   ; load a crunched screen
+04032E             0405   load_crunched_screen:
+04032E             0406   	; open the file for read
+04032E 21 66 00 04 0407   	LD HL,crunched_screen_filename
+040332 0E 01       0408   	LD C,fa_open_existing|fa_read
+040334             0409   	MOSCALL mos_fopen
+040334 3E 0A       0001M  		LD	A, function
+040336 49 CF       0002M  		RST.LIS	08h
+040338             0410   
+040338             0411   	; exit on error
+040338 FE 00       0412   	CP 0
+04033A C8          0413   	RET Z
+04033B             0414   
+04033B             0415   	; filehandle -> C
+04033B 4F          0416   	LD C,A
+04033C             0417   
+04033C             0418   	; read the mode
+04033C             0419   	MOSCALL mos_fgetc
+04033C 3E 0C       0001M  		LD	A, function
+04033E 49 CF       0002M  		RST.LIS	08h
+040340 DA EE 03 04 0420   	JP C,lcs_error
+040344             0421   
+040344             0422   	; set the readen mode
+040344 C5          0423   	PUSH BC
+040345 F5          0424   	PUSH AF
+040346             0425   	VDU 22
+040346 3E 16       0001M  		LD	A, function
+040348 49 D7       0002M  		RST.LIS	10h
+04034A F1          0426   	POP AF
+04034B F5          0427   	PUSH AF
+04034C             0428   	VDU_A
+04034C 49 D7       0001M  		RST.LIS	10h
+04034E             0429   	VDU 23 ; hide cursor
+04034E 3E 17       0001M  		LD	A, function
+040350 49 D7       0002M  		RST.LIS	10h
+040352             0430   	VDU 1
+040352 3E 01       0001M  		LD	A, function
+040354 49 D7       0002M  		RST.LIS	10h
+040356             0431   	VDU 0
+040356 3E 00       0001M  		LD	A, function
+040358 49 D7       0002M  		RST.LIS	10h
+04035A F1          0432   	POP AF
+04035B C1          0433   	POP BC
+04035C             0434   
+04035C             0435   	; get colors count
+04035C 21 7F 00 04 0436   	LD HL,colors_by_mode
+040360 11 00 00 00 0437   	LD DE,#000000
+040364 5F          0438   	LD E,A
+040365 19          0439   	ADD HL,DE
+040366 7E          0440   	LD A,(HL) ; number of colors
+040367 21 7B 00 04 0441   	LD HL,colors_count
+04036B 77          0442   	LD (HL),A
+04036C             0443   
+04036C             0444   	; read the palette
+04036C 21 00 00 05 0445   	LD HL,$050000
+040370 11 00 00 00 0446   	LD DE,#000000
+040374 5F          0447   	LD E,A
+040375 16 03       0448   	LD D,3
+040377 ED 5C       0449   	MLT DE
+040379 D5          0450   	PUSH DE
+04037A             0451   	MOSCALL mos_fread
+04037A 3E 1A       0001M  		LD	A, function
+04037C 49 CF       0002M  		RST.LIS	08h
+04037E E1          0452   	POP HL
+04037F B7          0453   	OR A
+040380 ED 52       0454   	SBC HL,DE
+040382 19          0455   	ADD HL,DE
+040383 C2 EE 03 04 0456   	JP NZ,lcs_error
+040387             0457   
+040387             0458   	; set the palette
+040387 21 7B 00 04 0459   	LD HL,colors_count
+04038B 7E          0460   	LD A,(HL)
+04038C FE 00       0461   	CP 0
+04038E CA EE 03 04 0462   	JP Z,lcs_error
+040392             0463   
+040392 C5          0464   	PUSH BC
+040393             0465   
+040393             0466   lcs_set_palette:
+040393 4E          0467   	LD C,(HL)
+040394 23          0468   	INC HL
+040395 5E          0469   	LD E,(HL)
+040396 23          0470   	INC HL
+040397 6E          0471   	LD L,(HL)
+040398 23          0472   	INC HL
+040399 CD 2D 04 04 0473   	CALL set_color
+04039D 3D          0474   	DEC A
+04039E FE 00       0475   	CP 0
+0403A0 20 F1       0476   	JR NZ,lcs_set_palette
+0403A2             0477   
+0403A2 C1          0478   	POP BC
+0403A3             0479   
+0403A3             0480   	; read crunched flag
+0403A3             0481   	MOSCALL mos_fgetc
+0403A3 3E 0C       0001M  		LD	A, function
+0403A5 49 CF       0002M  		RST.LIS	08h
+0403A7 DA EE 03 04 0482   	JP C,lcs_error
+0403AB             0483   
+0403AB             0484   	; crunched file flag
+0403AB FE 01       0485   	CP 1
+0403AD C2 EE 03 04 0486   	JP NZ,lcs_error
+0403B1             0487   
+0403B1             0488   	; read data on the sdcard, and uncrunch
+0403B1 11 00 00 00 0489   	LD DE,#000000 ; x screen
+0403B5 21 00 00 00 0490   	LD HL,#000000 ; y screen
+0403B9             0491   
+0403B9             0492   lcs_loop:
+0403B9             0493   	MOSCALL mos_fgetc
+0403B9 3E 0C       0001M  		LD	A, function
+0403BB 49 CF       0002M  		RST.LIS	08h
+0403BD DA F7 03 04 0494   	JP C,lcs_exit
+0403C1             0495   
+0403C1             0496   	; case > 0
+0403C1 FE 01       0497   	CP 1
+0403C3 CC 68 04 04 0498   	CALL Z,plot_pixel
+0403C7 CA B9 03 04 0499   	JP Z,lcs_loop
+0403CB             0500   
+0403CB             0501   	; case 0,0
+0403CB             0502   	MOSCALL mos_fgetc
+0403CB 3E 0C       0001M  		LD	A, function
+0403CD 49 CF       0002M  		RST.LIS	08h
+0403CF DA F7 03 04 0503   	JP C,lcs_exit
+0403D3             0504   
+0403D3 FE 00       0505   	CP 0
+0403D5 CC 68 04 04 0506   	CALL Z,plot_pixel
+0403D9 CA B9 03 04 0507   	JP Z,lcs_loop
+0403DD             0508   
+0403DD             0509   	; case command, count, value
+0403DD 47          0510   	LD B,A
+0403DE             0511   
+0403DE             0512   	MOSCALL mos_fgetc
+0403DE 3E 0C       0001M  		LD	A, function
+0403E0 49 CF       0002M  		RST.LIS	08h
+0403E2 DA F7 03 04 0513   	JP C,lcs_exit
+0403E6             0514   
+0403E6 CC A6 04 04 0515   	CALL Z,plot_line
+0403EA C3 B9 03 04 0516   	JP lcs_loop
+0403EE             0517   
+0403EE             0518   lcs_error:
+0403EE             0519   	VDU 7
+0403EE 3E 07       0001M  		LD	A, function
+0403F0 49 D7       0002M  		RST.LIS	10h
+0403F2             0520   	MOSCALL mos_fclose
+0403F2 3E 0B       0001M  		LD	A, function
+0403F4 49 CF       0002M  		RST.LIS	08h
+0403F6 C9          0521   	RET
+0403F7             0522   
+0403F7             0523   lcs_exit:
+0403F7             0524   	MOSCALL mos_fclose
+0403F7 3E 0B       0001M  		LD	A, function
+0403F9 49 CF       0002M  		RST.LIS	08h
+0403FB C9          0525   	RET
+0403FC             0526   
+0403FC             0527   ; input: HL = negative key to check
+0403FC             0528   inkey:
+0403FC             0529   	MOSCALL	mos_getkbmap
+0403FC 3E 1E       0001M  		LD	A, function
+0403FE 49 CF       0002M  		RST.LIS	08h
+040400 23          0530   	INC	HL
+040401 7D          0531   	LD	A, L
+040402 ED 44       0532   	NEG
+040404 4F          0533   	LD	C, A
+040405 3E 01       0534   	LD	A, 1
+040407 FA 2B 04 04 0535   	JP	M,inkey_false ; < -128 ?
+04040B             0536   
+04040B 21 45 00 04 0537   	LD	HL,BITLOOKUP
+04040F 11 00 00 00 0538   	LD	DE,0
+040413 79          0539   	LD	A,C
+040414 E6 07       0540   	AND	00000111b
+040416 5F          0541   	LD	E,A
+040417 19          0542   	ADD	HL,DE
+040418 46          0543   	LD	B,(HL)
+040419             0544   
+040419 79          0545   	LD	A,C
+04041A E6 78       0546   	AND	01111000b
+04041C 0F          0547   	RRCA
+04041D 0F          0548   	RRCA
+04041E 0F          0549   	RRCA
+04041F 5F          0550   	LD	E, A
+040420 DD 19       0551   	ADD	IX,DE
+040422 DD 7E 00    0552   	LD	A,(IX+0)
+040425 A0          0553   	AND	B
+040426 28 03       0554   	JR Z,inkey_false
+040428 3E 01       0555   	LD A,1
+04042A C9          0556   	RET
+04042B             0557   inkey_false:
+04042B AF          0558   	XOR A
+04042C C9          0559   	RET
+04042D             0560   
+04042D             0561   ; set color RGB (a = c,e,l)
+04042D             0562   set_color:
+04042D F5          0563   	PUSH AF
+04042E C5          0564   	PUSH BC
+04042F D5          0565   	PUSH DE
+040430 E5          0566   	PUSH HL
+040431             0567   
+040431 E5          0568   	PUSH HL
+040432 21 7C 00 04 0569   	LD HL,red_tint
+040436 71          0570   	LD (HL),C
+040437 21 7D 00 04 0571   	LD HL,green_tint
+04043B 73          0572   	LD (HL),E
+04043C D1          0573   	POP DE
+04043D 21 7E 00 04 0574   	LD HL,blue_tint
+040441 73          0575   	LD (HL),E
+040442             0576   
+040442 F5          0577   	PUSH AF
+040443             0578   	VDU 19
+040443 3E 13       0001M  		LD	A, function
+040445 49 D7       0002M  		RST.LIS	10h
+040447 F1          0579   	POP AF
+040448             0580   	VDU_A
+040448 49 D7       0001M  		RST.LIS	10h
+04044A             0581   	VDU 255
+04044A 3E FF       0001M  		LD	A, function
+04044C 49 D7       0002M  		RST.LIS	10h
+04044E             0582   
+04044E 21 7C 00 04 0583   	LD HL,red_tint
+040452 7E          0584   	LD A,(HL)
+040453             0585   	VDU_A
+040453 49 D7       0001M  		RST.LIS	10h
+040455             0586   
+040455 21 7D 00 04 0587   	LD HL,green_tint
+040459 7E          0588   	LD A,(HL)
+04045A             0589   	VDU_A
+04045A 49 D7       0001M  		RST.LIS	10h
+04045C             0590   
+04045C 21 7E 00 04 0591   	LD HL,blue_tint
+040460 7E          0592   	LD A,(HL)
+040461             0593   	VDU_A
+040461 49 D7       0001M  		RST.LIS	10h
+040463             0594   
+040463 E1          0595   	pop hl
+040464 D1          0596   	pop de
+040465 C1          0597   	pop bc
+040466 F1          0598   	pop af
+040467 C9          0599   	ret
+040468             0600   
+040468             0601   ; A -> color
+040468             0602   plot_pixel:
+040468 F5          0603   	PUSH AF
+040469 C5          0604   	PUSH BC
+04046A D5          0605   	PUSH DE
+04046B E5          0606   	PUSH HL
+04046C             0607   
+04046C F5          0608   	PUSH AF
+04046D             0609   	VDU 18
+04046D 3E 12       0001M  		LD	A, function
+04046F 49 D7       0002M  		RST.LIS	10h
+040471             0610   	VDU 0
+040471 3E 00       0001M  		LD	A, function
+040473 49 D7       0002M  		RST.LIS	10h
+040475 F1          0611   	POP AF
+040476 CD AF 04 04 0612   	call debug_byte
+04047A             0613   	VDU_A
+04047A 49 D7       0001M  		RST.LIS	10h
+04047C             0614   
+04047C             0615   	VDU 25
+04047C 3E 19       0001M  		LD	A, function
+04047E 49 D7       0002M  		RST.LIS	10h
+040480             0616   	VDU 0
+040480 3E 00       0001M  		LD	A, function
+040482 49 D7       0002M  		RST.LIS	10h
+040484             0617   
+040484 E1          0618   	POP HL
+040485 D1          0619   	POP DE
+040486 C1          0620   	POP BC
+040487 F1          0621   	POP AF
+040488 F5          0622   	PUSH AF
+040489 C5          0623   	PUSH BC
+04048A D5          0624   	PUSH DE
+04048B E5          0625   	PUSH HL
+04048C             0626   
+04048C             0627   	VDU_DE
+04048C 7B          0001M  		LD A,E
+04048D 49 D7       0002M  		RST.LIS	10h
+04048F 7A          0003M  		LD A,D
+040490 49 D7       0004M  		RST.LIS	10h
+040492             0628   
+040492 E1          0629   	POP HL
+040493 D1          0630   	POP DE
+040494 C1          0631   	POP BC
+040495 F1          0632   	POP AF
+040496 F5          0633   	PUSH AF
+040497 C5          0634   	PUSH BC
+040498 D5          0635   	PUSH DE
+040499 E5          0636   	PUSH HL
+04049A             0637   
+04049A             0638   	VDU_HL
+04049A 7D          0001M  		LD A,L
+04049B 49 D7       0002M  		RST.LIS	10h
+04049D 7C          0003M  		LD A,H
+04049E 49 D7       0004M  		RST.LIS	10h
+0404A0             0639   
+0404A0 E1          0640   	POP HL
+0404A1 D1          0641   	POP DE
+0404A2 C1          0642   	POP BC
+0404A3 F1          0643   	POP AF
+0404A4             0644   
+0404A4 13          0645   	INC DE
+0404A5 C9          0646   	ret
+0404A6             0647   
+0404A6             0648   ; B -> count of pixels to draw
+0404A6             0649   ; A -> color
+0404A6             0650   plot_line:
+0404A6 F5          0651   	PUSH AF
+0404A7 C5          0652   	PUSH BC
+0404A8 D5          0653   	PUSH DE
+0404A9 E5          0654   	PUSH HL
+0404AA             0655   
+0404AA E1          0656   	POP HL
+0404AB D1          0657   	POP DE
+0404AC C1          0658   	POP BC
+0404AD F1          0659   	POP AF
+0404AE C9          0660   	ret
+0404AF             0661   
+0404AF             0662   ;=================
+0404AF             0663   ; Debug functions
+0404AF             0664   ;=================
+0404AF             0665   ; A = byte to debug
+0404AF             0666   debug_byte:
+0404AF F5          0667   	PUSH AF
+0404B0 C5          0668   	PUSH BC
+0404B1 D5          0669   	PUSH DE
+0404B2 E5          0670   	PUSH HL
+0404B3 21 00 00 00 0671   	LD HL,$000000
+0404B7 6F          0672   	LD L,A
+0404B8 11 F4 04 04 0673   	LD DE,debug_text
+0404BC D5          0674   	PUSH DE
+0404BD CD FA 04 04 0675   	CALL num2dec
+0404C1 E1          0676   	POP HL
+0404C2 23          0677   	INC HL
+0404C3 23          0678   	INC HL
+0404C4 01 03 00 00 0679   	LD BC,3
+0404C8 3E 00       0680   	LD A,0
+0404CA 49 DF       0681   	RST.LIS $18
+0404CC E1          0682   	POP HL
+0404CD D1          0683   	POP DE
+0404CE C1          0684   	POP BC
+0404CF F1          0685   	POP AF
+0404D0 C9          0686   	RET
+0404D1             0687   
+0404D1             0688   ; HL = word to debug
+0404D1             0689   debug_word:
+0404D1 F5          0690   	PUSH AF
+0404D2 C5          0691   	PUSH BC
+0404D3 D5          0692   	PUSH DE
+0404D4 E5          0693   	PUSH HL
+0404D5 11 00 00 00 0694   	LD DE,$000000 ; remove HLU
+0404D9 5D          0695   	LD E,L
+0404DA 54          0696   	LD D,H
+0404DB D5          0697   	PUSH DE
+0404DC E1          0698   	POP HL
+0404DD 11 F4 04 04 0699   	LD DE,debug_text
+0404E1 D5          0700   	PUSH DE
+0404E2 CD FA 04 04 0701   	CALL num2dec
+0404E6 E1          0702   	POP HL
+0404E7 01 05 00 00 0703   	LD BC,5
+0404EB 3E 00       0704   	LD A,0
+0404ED 49 DF       0705   	RST.LIS $18
+0404EF E1          0706   	POP HL
+0404F0 D1          0707   	POP DE
+0404F1 C1          0708   	POP BC
+0404F2 F1          0709   	POP AF
+0404F3 C9          0710   	RET
+0404F4             0711   
+0404F4             0712   debug_text:
+0404F4             0713   	DS 6
+0404FA             0714   
+0404FA             0715   ; 16 bits number to string
+0404FA             0716   num2dec:
+0404FA 01 F0 D8 FF 0717   	LD BC,-10000
+0404FE CD 1B 05 04 0718   	CALL num1
+040502 01 18 FC FF 0719   	LD BC,-1000
+040506 CD 1B 05 04 0720   	CALL num1
+04050A 01 9C FF FF 0721   	LD BC,-100
+04050E CD 1B 05 04 0722   	CALL num1
+040512 01 F6 FF FF 0723   	LD BC,-10
+040516 CD 1B 05 04 0724   	CALL num1
+04051A 48          0725   	LD C,B
+04051B             0726   
+04051B 3E 2F       0727   num1: LD A,'0'-1
+04051D 3C          0728   num2: INC A
+04051E 09          0729   	ADD HL,BC
+04051F 38 FC       0730   	JR C,num2
+040521 ED 42       0731   	SBC HL,BC
+040523             0732   
+040523 12          0733   	LD (DE),A
+040524 13          0734   	INC DE
+040525 C9          0735   	RET
