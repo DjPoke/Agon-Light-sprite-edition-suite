@@ -83,6 +83,10 @@ Procedure LoadScreen(file$)
       g.a = ReadByte(1)
       b.a = ReadByte(1)
       
+      r = Round(r / $55, #PB_Round_Down) * $55
+      g = Round(g / $55, #PB_Round_Down) * $55
+      b = Round(b / $55, #PB_Round_Down) * $55
+      
       pal(i) = RGBA(r, g, b, 255)
     Next
     
@@ -196,8 +200,8 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 140
-; FirstLine = 127
+; CursorPosition = 88
+; FirstLine = 67
 ; Folding = -
 ; EnableXP
 ; DPIAware

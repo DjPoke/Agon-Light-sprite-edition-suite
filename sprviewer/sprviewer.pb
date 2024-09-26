@@ -114,8 +114,8 @@ Procedure LoadSpr(file$)
       
       For y = 0 To size - 1
         For x = 0 To size - 1
-          c.l = pal(ReadByte(1))
-          c = RGBA(Red(c), Green(c), Blue(c), 255)
+          c.l = pal(ReadByte(1))          
+          c = RGBA(Round(Red(c) / $55, #PB_Round_Down) * $55, Round(Green(c) / $55, #PB_Round_Down) * $55, Round(Blue(c) / $55, #PB_Round_Down) * $55, 255)
           
           Plot(x, y, c)
         Next
@@ -180,8 +180,8 @@ Procedure LoadPalette(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 27
-; FirstLine = 9
+; CursorPosition = 116
+; FirstLine = 99
 ; Folding = -
 ; EnableXP
 ; DPIAware
