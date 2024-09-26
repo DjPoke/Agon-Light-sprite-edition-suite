@@ -1,0 +1,5 @@
+TODO:
+=====
+
+- Debug the raw loader
+- Program the crunched loader

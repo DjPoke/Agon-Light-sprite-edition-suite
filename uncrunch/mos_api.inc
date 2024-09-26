@@ -123,7 +123,7 @@ ffs_getcwd:		EQU	9Eh
 ;
 ffs_mount:		EQU	9Fh
 ffs_mkfs:		EQU	A0h
-ffs_fdisk		EQU	A1h
+ffs_fdisk:		EQU	A1h
 ffs_getfree:		EQU	A2h
 ffs_getlabel:		EQU	A3h
 ffs_setlabel:		EQU	A4h
@@ -187,71 +187,34 @@ vdp_pflag_mouse:	EQU	01000000b
 vdp_pflag_buffered:	EQU	10000000b
 
 ;
-; FatFS structures
-; These mirror the structures contained in src_fatfs/ff.h in the MOS project
-;
-; Object ID and allocation information (FFOBJID)
-;
-FFOBJID	.STRUCT
-	fs:		DS	3	; Pointer to the hosting volume of this object
-	id:		DS	2	; Hosting volume mount ID
-	attr:		DS	1	; Object attribute
-	stat:		DS	1	; Object chain status (b1-0: =0:not contiguous, =2:contiguous, =3:fragmented in this session, b2:sub-directory stretched)
-	sclust:		DS	4	; Object data start cluster (0:no cluster or root directory)
-	objsize:	DS	4	; Object size (valid when sclust != 0)
-FFOBJID_SIZE .ENDSTRUCT FFOBJID
-;
-; File object structure (FIL)
-;
-FIL .STRUCT
-	obj:		.TAG	FFOBJID	; Object identifier
-	flag:		DS	1	; File status flags
-	err:		DS	1	; Abort flag (error code)
-	fptr:		DS	4	; File read/write pointer (Zeroed on file open)
-	clust:		DS	4	; Current cluster of fpter (invalid when fptr is 0)
-	sect:		DS	4	; Sector number appearing in buf[] (0:invalid)
-	dir_sect:	DS	4	; Sector number containing the directory entry
-	dir_ptr:	DS	3	; Pointer to the directory entry in the win[]
-FIL_SIZE .ENDSTRUCT FIL
-;
-; Directory object structure (DIR)
-; 
-DIR .STRUCT
-	obj:		.TAG	FFOBJID	; Object identifier
-	dptr:		DS	4	; Current read/write offset
-	clust:		DS	4	; Current cluster
-	sect:		DS	4	; Current sector (0:Read operation has terminated)
-	dir:		DS	3	; Pointer to the directory item in the win[]
-	fn:		DS	12	; SFN (in/out) {body[8],ext[3],status[1]}
-	blk_ofs:	DS	4	; Offset of current entry block being processed (0xFFFFFFFF:Invalid)
-DIR_SIZE .ENDSTRUCT DIR
-;
-; File information structure (FILINFO)
-;
-FILINFO .STRUCT
-	fsize:		DS 	4	; File size
-	fdate:		DS	2	; Modified date
-	ftime:		DS	2	; Modified time
-	fattrib:	DS	1	; File attribute
-	altname:	DS	13	; Alternative file name
-	fname:		DS	256	; Primary file name
-FILINFO_SIZE .ENDSTRUCT FILINFO
-
-;
 ; Macro for calling the API
 ; Parameters:
 ; - function: One of the function numbers listed above
 ;
-MOSCALL:		MACRO	function
-			LD	A, function
-			RST.LIS	08h
-			ENDMACRO
+	MACRO moscall function
+		LD	A, function
+		RST.LIS	08h
+	ENDMACRO
 
-VDU:			MACRO	function
-			LD	A, function
-			RST.LIS	10h
-			ENDMACRO
+	MACRO vdu function
+		LD	A, function
+		RST.LIS	10h
+	ENDMACRO
 
-VDU_A:			MACRO	function
-			RST.LIS	10h
-			ENDMACRO
+	MACRO vdu_a
+		RST.LIS	10h
+	ENDMACRO
+
+	MACRO VDU_DE
+		LD A,E
+		RST.LIS	10h
+		LD A,D
+		RST.LIS	10h
+	ENDMACRO
+
+	MACRO VDU_HL
+		LD A,L
+		RST.LIS	10h
+		LD A,H
+		RST.LIS	10h
+	ENDMACRO
