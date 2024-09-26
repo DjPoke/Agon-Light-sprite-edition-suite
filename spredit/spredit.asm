@@ -1473,7 +1473,12 @@ dslp_red_up:
 	ld hl,current_pen
 	ld b,(hl)
 	call fn_get_color
-	inc c
+	ld a,c
+	cp #ff
+	jr nc,dslp_not_inc1
+	add a,#55
+	ld c,a
+dslp_not_inc1:
 	call fn_set_color
 	call fn_draw_the_palette
 	call fn_refresh_sprite
@@ -1490,7 +1495,12 @@ dslp_green_up:
 	ld hl,current_pen
 	ld b,(hl)
 	call fn_get_color
-	inc e
+	ld a,e
+	cp #ff
+	jr nc,dslp_not_inc2
+	add a,#55
+	ld e,a
+dslp_not_inc2:
 	call fn_set_color
 	call fn_draw_the_palette
 	call fn_refresh_sprite
@@ -1507,7 +1517,12 @@ dslp_blue_up:
 	ld hl,current_pen
 	ld b,(hl)
 	call fn_get_color
-	inc l
+	ld a,l
+	cp #ff
+	jr nc,dslp_not_inc3
+	add a,#55
+	ld l,a
+dslp_not_inc3:
 	call fn_set_color
 	call fn_draw_the_palette
 	call fn_refresh_sprite
@@ -1524,7 +1539,12 @@ dslp_red_down:
 	ld hl,current_pen
 	ld b,(hl)
 	call fn_get_color
-	dec c
+	ld a,c
+	cp #01
+	jr c,dslp_not_dec1
+	sub a,#55
+	ld c,a
+dslp_not_dec1:
 	call fn_set_color
 	call fn_draw_the_palette
 	call fn_refresh_sprite
@@ -1541,7 +1561,12 @@ dslp_green_down:
 	ld hl,current_pen
 	ld b,(hl)
 	call fn_get_color
-	dec e
+	ld a,e
+	cp #01
+	jr c,dslp_not_dec2
+	sub a,#55
+	ld e,a
+dslp_not_dec2:
 	call fn_set_color
 	call fn_draw_the_palette
 	call fn_refresh_sprite
@@ -1558,7 +1583,12 @@ dslp_blue_down:
 	ld hl,current_pen
 	ld b,(hl)
 	call fn_get_color
-	dec l
+	ld a,l
+	cp #01
+	jr c,dslp_not_dec3
+	sub a,#55
+	ld l,a
+dslp_not_dec3:
 	call fn_set_color
 	call fn_draw_the_palette
 	call fn_refresh_sprite
