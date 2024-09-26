@@ -1416,12 +1416,174 @@ dsl_palette_tool_loop:
 	cp 1
 	call z,dslp_save_palette
 
+	; red up
+	ld hl,KEY_1
+	call fn_inkey
+	cp 1
+	call z,dslp_red_up
+
+	; green up
+	ld hl,KEY_2
+	call fn_inkey
+	cp 1
+	call z,dslp_green_up
+
+	; blue up
+	ld hl,KEY_3
+	call fn_inkey
+	cp 1
+	call z,dslp_blue_up
+
+	; red down
+	ld hl,KEY_4
+	call fn_inkey
+	cp 1
+	call z,dslp_red_down
+
+	; green down
+	ld hl,KEY_5
+	call fn_inkey
+	cp 1
+	call z,dslp_green_down
+
+	; blue down
+	ld hl,KEY_6
+	call fn_inkey
+	cp 1
+	call z,dslp_blue_down
+
+	; reset to black
+	ld hl,KEY_7
+	call fn_inkey
+	cp 1
+	call z,dslp_reset_color
+
 	; exit program
 	ld hl,KEY_ESCAPE
 	call fn_inkey
 	cp 1
 	jp z,exit_program
 	
+	jp dsl_palette_tool_loop
+
+dslp_red_up:
+	ld hl,current_pen
+	ld c,(hl)
+	call fn_draw_palette_without_border
+	ld hl,current_pen
+	ld b,(hl)
+	call fn_get_color
+	inc c
+	call fn_set_color
+	call fn_draw_the_palette
+	call fn_refresh_sprite
+	ld hl,current_pen
+	ld c,(hl)
+	call fn_draw_palette_with_border
+	call fn_slowdown
+	jp dsl_palette_tool_loop
+
+dslp_green_up:
+	ld hl,current_pen
+	ld c,(hl)
+	call fn_draw_palette_without_border
+	ld hl,current_pen
+	ld b,(hl)
+	call fn_get_color
+	inc e
+	call fn_set_color
+	call fn_draw_the_palette
+	call fn_refresh_sprite
+	ld hl,current_pen
+	ld c,(hl)
+	call fn_draw_palette_with_border
+	call fn_slowdown
+	jp dsl_palette_tool_loop
+
+dslp_blue_up:
+	ld hl,current_pen
+	ld c,(hl)
+	call fn_draw_palette_without_border
+	ld hl,current_pen
+	ld b,(hl)
+	call fn_get_color
+	inc l
+	call fn_set_color
+	call fn_draw_the_palette
+	call fn_refresh_sprite
+	ld hl,current_pen
+	ld c,(hl)
+	call fn_draw_palette_with_border
+	call fn_slowdown
+	jp dsl_palette_tool_loop
+
+dslp_red_down:
+	ld hl,current_pen
+	ld c,(hl)
+	call fn_draw_palette_without_border
+	ld hl,current_pen
+	ld b,(hl)
+	call fn_get_color
+	dec c
+	call fn_set_color
+	call fn_draw_the_palette
+	call fn_refresh_sprite
+	ld hl,current_pen
+	ld c,(hl)
+	call fn_draw_palette_with_border
+	call fn_slowdown
+	jp dsl_palette_tool_loop
+
+dslp_green_down:
+	ld hl,current_pen
+	ld c,(hl)
+	call fn_draw_palette_without_border
+	ld hl,current_pen
+	ld b,(hl)
+	call fn_get_color
+	dec e
+	call fn_set_color
+	call fn_draw_the_palette
+	call fn_refresh_sprite
+	ld hl,current_pen
+	ld c,(hl)
+	call fn_draw_palette_with_border
+	call fn_slowdown
+	jp dsl_palette_tool_loop
+
+dslp_blue_down:
+	ld hl,current_pen
+	ld c,(hl)
+	call fn_draw_palette_without_border
+	ld hl,current_pen
+	ld b,(hl)
+	call fn_get_color
+	dec l
+	call fn_set_color
+	call fn_draw_the_palette
+	call fn_refresh_sprite
+	ld hl,current_pen
+	ld c,(hl)
+	call fn_draw_palette_with_border
+	call fn_slowdown
+	jp dsl_palette_tool_loop
+
+dslp_reset_color:
+	ld hl,current_pen
+	ld c,(hl)
+	call fn_draw_palette_without_border
+	ld hl,current_pen
+	ld b,(hl)
+	ld c,0
+	ld e,0
+	ld l,0
+	call fn_set_color
+	call fn_draw_the_palette
+	call fn_refresh_sprite
+	ld hl,current_pen
+	ld c,(hl)
+	call fn_draw_palette_with_border
+	call fn_slowdown
 	jp dsl_palette_tool_loop
 
 dslp_load_palette:
@@ -3705,6 +3867,37 @@ htb:	sla c   ; shift c into carry
 		pop bc
 		ret
 
+; set color RGB (b = c,e,l)
+fn_set_color:
+	push af
+	push bc
+	push de
+	push hl
+
+	ld a,l
+	ld hl,red_tint
+	ld (hl),c
+	ld hl,green_tint
+	ld (hl),e
+	ld hl,blue_tint
+	ld (hl),a
+	
+	call lp_set_tint
+
+	pop hl
+	pop de
+	pop bc
+	pop af
+	ret
+
+; read rgb tints for the color in b
+fn_get_color:
+	; todo...
+	ld c,0
+	ld e,0
+	ld l,0
+	ret
+
 ;======================================================================
 
 ; coordinates for rectangles
@@ -3967,7 +4160,9 @@ rgb_palette:
 
 ; ===============================================
 
-
+;=================
+; Debug functions
+;=================
 ; A = byte to debug
 debug_byte:
 	PUSH AF
