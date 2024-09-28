@@ -66,6 +66,7 @@ start:
 	VDU 15
 	
 	; load raw screen
+	LD IX,raw_screen
 	CALL load_raw_screen
 
 exit_program:
@@ -104,5 +105,5 @@ exit_program:
 	
 ; ===============================================
 ; included binary files
-not_crunched:
+raw_screen:
 .INCBIN "screens/not_crunched.scn"

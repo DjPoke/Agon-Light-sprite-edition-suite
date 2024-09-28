@@ -111,10 +111,9 @@ palette_rgb:
 	DS 192
 
 ; load a raw screen
-; (file included at the end of this source code)
+; ix -> pointer to the image
 load_raw_screen:
-	; point to the start of the image
-	LD IX,not_crunched
+	push ix
 	
 	; store the mode
 	LD A,(IX+0)
@@ -187,12 +186,16 @@ load_raw_screen:
 	POP HL
 	LDIR
 	
+	POP IX
+	
 	; set the palette
 	LD DE,colors_count
 	LD A,(DE)
 	CP 0
 	JP Z,lrs_error
 
+	PUSH IX
+	
 	LD B,0
 	LD IX,palette_rgb
 
@@ -209,7 +212,7 @@ lrs_set_palette:
 	JR NZ,lrs_set_palette
 		
 	; not crunched file flag
-	LD HL,not_crunched
+	POP HL
 	INC HL
 	LD BC,$000000
 	LD C,A ; colors count * 3
@@ -358,77 +361,62 @@ lrs_error:
 	RET
 
 ; load a crunched screen
+; ix -> pointer to the image
 load_crunched_screen:
-	; open the file for read
-	LD HL,crunched_screen_filename
-	LD C,fa_open_existing|fa_read
-	MOSCALL mos_fopen
-	
-	; exit on error
-	CP 0
-	RET Z
-	
-	; filehandle -> C
-	LD C,A
-
-	; read the mode
-	MOSCALL mos_fgetc
-	JP C,lcs_error
+	PUSH IY
+	PUSH IX
 	
 	; store the mode
+	LD A,(IX+0)
 	LD HL,mode_value
 	LD (HL),A
-	
-	; store the width of the screen
+		
 	PUSH AF
 	
+	; store the width and the height of the screen
+	LD DE,$000000
+	LD E,A
+	LD D,2
+	MLT DE
+	PUSH DE
 	LD HL,width_by_mode
-	LD DE,$000000
-	LD E,A
-	LD D,2
-	MLT DE
 	ADD HL,DE
-	PUSH HL
-	POP IX
-	LD HL,width_value
-	LD A,(IX+0)
-	LD (HL),A
+	LD DE,width_value
+	LD A,(HL)
+	LD (DE),A
+	INC DE
 	INC HL
-	LD A,(IX+1)
-	LD (HL),A
-
-	; store the height of the screen
-	POP AF	
-	PUSH AF
+	LD A,(HL)
+	LD (DE),A
+	INC HL
+	POP DE
 	LD HL,height_by_mode
-	LD DE,$000000
-	LD E,A
-	LD D,2
-	MLT DE
 	ADD HL,DE
-	PUSH HL
-	POP IX
-	LD HL,height_value
-	LD A,(IX+0)
-	LD (HL),A
+	LD DE,height_value
+	LD A,(HL)
+	LD (DE),A
+	INC DE
 	INC HL
-	LD A,(IX+1)
-	LD (HL),A
-	POP AF
-
+	LD A,(HL)
+	LD (DE),A
+	INC HL
+	
+	PUSH IX
+	
 	; set the readen mode
-	PUSH BC
-	PUSH AF
 	VDU 22
-	POP AF
-	PUSH AF
+	LD HL,mode_value
+	LD A,(HL)
 	VDU_A
-	VDU 23 ; hide cursor
+	
+	; hide cursor
+	VDU 23
 	VDU 1
 	VDU 0
-	POP AF
-	POP BC
 	
+	POP IX
+	POP AF
+		
 	; get colors count
 	LD HL,colors_by_mode
 	LD DE,$000000
@@ -437,29 +425,31 @@ load_crunched_screen:
 	LD A,(HL) ; number of colors
 	LD HL,colors_count
 	LD (HL),A
-			
+		
 	; read the palette
-	LD HL,palette_rgb
-	LD DE,$000000
-	LD E,A
-	LD D,3
-	MLT DE
-	PUSH DE
-	MOSCALL mos_fread
+	LD DE,palette_rgb
+	LD BC,$000000
+	LD C,A ; colors count * 3
+	LD B,3
+	MLT BC
+	INC IX
+	PUSH IX
 	POP HL
-	CALL compare
-	JP NZ,lcs_error
+	LDIR
+	
+	POP IX
 	
 	; set the palette
-	LD HL,colors_count
-	LD A,(HL)
+	LD DE,colors_count
+	LD A,(DE)
 	CP 0
 	JP Z,lcs_error
+
+	PUSH IX
 	
-	PUSH BC
 	LD B,0
 	LD IX,palette_rgb
-	
+
 lcs_set_palette:
 	LD C,(IX+0)
 	LD E,(IX+1)
@@ -468,57 +458,259 @@ lcs_set_palette:
 	INC IX
 	INC IX
 	CALL set_color
-	INC B	
+	INC B
 	CP B
-	JR NC,lcs_set_palette
-
-	POP BC
-
-	; read crunched flag
-	MOSCALL mos_fgetc
-	JP C,lcs_error
-
+	JR NZ,lcs_set_palette
+		
 	; crunched file flag
+	POP HL
+	INC HL
+	LD BC,$000000
+	LD C,A ; colors count * 3
+	LD B,3
+	MLT BC
+	ADD HL,BC
+	LD A,(HL)
 	CP 1
 	JP NZ,lcs_error
-
-	; read data on the sdcard, and uncrunch
-	LD DE,$000000 ; x screen
-	LD HL,$000000 ; y screen
 	
+	INC HL
+	PUSH HL
+	
+	; clear buffer 64255
+	VDU 23
+	VDU 0
+	VDU $A0
+	VDU $FF ; buffer number (16 bits)
+	VDU $FA
+	VDU 2 ; command
+
+	; coordinates to draw a piece of screen
+	POP HL ; start address
+	POP IY
+	DEC IY ; end address-1
+
+lcs_upload_little_blocks:
+	PUSH HL
+	
+	LD A,(HL)
+	CP 64
+	JP NC,lcs_wrong_file ; exit if more than 64 colors
+	CP 1 ; > 0 ?
+	JP NC,lcs_upload_little_blocks2
+	
+	; upload data to the buffer
+	VDU 23
+	VDU 0
+	VDU $A0
+	VDU $FF ; buffer number (16 bits)
+	VDU $FA
+	VDU 0 ; command
+	LD DE,4 ; 1 byte * 4
+	VDU_DE
+	
+	POP HL
+
+	PUSH HL
+	LD HL,palette_rgb ; start of palette
+	LD DE,$000000
+	LD E,A
+	LD D,3
+	MLT DE ; color * 3 tints
+	ADD HL,DE ; hl -> RGB values for this color
+	LD A,(HL) ; get red
+	INC HL
+	PUSH HL
+	VDU_A
+	POP HL
+	LD A,(HL) ; get green
+	INC HL
+	PUSH HL
+	VDU_A
+	POP HL
+	LD A,(HL) ; get blue
+	INC HL
+	PUSH HL
+	VDU_A
+	POP HL
+	LD A,255 ; get alpha
+	VDU_A
+	POP HL
+	INC HL
+	PUSH IY
+	POP DE
+	CALL compare24
+	JP C,lcs_upload_little_blocks
+	JP lcs_consolidate
+
+lcs_upload_little_blocks2:
+	PUSH HL
+	
+	INC HL
+	LD A,(HL)
+	CP 0 ; = 0 ?
+	JP NZ,lcs_upload_little_blocks3
+	
+	; upload data to the buffer
+	VDU 23
+	VDU 0
+	VDU $A0
+	VDU $FF ; buffer number (16 bits)
+	VDU $FA
+	VDU 0 ; command
+	LD DE,4 ; 1 byte * 4
+	VDU_DE
+	
+	POP HL
+
+	PUSH HL
+	LD HL,palette_rgb ; start of palette
+	LD DE,$000000
+	LD E,A
+	LD D,3
+	MLT DE ; color * 3 tints
+	ADD HL,DE ; hl -> RGB values for this color
+	LD A,(HL) ; get red
+	INC HL
+	PUSH HL
+	VDU_A
+	POP HL
+	LD A,(HL) ; get green
+	INC HL
+	PUSH HL
+	VDU_A
+	POP HL
+	LD A,(HL) ; get blue
+	INC HL
+	PUSH HL
+	VDU_A
+	POP HL
+	LD A,255 ; get alpha
+	VDU_A
+	POP HL
+	INC HL
+	PUSH IY
+	POP DE
+	CALL compare24
+	JP C,lcs_upload_little_blocks
+	JP lcs_consolidate
+
+lcs_upload_little_blocks3:
+	PUSH HL
+
+	LD B,(HL)
+	INC HL
+	
+	PUSH BC
+	
+	; upload data to the buffer
+	VDU 23
+	VDU 0
+	VDU $A0
+	VDU $FF ; buffer number (16 bits)
+	VDU $FA
+	VDU 0 ; command
+	LD DE,$000000
+	LD E,4 ; B bytes * 4
+	LD D,B
+	MLT DE
+	VDU_DE
+	
+	POP BC
+
+	POP HL
+
 lcs_loop:
-	MOSCALL mos_fgetc
-	JP C,lcs_exit
+	PUSH HL
+	LD A,(HL)
+	LD HL,palette_rgb ; start of palette
+	LD DE,$000000
+	LD E,A
+	LD D,3
+	MLT DE ; color * 3 tints
+	ADD HL,DE ; hl -> RGB values for this color
+	LD A,(HL) ; get red
+	INC HL
+	PUSH HL
+	VDU_A
+	POP HL
+	LD A,(HL) ; get green
+	INC HL
+	PUSH HL
+	VDU_A
+	POP HL
+	LD A,(HL) ; get blue
+	INC HL
+	PUSH HL
+	VDU_A
+	POP HL
+	LD A,255 ; get alpha
+	VDU_A	
+	POP HL
+	DJNZ lcs_loop
+	INC HL
+	PUSH IY
+	POP DE
+	CALL compare24
+	JP C,lcs_upload_little_blocks
 
-	; case > 0
-	CP 1
-	CALL Z,plot_pixel
-	JP Z,lcs_loop
-	
-	; case 0,0
-	MOSCALL mos_fgetc
-	JP C,lcs_exit
+lcs_consolidate:
+	; consolidate buffer 0
+	VDU 23
+	VDU 0
+	VDU $A0
+	VDU $FF ; buffer number (16 bits)
+	VDU $FA
+	VDU 14 ; command
 
-	CP 0
-	CALL Z,plot_pixel
-	JP Z,lcs_loop
+	; set buffer 64255 as bitmap (bitmap 255)
+	VDU 23
+	VDU 27
+	VDU $20
+	VDU $FF ; bitmap number (16 bits)
+	VDU $FA
 
-	; case command, count, value
-	LD B,A
+	; set buffer 64255 attributes
+	VDU 23
+	VDU 27
+	VDU $21
+	LD IX,width_value
+	LD IY,height_value
+	LD DE,$000000
+	LD E,(IX+0)
+	LD D,(IX+1)
+	VDU_DE
+	LD IY,height_value
+	LD HL,$000000
+	LD L,(IY+0)
+	LD H,(IY+1)
+	VDU_HL
+	VDU 0 ; rgba8888
 
-	MOSCALL mos_fgetc
-	JP C,lcs_exit
+	; select bitmap 255
+	VDU 23
+	VDU 27
+	VDU 0
+	VDU 255
 
-	CALL Z,draw_line
-	JP lcs_loop
+	; draw bitmap 255 at coordinates 0,0
+	VDU 23
+	VDU 27
+	VDU 3
+	VDU 0
+	VDU 0
+	VDU 0
+	VDU 0
+	RET
+
+lcs_wrong_file:
+	POP IX
+	POP BC
+	VDU 7
+	RET
 
 lcs_error:
 	VDU 7
-	MOSCALL mos_fclose
-	RET
-
-lcs_exit:
-	MOSCALL mos_fclose
 	RET
 	
 ; input: HL = negative key to check
@@ -689,4 +881,12 @@ compare:
 
 	LD A,L
 	CP E
+	RET
+
+compare24:
+	PUSH HL
+	OR A
+	SBC HL,DE
+	ADD HL,DE
+	POP HL
 	RET
