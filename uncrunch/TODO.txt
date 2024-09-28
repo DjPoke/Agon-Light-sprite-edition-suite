@@ -1,5 +1,4 @@
 TODO:
 =====
 
-- Debug the raw loader
 - Debug the crunched loader

@@ -1,29 +1,8 @@
-; uncrunch.asm
+; load_screen.inc
 ; (B.Vignoli)
 ;
 ; MIT Licence
-;
-
-.ASSUME ADL=1
-.ORG $040000
-
-	JP start
-
-; MOS header
-.ALIGN 64
-.DB "MOS",0,1
-
-.FILLBYTE 0
-
-	INCLUDE "mos_api.inc"
-	INCLUDE "debug.inc"
-
-; equ
-KEY_ESCAPE: EQU -113
-
-BITLOOKUP:
-	DB 01h,02h,04h,08h
-	DB 10h,20h,40h,80h
+; 2024
 
 ; data
 crunched_screen_filename:
@@ -131,87 +110,6 @@ height_by_mode:
 palette_rgb:
 	DS 192
 
-; start main program ============================
-start:
-	PUSH AF
-	PUSH BC
-	PUSH DE
-	PUSH IX
-	PUSH IY
-
-	; reset sprites and bitmaps data
-	VDU 23
-	VDU 27
-	VDU 16
-
-	; set mode 8
-	VDU 22
-	VDU 8
-	
-	; set black paper color
-	VDU 17
-	VDU 128
-	
-	; clear screen
-	VDU 12
-
-	; hide cursor
-	VDU 23
-	VDU 1
-	VDU 0
-
-	; disable logical screen
-	VDU 23
-	VDU 0
-	VDU $C0
-	VDU 0
-
-	; set pen 15
-	VDU 17
-	VDU 15
-	
-	; load raw screen
-	CALL load_raw_screen
-
-	; load crunched screen
-	;CALL load_crunched_screen
-
-exit_program:
-	; wait for any key to be released
-	LD HL,KEY_ESCAPE
-	CALL inkey
-	CP 1
-	JR NZ,exit_program
-
-	; reset to mode 1
-	VDU 22
-	VDU 1
-	
-	; enable logical screen
-	VDU 23
-	VDU 0
-	VDU $C0
-	VDU 1
-	
-	; position the texte cursor at home
-	VDU 30
-
-	; show cursor
-	VDU 23
-	VDU 1
-	VDU 1
-
-	POP IY
-	POP IX
-	POP DE
-	POP BC
-	POP AF
-	LD HL,0
-
-	RET
-	
-; ===============================================
-
 ; load a raw screen
 ; (file included at the end of this source code)
 load_raw_screen:
@@ -294,12 +192,12 @@ load_raw_screen:
 	LD A,(DE)
 	CP 0
 	JP Z,lrs_error
-	
+
 	LD B,0
 	LD IX,palette_rgb
 
 lrs_set_palette:
-	LD C,(IX+0)	
+	LD C,(IX+0)
 	LD E,(IX+1)
 	LD L,(IX+2)
 	INC IX
@@ -338,6 +236,8 @@ lrs_set_palette:
 	LD IY,300 ; 300 blocks of 256 bytes * 4 for the 1st RAM part
 
 lrs_upload_block:
+	PUSH HL
+	
 	; upload data to the buffer
 	VDU 23
 	VDU 0
@@ -345,14 +245,16 @@ lrs_upload_block:
 	VDU $FF ; buffer number (16 bits)
 	VDU $FA
 	VDU 0 ; command
-	LD DE,256*4 ; 300 bytes * 4
+	LD DE,256*4 ; 256 bytes * 4
 	VDU_DE
+	
+	POP HL
 		
 	PUSH BC
 	PUSH IX
 	LD BC,256 ; 256 loops
 lrs_loop:
-	LD A,(HL) ; rgba8888 color
+	LD A,(HL) ; indexed color
 	CP 64
 	JP NC,lrs_wrong_file
 	PUSH HL
@@ -380,6 +282,7 @@ lrs_loop:
 	LD A,255 ; get alpha
 	VDU_A
 	POP HL
+	INC HL
 	DEC BC
 	LD A,B
 	OR C
@@ -787,10 +690,3 @@ compare:
 	LD A,L
 	CP E
 	RET
-
-; included binary files
-not_crunched:
-.INCBIN "screens/not_crunched.scn"
-
-crunched:
-.INCBIN "screens/crunched.scn"
