@@ -65,11 +65,11 @@ start:
 	; set pen 15
 	VDU 17
 	VDU 15
-	
+
 	; load crunched screen
 	ld ix,crunched_screen
-	ld iy,end_crunched_screen
-	CALL load_crunched_screen
+	ld iy,uncrunched_screen
+	CALL load_screen
 
 exit_program:
 	; wait for any key to be released
@@ -109,4 +109,7 @@ exit_program:
 ; included binary files
 crunched_screen:
 .INCBIN "screens/crunched.scn"
-end_crunched_screen:
+
+; buffer for uncrunched screen
+uncrunched_screen:
+	ds 320*240

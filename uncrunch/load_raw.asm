@@ -67,7 +67,7 @@ start:
 	
 	; load raw screen
 	LD IX,raw_screen
-	CALL load_raw_screen
+	CALL load_screen
 
 exit_program:
 	; wait for any key to be released
