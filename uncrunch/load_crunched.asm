@@ -17,15 +17,11 @@
 .FILLBYTE 0
 
 	INCLUDE "mos_api.inc"
+	INCLUDE "inputs.inc"
 	INCLUDE "load_screen.inc"
-	INCLUDE "debug.inc"
 
 ; equ
 KEY_ESCAPE: EQU -113
-
-BITLOOKUP:
-	DB 01h,02h,04h,08h
-	DB 10h,20h,40h,80h
 
 ; start main program ============================
 start:
@@ -69,12 +65,12 @@ start:
 	; load crunched screen
 	ld ix,crunched_screen
 	ld iy,uncrunched_screen
-	CALL load_screen
+	CALL scn_load
 
 exit_program:
 	; wait for any key to be released
 	LD HL,KEY_ESCAPE
-	CALL inkey
+	CALL inp_inkey
 	CP 1
 	JR NZ,exit_program
 

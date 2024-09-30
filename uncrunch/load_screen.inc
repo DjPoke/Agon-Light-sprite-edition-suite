@@ -5,31 +5,28 @@
 ; 2024
 
 ; data
-crunched_screen_filename:
-	db "temp",0
-
-mode_value:
+scn_mode_value:
 	DB 0
 
-width_value:
+scn_width_value:
 	DW 0
 
-height_value:
+scn_height_value:
 	DW 0
 	
-colors_count:
+scn_colors_count:
 	DB 0
 
-red_tint:
+scn_red_tint:
 	DB 0
 	
-green_tint:
+scn_green_tint:
 	DB 0	
 
-blue_tint:
+scn_blue_tint:
 	DB 0
 	
-colors_by_mode:
+scn_colors_by_mode:
 	DB 16
 	DB 4
 	DB 2
@@ -55,7 +52,7 @@ colors_by_mode:
 	DB 4
 	DB 2
 
-width_by_mode:
+scn_width_by_mode:
 	DW 640
 	DW 640
 	DW 640
@@ -81,7 +78,7 @@ width_by_mode:
 	DW 512
 	DW 512
 	
-height_by_mode:
+scn_height_by_mode:
 	DW 480
 	DW 480
 	DW 480
@@ -107,19 +104,19 @@ height_by_mode:
 	DW 384
 	DW 384
 
-palette_rgb:
+scn_palette_rgb:
 	DS 192
 
 ; load a raw screen
 ; ix -> pointer to the (crunched or raw) image
 ; iy -> pointer to the buffer (only for crunched files)
-load_screen:
+scn_load:
 	push iy
 	push ix
 	
 	; store the mode
 	LD A,(IX+0)
-	LD HL,mode_value
+	LD HL,scn_mode_value
 	LD (HL),A
 		
 	PUSH AF
@@ -130,9 +127,9 @@ load_screen:
 	LD D,2
 	MLT DE
 	PUSH DE
-	LD HL,width_by_mode
+	LD HL,scn_width_by_mode
 	ADD HL,DE
-	LD DE,width_value
+	LD DE,scn_width_value
 	LD A,(HL)
 	LD (DE),A
 	INC DE
@@ -141,9 +138,9 @@ load_screen:
 	LD (DE),A
 	INC HL
 	POP DE
-	LD HL,height_by_mode
+	LD HL,scn_height_by_mode
 	ADD HL,DE
-	LD DE,height_value
+	LD DE,scn_height_value
 	LD A,(HL)
 	LD (DE),A
 	INC DE
@@ -156,7 +153,7 @@ load_screen:
 	
 	; set the readen mode
 	VDU 22
-	LD HL,mode_value
+	LD HL,scn_mode_value
 	LD A,(HL)
 	VDU_A
 	
@@ -169,16 +166,16 @@ load_screen:
 	POP AF
 		
 	; get colors count
-	LD HL,colors_by_mode
+	LD HL,scn_colors_by_mode
 	LD DE,$000000
 	LD E,A
 	ADD HL,DE
 	LD A,(HL) ; number of colors
-	LD HL,colors_count
+	LD HL,scn_colors_count
 	LD (HL),A
 		
 	; read the palette
-	LD DE,palette_rgb
+	LD DE,scn_palette_rgb
 	LD BC,$000000
 	LD C,A ; colors count * 3
 	LD B,3
@@ -191,27 +188,27 @@ load_screen:
 	POP IX
 	
 	; set the palette
-	LD DE,colors_count
+	LD DE,scn_colors_count
 	LD A,(DE)
 	CP 0
-	JP Z,lrs_error
+	JP Z,scn_lrs_error
 
 	PUSH IX
 	
 	LD B,0
-	LD IX,palette_rgb
+	LD IX,scn_palette_rgb
 
-lrs_set_palette:
+scn_lrs_set_palette:
 	LD C,(IX+0)
 	LD E,(IX+1)
 	LD L,(IX+2)
 	INC IX
 	INC IX
 	INC IX
-	CALL set_color
+	CALL scn_set_color
 	INC B
 	CP B
-	JR NZ,lrs_set_palette
+	JR NZ,scn_lrs_set_palette
 		
 	; not crunched file flag
 	POP HL ; HL -> crunched data, DE -> screen buffer
@@ -226,48 +223,48 @@ lrs_set_palette:
 	LD A,(HL)
 	INC HL
 	CP 0
-	JR Z,lrs_not_crunched
+	JR Z,scn_lrs_not_crunched
 
 ; uncrunch the file
-lrs_uncrunch:
-	CALL compare24 ; HL = IY ? exit
-	JP NC,lrs_not_crunched
+scn_lrs_uncrunch:
+	CALL scn_compare24 ; HL = IY ? exit
+	JP NC,scn_lrs_not_crunched
 	
 	; a single byte > 0 ?
 	LD A,(HL)
 	CP 0
-	JR Z,lrs_uncrunch_next1
+	JR Z,scn_lrs_uncrunch_next1
 	
 	LD (DE),A
 	INC DE
 	INC HL
-	JP lrs_uncrunch
+	JP scn_lrs_uncrunch
 
-lrs_uncrunch_next1:
+scn_lrs_uncrunch_next1:
 	INC HL
 	LD A,(HL)
 	CP 0
-	JR NZ,lrs_uncrunch_next2
+	JR NZ,scn_lrs_uncrunch_next2
 	
 	LD (DE),A
 	INC DE
 	INC HL
-	JP lrs_uncrunch	
+	JP scn_lrs_uncrunch	
 
-lrs_uncrunch_next2:
+scn_lrs_uncrunch_next2:
 	LD B,A ; count of bytes of the same value
 	INC HL
 	LD A,(HL)
 
-lrs_uncrunch_loop:
+scn_lrs_uncrunch_loop:
 	LD (DE),A
 	INC DE
-	DJNZ lrs_uncrunch_loop
+	DJNZ scn_lrs_uncrunch_loop
 
 	INC HL
-	JP lrs_uncrunch	
+	JP scn_lrs_uncrunch	
 
-lrs_not_crunched:
+scn_lrs_not_crunched:
 	PUSH HL
 	
 	; clear buffer 64255
@@ -282,7 +279,7 @@ lrs_not_crunched:
 	POP HL ; start address
 	LD IY,300 ; 300 blocks of 256 bytes * 4 for the 1st RAM part
 
-lrs_upload_block:
+scn_lrs_upload_block:
 	PUSH HL
 	
 	; upload data to the buffer
@@ -300,12 +297,12 @@ lrs_upload_block:
 	PUSH BC
 	PUSH IX
 	LD BC,256 ; 256 loops
-lrs_loop:
+scn_lrs_loop:
 	LD A,(HL) ; indexed color
 	CP 64
-	JP NC,lrs_wrong_file
+	JP NC,scn_lrs_wrong_file
 	PUSH HL
-	LD HL,palette_rgb ; start of palette
+	LD HL,scn_palette_rgb ; start of palette
 	LD DE,$000000
 	LD E,A
 	LD D,3
@@ -333,7 +330,7 @@ lrs_loop:
 	DEC BC
 	LD A,B
 	OR C
-	JP NZ,lrs_loop
+	JP NZ,scn_lrs_loop
 	POP IX
 	POP BC
 
@@ -344,7 +341,7 @@ lrs_loop:
 	LD A,D
 	OR E
 	CP 0
-	JP NZ,lrs_upload_block
+	JP NZ,scn_lrs_upload_block
 	
 	; consolidate buffer 0
 	VDU 23
@@ -365,13 +362,13 @@ lrs_loop:
 	VDU 23
 	VDU 27
 	VDU $21
-	LD IX,width_value
-	LD IY,height_value
+	LD IX,scn_width_value
+	LD IY,scn_height_value
 	LD DE,$000000
 	LD E,(IX+0)
 	LD D,(IX+1)
 	VDU_DE
-	LD IY,height_value
+	LD IY,scn_height_value
 	LD HL,$000000
 	LD L,(IY+0)
 	LD H,(IY+1)
@@ -394,52 +391,35 @@ lrs_loop:
 	VDU 0
 	RET
 
-lrs_wrong_file:
+scn_redraw:
+	; select bitmap 255
+	VDU 23
+	VDU 27
+	VDU 0
+	VDU 255
+
+	; draw bitmap 255 at coordinates 0,0
+	VDU 23
+	VDU 27
+	VDU 3
+	VDU 0
+	VDU 0
+	VDU 0
+	VDU 0
+	RET
+
+scn_lrs_wrong_file:
 	POP IX
 	POP BC
 	VDU 7
 	RET
 
-lrs_error:
+scn_lrs_error:
 	VDU 7
-	RET
-	
-; input: HL = negative key to check
-inkey:
-	MOSCALL	mos_getkbmap
-	INC	HL
-	LD	A, L
-	NEG
-	LD	C, A
-	LD	A, 1
-	JP	M,inkey_false ; < -128 ?
-
-	LD	HL,BITLOOKUP
-	LD	DE,0
-	LD	A,C
-	AND	00000111b
-	LD	E,A
-	ADD	HL,DE
-	LD	B,(HL)
-
-	LD	A,C
-	AND	01111000b
-	RRCA
-	RRCA
-	RRCA
-	LD	E, A
-	ADD	IX,DE
-	LD	A,(IX+0)
-	AND	B
-	JR Z,inkey_false
-	LD A,1
-	RET
-inkey_false:
-	XOR A
 	RET
 
 ; set color RGB (b = c,e,l)
-set_color:
+scn_set_color:
 	PUSH IX
 	PUSH AF
 	PUSH BC
@@ -448,12 +428,12 @@ set_color:
 
 	PUSH BC
 	PUSH HL
-	LD HL,red_tint
+	LD HL,scn_red_tint
 	LD (HL),C
-	LD HL,green_tint
+	LD HL,scn_green_tint
 	LD (HL),E
 	POP DE
-	LD HL,blue_tint
+	LD HL,scn_blue_tint
 	LD (HL),E
 	
 	VDU 19
@@ -462,15 +442,15 @@ set_color:
 	VDU_A
 	VDU 255
 	
-	LD HL,red_tint
+	LD HL,scn_red_tint
 	LD A,(HL)
 	VDU_A
 
-	LD HL,green_tint
+	LD HL,scn_green_tint
 	LD A,(HL)
 	VDU_A
 
-	LD HL,blue_tint
+	LD HL,scn_blue_tint
 	LD A,(HL)
 	VDU_A	
 
@@ -481,91 +461,7 @@ set_color:
 	POP IX
 	ret
 
-; DE -> x
-; HL -> y
-; A -> color
-plot_pixel:
-	PUSH AF
-	PUSH BC
-	PUSH DE
-	PUSH HL
-
-	PUSH AF
-	VDU 18
-	VDU 0
-	POP AF
-	VDU_A
-
-	VDU 25
-	VDU 4
-
-	POP HL
-	POP DE
-	PUSH DE
-	PUSH HL
-	
-	VDU_DE
-
-	POP HL
-	POP DE
-	PUSH DE
-	PUSH HL
-	
-	VDU_HL
-
-	VDU 25
-	VDU 5
-
-	POP HL
-	POP DE
-	PUSH DE
-	PUSH HL
-	
-	VDU_DE
-
-	POP HL
-	POP DE
-	PUSH DE
-	PUSH HL
-	
-	VDU_HL
-
-	POP HL
-	POP DE
-	POP BC
-	POP AF
-
-	INC DE
-
-	PUSH HL
-	LD IX,width_value
-	LD L,(IX+0)
-	LD H,(IX+1)
-	CALL compare
-	POP HL
-	RET NZ
-
-	LD DE,$000000
-	INC HL
-	RET
-
-; DE -> x
-; HL -> y
-; B -> count of pixels to draw
-; A -> color
-draw_line:
-	PUSH AF
-	PUSH BC
-	PUSH DE
-	PUSH HL
-
-	POP HL
-	POP DE
-	POP BC
-	POP AF
-	RET
-
-compare:
+scn_compare:
 	LD A,H
 	CP D
 	RET NZ
@@ -574,7 +470,7 @@ compare:
 	CP E
 	RET
 
-compare24:
+scn_compare24:
 	PUSH HL
 	PUSH DE
 	PUSH IY
