@@ -20,11 +20,7 @@
 	INCLUDE "debug.inc"
 
 ; equ
-KEY_ESCAPE: EQU -113
 
-BITLOOKUP:
-	DB 01h,02h,04h,08h
-	DB 10h,20h,40h,80h
 
 ; start main program ============================
 start:
@@ -39,9 +35,9 @@ start:
 	VDU 27
 	VDU 16
 
-	; set mode 8
+	; set mode 136 (double buffered mode 8)
 	VDU 22
-	VDU 8
+	VDU 8;+128
 	
 	; set black paper color
 	VDU 17
@@ -64,14 +60,30 @@ start:
 	; set pen 15
 	VDU 17
 	VDU 15
+	
+	LD HL,palette1
+	CALL load_palette
+
+	LD HL,sprite1
+	LD A,0 ; sprite number
+	CALL init_sprite ; c -> frames count
+	
+	LD A,0
+	LD DE,152
+	LD HL,112
+	;CALL set_sprite_position
+	
+	LD A,0
+	;CALL show_sprite
 
 main_loop:
+	;CALL flip
 	JP main_loop
 
 exit_program:
 	; reset to mode 1
-	VDU 22
-	VDU 1
+	;VDU 22
+	;VDU 1
 	
 	; enable logical screen
 	VDU 23
@@ -97,3 +109,8 @@ exit_program:
 	RET
 	
 ; ===============================================
+palette1:
+.incbin "data/BountyBoy.pal"
+
+sprite1:
+.incbin "data/BountyBoy.spr"
