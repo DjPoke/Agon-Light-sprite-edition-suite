@@ -1,0 +1,463 @@
+PC     Output      Line
+040000             0001   ; sprdemo.asm
+040000             0002   ; (B.Vignoli)
+040000             0003   ;
+040000             0004   ; MIT Licence
+040000             0005   ; 2024
+040000             0006   
+040000             0007   .ASSUME ADL=1
+040000             0008   .ORG $040000
+040000             0009   
+040000 C3 C4 00 04 0010   	JP start
+040004             0011   
+040004             0012   ; MOS header
+040004 00 00 00 00 0013   .ALIGN 64
+       00 00 00 00 
+       00 00 00 00 
+       00 00 00 00 
+       00 00 00 00 
+       00 00 00 00 
+       00 00 00 00 
+       00 00 00 00 
+       00 00 00 00 
+       00 00 00 00 
+       00 00 00 00 
+       00 00 00 00 
+       00 00 00 00 
+       00 00 00 00 
+       00 00 00 00 
+040040 4D 4F 53 00 0014   .DB "MOS",0,1
+       01          
+040045             0015   
+040045             0016   .FILLBYTE 0
+040045             0017   
+040045             0018   	INCLUDE "mos_api.inc"
+040045             0001*  ;
+040045             0002*  ; Title:	AGON MOS - API for user projects
+040045             0003*  ; Author:	Dean Belfield
+040045             0004*  ; Created:	03/08/2022
+040045             0005*  ; Last Updated:	11/11/2023
+040045             0006*  ;
+040045             0007*  ; Modinfo:
+040045             0008*  ; 05/08/2022:	Added mos_feof
+040045             0009*  ; 09/08/2022:	Added system variables: cursorX, cursorY
+040045             0010*  ; 18/08/2022:	Added system variables: scrchar, scrpixel, audioChannel, audioSuccess, vpd_pflags
+040045             0011*  ; 05/09/2022:	Added mos_ren, vdp_pflag_mode
+040045             0012*  ; 24/09/2022:	Added mos_getError, mos_mkdir
+040045             0013*  ; 13/10/2022:	Added mos_oscli
+040045             0014*  ; 23/02/2023:	Added more sysvars, fixed typo in sysvar_audioSuccess, offsets for sysvar_scrCols, sysvar_scrRows
+040045             0015*  ; 04/03/2023:	Added sysvar_scrpixelIndex
+040045             0016*  ; 08/03/2023:	Renamed sysvar_keycode to sysvar_keyascii, added sysvar_vkeycode
+040045             0017*  ; 15/03/2023:	Added mos_copy, mos_getrtc, mos_setrtc, rtc, vdp_pflag_rtc
+040045             0018*  ; 21/03/2023:	Added mos_setintvector, sysvars for keyboard status, vdu codes for vdp
+040045             0019*  ; 22/03/2023:	The VDP commands are now indexed from 0x80
+040045             0020*  ; 29/03/2023:	Added mos_uopen, mos_uclose, mos_ugetc, mos_uputc
+040045             0021*  ; 13/04/2023:	Added FatFS file structures (FFOBJID, FIL, DIR, FILINFO)
+040045             0022*  ; 15/04/2023:	Added mos_getfil, mos_fread, mos_fwrite and mos_flseek
+040045             0023*  ; 19/05/2023:	Added sysvar_scrMode
+040045             0024*  ; 05/06/2023:	Added sysvar_rtcEnable
+040045             0025*  ; 03/08/2023:	Added mos_setkbvector
+040045             0026*  ; 10/08/2023:	Added mos_getkbmap
+040045             0027*  ; 11/11/2023:	Added mos_i2c_open, mos_i2c_close, mos_i2c_write and mos_i2c_read
+040045             0028*  
+040045             0029*  ; VDP control (VDU 23, 0, n)
+040045             0030*  ;
+040045             0031*  vdp_gp:			EQU 	80h
+040045             0032*  vdp_keycode:		EQU 	81h
+040045             0033*  vdp_cursor:		EQU	82h
+040045             0034*  vdp_scrchar:		EQU	83h
+040045             0035*  vdp_scrpixel:		EQU	84h
+040045             0036*  vdp_audio:		EQU	85h
+040045             0037*  vdp_mode:		EQU	86h
+040045             0038*  vdp_rtc:		EQU	87h
+040045             0039*  vdp_keystate:		EQU	88h
+040045             0040*  vdp_logicalcoords:	EQU	C0h
+040045             0041*  vdp_terminalmode:	EQU	FFh
+040045             0042*  
+040045             0043*  ; MOS high level functions
+040045             0044*  ;
+040045             0045*  mos_getkey:		EQU	00h
+040045             0046*  mos_load:		EQU	01h
+040045             0047*  mos_save:		EQU	02h
+040045             0048*  mos_cd:			EQU	03h
+040045             0049*  mos_dir:		EQU	04h
+040045             0050*  mos_del:		EQU	05h
+040045             0051*  mos_ren:		EQU	06h
+040045             0052*  mos_mkdir:		EQU	07h
+040045             0053*  mos_sysvars:		EQU	08h
+040045             0054*  mos_editline:		EQU	09h
+040045             0055*  mos_fopen:		EQU	0Ah
+040045             0056*  mos_fclose:		EQU	0Bh
+040045             0057*  mos_fgetc:		EQU	0Ch
+040045             0058*  mos_fputc:		EQU	0Dh
+040045             0059*  mos_feof:		EQU	0Eh
+040045             0060*  mos_getError:		EQU	0Fh
+040045             0061*  mos_oscli:		EQU	10h
+040045             0062*  mos_copy:		EQU	11h
+040045             0063*  mos_getrtc:		EQU	12h
+040045             0064*  mos_setrtc:		EQU	13h
+040045             0065*  mos_setintvector:	EQU	14h
+040045             0066*  mos_uopen:		EQU	15h
+040045             0067*  mos_uclose:		EQU	16h
+040045             0068*  mos_ugetc:		EQU	17h
+040045             0069*  mos_uputc:		EQU 	18h
+040045             0070*  mos_getfil:		EQU	19h
+040045             0071*  mos_fread:		EQU	1Ah
+040045             0072*  mos_fwrite:		EQU	1Bh
+040045             0073*  mos_flseek:		EQU	1Ch
+040045             0074*  mos_setkbvector:	EQU	1Dh
+040045             0075*  mos_getkbmap:		EQU	1Eh
+040045             0076*  mos_i2c_open:		EQU	1Fh
+040045             0077*  mos_i2c_close:		EQU	20h
+040045             0078*  mos_i2c_write:		EQU	21h
+040045             0079*  mos_i2c_read:		EQU	22h
+040045             0080*  
+040045             0081*  
+040045             0082*  ; FatFS file access functions
+040045             0083*  ;
+040045             0084*  ffs_fopen:		EQU	80h
+040045             0085*  ffs_fclose:		EQU	81h
+040045             0086*  ffs_fread:		EQU	82h
+040045             0087*  ffs_fwrite:		EQU	83h
+040045             0088*  ffs_flseek:		EQU	84h
+040045             0089*  ffs_ftruncate:		EQU	85h
+040045             0090*  ffs_fsync:		EQU	86h
+040045             0091*  ffs_fforward:		EQU	87h
+040045             0092*  ffs_fexpand:		EQU	88h
+040045             0093*  ffs_fgets:		EQU	89h
+040045             0094*  ffs_fputc:		EQU	8Ah
+040045             0095*  ffs_fputs:		EQU	8Bh
+040045             0096*  ffs_fprintf:		EQU	8Ch
+040045             0097*  ffs_ftell:		EQU	8Dh
+040045             0098*  ffs_feof:		EQU	8Eh
+040045             0099*  ffs_fsize:		EQU	8Fh
+040045             0100*  ffs_ferror:		EQU	90h
+040045             0101*  
+040045             0102*  ; FatFS directory access functions
+040045             0103*  ;
+040045             0104*  ffs_dopen:		EQU	91h
+040045             0105*  ffs_dclose:		EQU	92h
+040045             0106*  ffs_dread:		EQU	93h
+040045             0107*  ffs_dfindfirst:		EQU	94h
+040045             0108*  ffs_dfindnext:		EQU	95h
+040045             0109*  
+040045             0110*  ; FatFS file and directory management functions
+040045             0111*  ;
+040045             0112*  ffs_stat:		EQU	96h
+040045             0113*  ffs_unlink:		EQU	97h
+040045             0114*  ffs_rename:		EQU	98h
+040045             0115*  ffs_chmod:		EQU	99h
+040045             0116*  ffs_utime:		EQU	9Ah
+040045             0117*  ffs_mkdir:		EQU	9Bh
+040045             0118*  ffs_chdir:		EQU	9Ch
+040045             0119*  ffs_chdrive:		EQU	9Dh
+040045             0120*  ffs_getcwd:		EQU	9Eh
+040045             0121*  
+040045             0122*  ; FatFS volume management and system configuration functions
+040045             0123*  ;
+040045             0124*  ffs_mount:		EQU	9Fh
+040045             0125*  ffs_mkfs:		EQU	A0h
+040045             0126*  ffs_fdisk:		EQU	A1h
+040045             0127*  ffs_getfree:		EQU	A2h
+040045             0128*  ffs_getlabel:		EQU	A3h
+040045             0129*  ffs_setlabel:		EQU	A4h
+040045             0130*  ffs_setcp:		EQU	A5h
+040045             0131*  
+040045             0132*  ; File access modes
+040045             0133*  ;
+040045             0134*  fa_read:		EQU	01h
+040045             0135*  fa_write:		EQU	02h
+040045             0136*  fa_open_existing:	EQU	00h
+040045             0137*  fa_create_new:		EQU	04h
+040045             0138*  fa_create_always:	EQU	08h
+040045             0139*  fa_open_always:		EQU	10h
+040045             0140*  fa_open_append:		EQU	30h
+040045             0141*  
+040045             0142*  ; System variable indexes for api_sysvars
+040045             0143*  ; Index into _sysvars in globals.asm
+040045             0144*  ;
+040045             0145*  sysvar_time:		EQU	00h	; 4: Clock timer in centiseconds (incremented by 2 every VBLANK)
+040045             0146*  sysvar_vpd_pflags:	EQU	04h	; 1: Flags to indicate completion of VDP commands
+040045             0147*  sysvar_keyascii:	EQU	05h	; 1: ASCII keycode, or 0 if no key is pressed
+040045             0148*  sysvar_keymods:		EQU	06h	; 1: Keycode modifiers
+040045             0149*  sysvar_cursorX:		EQU	07h	; 1: Cursor X position
+040045             0150*  sysvar_cursorY:		EQU	08h	; 1: Cursor Y position
+040045             0151*  sysvar_scrchar:		EQU	09h	; 1: Character read from screen
+040045             0152*  sysvar_scrpixel:	EQU	0Ah	; 3: Pixel data read from screen (R,B,G)
+040045             0153*  sysvar_audioChannel:	EQU	0Dh	; 1: Audio channel
+040045             0154*  sysvar_audioSuccess:	EQU	0Eh	; 1: Audio channel note queued (0 = no, 1 = yes)
+040045             0155*  sysvar_scrWidth:	EQU	0Fh	; 2: Screen width in pixels
+040045             0156*  sysvar_scrHeight:	EQU	11h	; 2: Screen height in pixels
+040045             0157*  sysvar_scrCols:		EQU	13h	; 1: Screen columns in characters
+040045             0158*  sysvar_scrRows:		EQU	14h	; 1: Screen rows in characters
+040045             0159*  sysvar_scrColours:	EQU	15h	; 1: Number of colours displayed
+040045             0160*  sysvar_scrpixelIndex:	EQU	16h	; 1: Index of pixel data read from screen
+040045             0161*  sysvar_vkeycode:	EQU	17h	; 1: Virtual key code from FabGL
+040045             0162*  sysvar_vkeydown:	EQU	18h	; 1: Virtual key state from FabGL (0=up, 1=down)
+040045             0163*  sysvar_vkeycount:	EQU	19h	; 1: Incremented every time a key packet is received
+040045             0164*  sysvar_rtc:		EQU	1Ah	; 6: Real time clock data
+040045             0165*  sysvar_spare:		EQU	20h	; 2: Spare, previously used by rtc
+040045             0166*  sysvar_keydelay:	EQU	22h	; 2: Keyboard repeat delay
+040045             0167*  sysvar_keyrate:		EQU	24h	; 2: Keyboard repeat reat
+040045             0168*  sysvar_keyled:		EQU	26h	; 1: Keyboard LED status
+040045             0169*  sysvar_scrMode:		EQU	27h	; 1: Screen mode
+040045             0170*  sysvar_rtcEnable:	EQU	28h	; 1: RTC enable flag (0: disabled, 1: use ESP32 RTC)
+040045             0171*  sysvar_mouseX:		EQU	29h	; 2: Mouse X position
+040045             0172*  sysvar_mouseY:		EQU	2Bh	; 2: Mouse Y position
+040045             0173*  sysvar_mouseButtons:	EQU	2Dh	; 1: Mouse button state
+040045             0174*  sysvar_mouseWheel:	EQU	2Eh	; 1: Mouse wheel delta
+040045             0175*  sysvar_mouseXDelta:	EQU	2Fh	; 2: Mouse X delta
+040045             0176*  sysvar_mouseYDelta:	EQU	31h	; 2: Mouse Y delta
+040045             0177*  
+040045             0178*  ; Flags for the VPD protocol
+040045             0179*  ;
+040045             0180*  vdp_pflag_cursor:	EQU	00000001b
+040045             0181*  vdp_pflag_scrchar:	EQU	00000010b
+040045             0182*  vdp_pflag_point:	EQU	00000100b
+040045             0183*  vdp_pflag_audio:	EQU	00001000b
+040045             0184*  vdp_pflag_mode:		EQU	00010000b
+040045             0185*  vdp_pflag_rtc:		EQU	00100000b
+040045             0186*  vdp_pflag_mouse:	EQU	01000000b
+040045             0187*  vdp_pflag_buffered:	EQU	10000000b
+040045             0188*  
+040045             0189*  ;
+040045             0190*  ; Macro for calling the API
+040045             0191*  ; Parameters:
+040045             0192*  ; - function: One of the function numbers listed above
+040045             0193*  ;
+040045             0194*  	MACRO moscall function
+040045             0195*  		LD	A, function
+040045             0196*  		RST.LIS	08h
+040045             0197*  	ENDMACRO
+040045             0198*  
+040045             0199*  	MACRO vdu function
+040045             0200*  		LD	A, function
+040045             0201*  		RST.LIS	10h
+040045             0202*  	ENDMACRO
+040045             0203*  
+040045             0204*  	MACRO vdu_a
+040045             0205*  		RST.LIS	10h
+040045             0206*  	ENDMACRO
+040045             0207*  
+040045             0208*  	MACRO VDU_DE
+040045             0209*  		LD A,E
+040045             0210*  		RST.LIS	10h
+040045             0211*  		LD A,D
+040045             0212*  		RST.LIS	10h
+040045             0213*  	ENDMACRO
+040045             0214*  
+040045             0215*  	MACRO VDU_HL
+040045             0216*  		LD A,L
+040045             0217*  		RST.LIS	10h
+040045             0218*  		LD A,H
+040045             0219*  		RST.LIS	10h
+040045             0220*  	ENDMACRO
+040045             0019   	INCLUDE "sprites.inc"
+040045             0020   	INCLUDE "debug.inc"
+040045             0001*  ;=================
+040045             0002*  ; Debug functions
+040045             0003*  ;=================
+040045             0004*  ; A = byte to debug
+040045             0005*  debug_byte:
+040045 F5          0006*  	PUSH AF
+040046 C5          0007*  	PUSH BC
+040047 D5          0008*  	PUSH DE
+040048 E5          0009*  	PUSH HL
+040049 21 00 00 00 0010*  	LD HL,$000000
+04004D 6F          0011*  	LD L,A
+04004E 11 8A 00 04 0012*  	LD DE,debug_text
+040052 D5          0013*  	PUSH DE
+040053 CD 90 00 04 0014*  	CALL num2dec
+040057 E1          0015*  	POP HL
+040058 23          0016*  	INC HL
+040059 23          0017*  	INC HL
+04005A 01 03 00 00 0018*  	LD BC,3
+04005E 3E 00       0019*  	LD A,0
+040060 49 DF       0020*  	RST.LIS $18
+040062 E1          0021*  	POP HL
+040063 D1          0022*  	POP DE
+040064 C1          0023*  	POP BC
+040065 F1          0024*  	POP AF
+040066 C9          0025*  	RET
+040067             0026*  
+040067             0027*  ; HL = word to debug
+040067             0028*  debug_word:
+040067 F5          0029*  	PUSH AF
+040068 C5          0030*  	PUSH BC
+040069 D5          0031*  	PUSH DE
+04006A E5          0032*  	PUSH HL
+04006B 11 00 00 00 0033*  	LD DE,$000000 ; remove HLU
+04006F 5D          0034*  	LD E,L
+040070 54          0035*  	LD D,H
+040071 D5          0036*  	PUSH DE
+040072 E1          0037*  	POP HL
+040073 11 8A 00 04 0038*  	LD DE,debug_text
+040077 D5          0039*  	PUSH DE
+040078 CD 90 00 04 0040*  	CALL num2dec
+04007C E1          0041*  	POP HL
+04007D 01 05 00 00 0042*  	LD BC,5
+040081 3E 00       0043*  	LD A,0
+040083 49 DF       0044*  	RST.LIS $18
+040085 E1          0045*  	POP HL
+040086 D1          0046*  	POP DE
+040087 C1          0047*  	POP BC
+040088 F1          0048*  	POP AF
+040089 C9          0049*  	RET
+04008A             0050*  
+04008A             0051*  debug_text:
+04008A             0052*  	DS 6
+040090             0053*  
+040090             0054*  ; 16 bits number to string
+040090             0055*  num2dec:
+040090 01 F0 D8 FF 0056*  	LD BC,-10000
+040094 CD B1 00 04 0057*  	CALL num1
+040098 01 18 FC FF 0058*  	LD BC,-1000
+04009C CD B1 00 04 0059*  	CALL num1
+0400A0 01 9C FF FF 0060*  	LD BC,-100
+0400A4 CD B1 00 04 0061*  	CALL num1
+0400A8 01 F6 FF FF 0062*  	LD BC,-10
+0400AC CD B1 00 04 0063*  	CALL num1
+0400B0 48          0064*  	LD C,B
+0400B1             0065*  
+0400B1 3E 2F       0066*  num1: LD A,'0'-1
+0400B3 3C          0067*  num2: INC A
+0400B4 09          0068*  	ADD HL,BC
+0400B5 38 FC       0069*  	JR C,num2
+0400B7 ED 42       0070*  	SBC HL,BC
+0400B9             0071*  
+0400B9 12          0072*  	LD (DE),A
+0400BA 13          0073*  	INC DE
+0400BB C9          0074*  	RET
+0400BC             0021   
+0400BC             0022   ; equ
+0400BC             0023   KEY_ESCAPE: EQU -113
+0400BC             0024   
+0400BC             0025   BITLOOKUP:
+0400BC 01 02 04 08 0026   	DB 01h,02h,04h,08h
+0400C0 10 20 40 80 0027   	DB 10h,20h,40h,80h
+0400C4             0028   
+0400C4             0029   ; start main program ============================
+0400C4             0030   start:
+0400C4 F5          0031   	PUSH AF
+0400C5 C5          0032   	PUSH BC
+0400C6 D5          0033   	PUSH DE
+0400C7 DD E5       0034   	PUSH IX
+0400C9 FD E5       0035   	PUSH IY
+0400CB             0036   
+0400CB             0037   	; reset sprites and bitmaps data
+0400CB             0038   	VDU 23
+0400CB 3E 17       0001M  		LD	A, function
+0400CD 49 D7       0002M  		RST.LIS	10h
+0400CF             0039   	VDU 27
+0400CF 3E 1B       0001M  		LD	A, function
+0400D1 49 D7       0002M  		RST.LIS	10h
+0400D3             0040   	VDU 16
+0400D3 3E 10       0001M  		LD	A, function
+0400D5 49 D7       0002M  		RST.LIS	10h
+0400D7             0041   
+0400D7             0042   	; set mode 8
+0400D7             0043   	VDU 22
+0400D7 3E 16       0001M  		LD	A, function
+0400D9 49 D7       0002M  		RST.LIS	10h
+0400DB             0044   	VDU 8
+0400DB 3E 08       0001M  		LD	A, function
+0400DD 49 D7       0002M  		RST.LIS	10h
+0400DF             0045   
+0400DF             0046   	; set black paper color
+0400DF             0047   	VDU 17
+0400DF 3E 11       0001M  		LD	A, function
+0400E1 49 D7       0002M  		RST.LIS	10h
+0400E3             0048   	VDU 128
+0400E3 3E 80       0001M  		LD	A, function
+0400E5 49 D7       0002M  		RST.LIS	10h
+0400E7             0049   
+0400E7             0050   	; clear screen
+0400E7             0051   	VDU 12
+0400E7 3E 0C       0001M  		LD	A, function
+0400E9 49 D7       0002M  		RST.LIS	10h
+0400EB             0052   
+0400EB             0053   	; hide cursor
+0400EB             0054   	VDU 23
+0400EB 3E 17       0001M  		LD	A, function
+0400ED 49 D7       0002M  		RST.LIS	10h
+0400EF             0055   	VDU 1
+0400EF 3E 01       0001M  		LD	A, function
+0400F1 49 D7       0002M  		RST.LIS	10h
+0400F3             0056   	VDU 0
+0400F3 3E 00       0001M  		LD	A, function
+0400F5 49 D7       0002M  		RST.LIS	10h
+0400F7             0057   
+0400F7             0058   	; disable logical screen
+0400F7             0059   	VDU 23
+0400F7 3E 17       0001M  		LD	A, function
+0400F9 49 D7       0002M  		RST.LIS	10h
+0400FB             0060   	VDU 0
+0400FB 3E 00       0001M  		LD	A, function
+0400FD 49 D7       0002M  		RST.LIS	10h
+0400FF             0061   	VDU $C0
+0400FF 3E C0       0001M  		LD	A, function
+040101 49 D7       0002M  		RST.LIS	10h
+040103             0062   	VDU 0
+040103 3E 00       0001M  		LD	A, function
+040105 49 D7       0002M  		RST.LIS	10h
+040107             0063   
+040107             0064   	; set pen 15
+040107             0065   	VDU 17
+040107 3E 11       0001M  		LD	A, function
+040109 49 D7       0002M  		RST.LIS	10h
+04010B             0066   	VDU 15
+04010B 3E 0F       0001M  		LD	A, function
+04010D 49 D7       0002M  		RST.LIS	10h
+04010F             0067   
+04010F             0068   main_loop:
+04010F C3 0F 01 04 0069   	JP main_loop
+040113             0070   
+040113             0071   exit_program:
+040113             0072   	; reset to mode 1
+040113             0073   	VDU 22
+040113 3E 16       0001M  		LD	A, function
+040115 49 D7       0002M  		RST.LIS	10h
+040117             0074   	VDU 1
+040117 3E 01       0001M  		LD	A, function
+040119 49 D7       0002M  		RST.LIS	10h
+04011B             0075   
+04011B             0076   	; enable logical screen
+04011B             0077   	VDU 23
+04011B 3E 17       0001M  		LD	A, function
+04011D 49 D7       0002M  		RST.LIS	10h
+04011F             0078   	VDU 0
+04011F 3E 00       0001M  		LD	A, function
+040121 49 D7       0002M  		RST.LIS	10h
+040123             0079   	VDU $C0
+040123 3E C0       0001M  		LD	A, function
+040125 49 D7       0002M  		RST.LIS	10h
+040127             0080   	VDU 1
+040127 3E 01       0001M  		LD	A, function
+040129 49 D7       0002M  		RST.LIS	10h
+04012B             0081   
+04012B             0082   	; position the texte cursor at home
+04012B             0083   	VDU 30
+04012B 3E 1E       0001M  		LD	A, function
+04012D 49 D7       0002M  		RST.LIS	10h
+04012F             0084   
+04012F             0085   	; show cursor
+04012F             0086   	VDU 23
+04012F 3E 17       0001M  		LD	A, function
+040131 49 D7       0002M  		RST.LIS	10h
+040133             0087   	VDU 1
+040133 3E 01       0001M  		LD	A, function
+040135 49 D7       0002M  		RST.LIS	10h
+040137             0088   	VDU 1
+040137 3E 01       0001M  		LD	A, function
+040139 49 D7       0002M  		RST.LIS	10h
+04013B             0089   
+04013B FD E1       0090   	POP IY
+04013D DD E1       0091   	POP IX
+04013F D1          0092   	POP DE
+040140 C1          0093   	POP BC
+040141 F1          0094   	POP AF
+040142 21 00 00 00 0095   	LD HL,0
+040146             0096   
+040146 C9          0097   	RET
+040147             0098   
+040147             0099   ; ===============================================

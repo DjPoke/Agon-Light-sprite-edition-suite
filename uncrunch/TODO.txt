@@ -1,4 +1,0 @@
-TODO:
-=====
-
-- Debug the crunched loader
