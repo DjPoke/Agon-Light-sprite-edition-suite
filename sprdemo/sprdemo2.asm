@@ -1,4 +1,4 @@
-; sprdemo1.asm
+; sprdemo2.asm
 ; (B.Vignoli)
 ;
 ; MIT Licence
@@ -16,6 +16,7 @@
 .FILLBYTE 0
 
 	INCLUDE "mos_api.inc"
+	INCLUDE "load_screen.inc"
 	INCLUDE "sprites.inc"
 
 ; equ
@@ -34,14 +35,17 @@ start:
 	VDU 27
 	VDU 16
 
-	; set mode 8
+	; set mode 136 (like mode 8, but double buffered)
 	VDU 22
-	VDU 8
+	VDU 136
 	
 	; set black paper color
 	VDU 17
 	VDU 128
 	
+	; clear screen
+	VDU 12
+
 	; hide cursor
 	VDU 23
 	VDU 1
@@ -57,8 +61,21 @@ start:
 	VDU 17
 	VDU 15
 	
-	LD HL,palette1
-	CALL spr_load_palette
+	; load crunched screen
+	ld ix,screen
+	ld iy,screen_buffer
+	CALL scn_load
+
+	; get sprite palette from crunched screen
+	LD HL,scn_palette_rgb
+	LD DE,spr_real_palette_buffer
+	LD BC,$000000
+	LD IX,scn_colors_count
+	LD A,(IX+0)
+	LD C,A
+	LD B,3
+	MLT BC
+	LDIR
 
 	LD HL,sprite1
 	LD A,0 ; sprite number
@@ -79,15 +96,17 @@ start:
 	POP DE
 
 main_loop:
+	CALL scn_redraw
 	PUSH DE
 	LD A,0
 	LD HL,112
 	CALL spr_set_position
 	CALL spr_update
-	CALL spr_sleep50
+	CALL spr_flip
+	LD BC,4000
+	CALL spr_sleep
 	CALL spr_set_next_frame
 	POP DE
-	INC DE
 	INC DE
 	LD HL,320
 	OR A
@@ -125,7 +144,11 @@ exit_program:
 	
 ; ===============================================
 palette1:
-.incbin "data/BountyBoy.pal"
+.incbin "data/X-Space.pal"
 
 sprite1:
-.incbin "data/BountyBoy.spr"
+.incbin "data/X-Space.spr"
+
+screen:
+.incbin "data/X-Space.scn"
+screen_buffer:

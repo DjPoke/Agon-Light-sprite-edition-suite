@@ -14,79 +14,162 @@ MAX_PAL_DATA_LO: equ 44h
 
 ;===================================
 ; data
-header:
+spr_header:
 	db "JASC-PAL",13,10
 	db "0100",13,10
 
-color_buffer:
+spr_color_buffer:
 	db 0,0,0
 
-real_palette_buffer:
+spr_real_palette_buffer:
 	ds 192
 
-palette_buffer:
+spr_palette_buffer:
 	ds MAX_PAL_DATA + 1
 
-temp_chars_buffer:
+spr_temp_chars_buffer:
 	db 0,0,0,0
 
-frames_count:
+spr_frames_count:
 	db 0
 
-bitmap_size:
+spr_bitmap_size:
 	db 0
 
-start_bitmap:
+spr_start_bitmap:
 	db 0
 
-current_bitmap:
+spr_current_bitmap:
 	db 0
 
-current_sprite:
+spr_current_sprite:
 	db 0
 
 ; real number of colors
-new_colors_count:
+spr_new_colors_count:
 	db 0
 
-colors_count:
+spr_colors_count:
 	db 0
 	
-red_tint:
+spr_red_tint:
 	db 0
 
-green_tint:
+spr_green_tint:
 	db 0
 
-blue_tint:
+spr_blue_tint:
 	db 0
 	
 ; file error message
-file_error:
+spr_file_error:
 	db "File error !             ",0
 
 ; header error message
-header_error:
+spr_header_error:
 	db "Header error !           ",0
 
 ; data error message
-data_error:
+spr_data_error:
 	db "Data error !             ",0
 
+spr_rgb_palette:
+	db $00,$00,$00
+	db $AA,$00,$00
+	db $00,$AA,$00
+	db $AA,$AA,$00
+	db $00,$00,$AA
+	db $AA,$00,$AA
+	db $00,$AA,$AA
+	db $AA,$AA,$AA
+
+	db $55,$55,$55
+	db $FF,$00,$00
+	db $00,$FF,$00
+	db $FF,$FF,$00
+	db $00,$00,$FF
+	db $FF,$00,$FF
+	db $00,$FF,$FF
+	db $FF,$FF,$FF
+
+	db $00,$00,$55
+	db $00,$55,$00
+	db $00,$55,$55
+	db $00,$55,$AA
+	db $00,$55,$FF
+	db $00,$AA,$55
+	db $00,$AA,$FF
+	db $00,$FF,$55
+
+	db $00,$FF,$AA
+	db $55,$00,$00
+	db $55,$00,$55
+	db $55,$00,$AA
+	db $55,$00,$FF
+	db $55,$55,$00
+	db $55,$55,$AA
+	db $55,$55,$FF
+
+	db $55,$AA,$00
+	db $55,$AA,$55
+	db $55,$AA,$AA
+	db $55,$AA,$FF
+	db $55,$FF,$00
+	db $55,$FF,$55
+	db $55,$FF,$AA
+	db $55,$FF,$FF
+
+	db $AA,$00,$55
+	db $AA,$00,$FF
+	db $AA,$55,$00
+	db $AA,$55,$55
+	db $AA,$55,$AA
+	db $AA,$55,$FF
+	db $AA,$AA,$55
+	db $AA,$AA,$FF
+
+	db $AA,$FF,$00
+	db $AA,$FF,$55
+	db $AA,$FF,$AA
+	db $AA,$FF,$FF
+	db $FF,$00,$55
+	db $FF,$00,$AA
+	db $FF,$55,$00
+	db $FF,$55,$55
+
+	db $FF,$55,$AA
+	db $FF,$55,$FF
+	db $FF,$AA,$00
+	db $FF,$AA,$55
+	db $FF,$AA,$AA
+	db $FF,$AA,$FF
+	db $FF,$FF,$55
+	db $FF,$FF,$AA
+
 ;===================================
+; set default palette as the one
+; to use for sprites
+; (don't forget me when needed !)
+spr_set_default_palette:
+	LD HL,spr_rgb_palette
+	LD DE,spr_real_palette_buffer
+	LD BC,64*3
+	LDIR
+	RET
+	
 ; load a palette
 ; the right mode must
 ; be set before
 ; hl -> pointer to palette
-load_palette:
+spr_load_palette:
 	; compare loaded header with needed header
-	ld de,header
+	ld de,spr_header
 	ld b,HEADER_BUFFER_SIZE
 
-lp_compare:
+spr_lp_compare:
 	ld a,(de)
 	cp (hl)
-	jp nz,lp_header_error
+	jp nz,spr_lp_header_error
 	
 	inc de
 	inc hl
@@ -94,29 +177,29 @@ lp_compare:
 	
 	ld a,b
 	cp 0
-	jp nz,lp_compare
+	jp nz,spr_lp_compare
 
 	push hl
 	pop ix
 	
 	; prepare to read the number of colors
-	ld hl,color_buffer
+	ld hl,spr_color_buffer
 	
-lp_getcount:
+spr_lp_getcount:
 	; read a string for colors count
 	ld a,(ix+0)
 	inc ix
 	
 	cp 48 ; < 0
-	jr c,lpgc_next
+	jr c,spr_lpgc_next
 	cp 58 ; > 9
-	jp nc,lp_data_error
+	jp nc,spr_lp_data_error
 
 	ld (hl),a
 	inc hl
-	jr lp_getcount
+	jr spr_lp_getcount
 
-lpgc_next:
+spr_lpgc_next:
 	push af
 	ld a,13
 	ld (hl),a ; store CR
@@ -124,7 +207,7 @@ lpgc_next:
 
 	; test CR
 	cp 13
-	jp nz,lp_close_error
+	jp nz,spr_lp_close_error
 
 	; read LF
 	ld a,(ix+0)
@@ -132,13 +215,13 @@ lpgc_next:
 
 	; test LF
 	cp 10
-	jp nz,lp_close_error
+	jp nz,spr_lp_close_error
 
 	; prepare to read color strings
 	ld de,#000000
-	ld hl,palette_buffer
+	ld hl,spr_palette_buffer
 	
-lp_load_pal_loop:
+spr_lp_load_pal_loop:
 	; read colors data
 	ld a,(ix+0)
 	inc ix
@@ -148,29 +231,29 @@ lp_load_pal_loop:
 	inc de ; count chars
 	ld a,d
 	cp MAX_PAL_DATA_HI
-	jp c,lp_load_pal_loop
+	jp c,spr_lp_load_pal_loop
 	ld a,e
 	cp MAX_PAL_DATA_LO
-	jp c,lp_load_pal_loop
-	jp lp_read_palette_data
+	jp c,spr_lp_load_pal_loop
+	jp spr_lp_read_palette_data
 
-lp_close_error:
+spr_lp_close_error:
 	push bc
 	
 	; read error
-	call print_file_error
+	call spr_print_file_error
 	
 	pop bc
-	jp lp_exit
+	jp spr_lp_exit
 
-lp_header_error:
+spr_lp_header_error:
 	; write error
-	call print_header_error
-	jp lp_exit
+	call spr_print_header_error
+	jp spr_lp_exit
 	
-lp_read_palette_data:
+spr_lp_read_palette_data:
 	; read the number of colors we have in the palette
-	ld hl,color_buffer
+	ld hl,spr_color_buffer
 	ld a,(hl)
 	ld b,a
 	inc hl
@@ -180,37 +263,37 @@ lp_read_palette_data:
 	; first is a char number ?
 	ld a,b
 	cp 48
-	jp c,lp_data_error
+	jp c,spr_lp_data_error
 	cp 58
-	jp nc,lp_data_error
+	jp nc,spr_lp_data_error
 
 	ld a,c
 	cp 13
-	jp nz,lp_two_numbers
+	jp nz,spr_lp_two_numbers
 	
 ; only one number
 	ld a,b
 	sub 48
 	
-	ld hl,new_colors_count
+	ld hl,spr_new_colors_count
 	ld (hl),a
 	
 	cp 0
-	jp z,lp_data_error
+	jp z,spr_lp_data_error
 	cp 3
-	jp c,lp_two_colors
+	jp c,spr_lp_two_colors
 	cp 5
-	jp c,lp_four_colors
+	jp c,spr_lp_four_colors
 	
-	jp lp_sixteen_colors
+	jp spr_lp_sixteen_colors
 
 ; two numbers
-lp_two_numbers:
+spr_lp_two_numbers:
 	ld a,c
 	cp 48
-	jp c,lp_data_error
+	jp c,spr_lp_data_error
 	cp 58
-	jp nc,lp_data_error
+	jp nc,spr_lp_data_error
 	
 	ld a,b
 	sub 48
@@ -220,141 +303,141 @@ lp_two_numbers:
 	mlt bc
 	add a,c
 	
-	ld hl,new_colors_count
+	ld hl,spr_new_colors_count
 	ld (hl),a
 
 	cp 10
-	jp c,lp_data_error
+	jp c,spr_lp_data_error
 	cp 17
-	jp c,lp_sixteen_colors
+	jp c,spr_lp_sixteen_colors
 	cp 65
-	jp c,lp_sixty_four_colors
+	jp c,spr_lp_sixty_four_colors
 	
-	jp lp_data_error
+	jp spr_lp_data_error
 
-lp_two_colors:
-	ld hl,colors_count
+spr_lp_two_colors:
+	ld hl,spr_colors_count
 	ld a,2
 	ld (hl),a
 
-lptc_done:
-	ld hl,new_colors_count
+spr_lptc_done:
+	ld hl,spr_new_colors_count
 	ld a,(hl) ; real number of coulours
 	ld b,0 ; start wit color 0
-	ld hl,palette_buffer ; palette will be got here
-	jp lp_read_colors
+	ld hl,spr_palette_buffer ; palette will be got here
+	jp spr_lp_read_colors
 
-lp_four_colors:
-	ld hl,colors_count
+spr_lp_four_colors:
+	ld hl,spr_colors_count
 	ld a,4
 	ld (hl),a
 	
-lpfc_done:
-	ld hl,new_colors_count
+spr_lpfc_done:
+	ld hl,spr_new_colors_count
 	ld a,(hl) ; real number of coulours
 	ld b,0 ; start wit color 0
-	ld hl,palette_buffer ; palette will be got here
-	jp lp_read_colors
+	ld hl,spr_palette_buffer ; palette will be got here
+	jp spr_lp_read_colors
 
-lp_sixteen_colors:
-	ld hl,colors_count
+spr_lp_sixteen_colors:
+	ld hl,spr_colors_count
 	ld a,16
 	ld (hl),a
 
-lpsc_done:
-	ld hl,new_colors_count
+spr_lpsc_done:
+	ld hl,spr_new_colors_count
 	ld a,(hl) ; real number of coulours
 	ld b,0 ; start wit color 0
-	ld hl,palette_buffer ; palette will be got here	
-	jp lp_read_colors
+	ld hl,spr_palette_buffer ; palette will be got here	
+	jp spr_lp_read_colors
 
-lp_sixty_four_colors:
-	ld hl,colors_count
+spr_lp_sixty_four_colors:
+	ld hl,spr_colors_count
 	ld a,64
 	ld (hl),a
 
-lpsfc_done:
-	ld hl,new_colors_count
+spr_lpsfc_done:
+	ld hl,spr_new_colors_count
 	ld a,(hl) ; real number of coulours
 	ld b,0 ; start wit color 0
-	ld hl,palette_buffer ; palette will be taken here
-	jp lp_read_colors
+	ld hl,spr_palette_buffer ; palette will be taken here
+	jp spr_lp_read_colors
 
-lp_read_colors:
+spr_lp_read_colors:
 	push af
 	
-	call lp_read_tint ; read red tint
+	call spr_lp_read_tint ; read red tint
 
 	push hl
-	ld hl,red_tint
+	ld hl,spr_red_tint
 	ld (hl),a	
 	pop hl
 
-	call lp_read_tint ; read green tint
+	call spr_lp_read_tint ; read green tint
 
 	push hl
-	ld hl,green_tint
+	ld hl,spr_green_tint
 	ld (hl),a
 	pop hl
 
-	call lp_read_tint ; read blue tint
+	call spr_lp_read_tint ; read blue tint
 
 	push hl
-	ld hl,blue_tint
+	ld hl,spr_blue_tint
 	ld (hl),a
 	pop hl
 	
-	call lp_set_tint
+	call spr_lp_set_tint
 	
 	pop af
 	
 	inc b ; increment number of colors
 	dec a ; decrement real number of colors
 	cp 0
-	jp nz,lp_read_colors
+	jp nz,spr_lp_read_colors
 	
-lp_exit:
+spr_lp_exit:
 	ret
 
-lp_data_error:
-	jp print_data_error
+spr_lp_data_error:
+	jp spr_print_data_error
 
-lp_file_error:
-	jp print_file_error
+spr_lp_file_error:
+	jp spr_print_file_error
 
-lp_read_tint:
+spr_lp_read_tint:
 	ld c,0 ; number of chars readen for a single string number
-	ld de,temp_chars_buffer ; temp buffer for a string number
+	ld de,spr_temp_chars_buffer ; temp buffer for a string number
 
 	; read next string number
-	call lprt_read_chars
+	call spr_lprt_read_chars
 
 	ld a,c
 	cp 0 ; no numbers
-	jp z,lprt_wrong_exit
+	jp z,spr_lprt_wrong_exit
 	cp 4 ; too many numbers
-	jp nc,lprt_wrong_exit
+	jp nc,spr_lprt_wrong_exit
 
 	cp 3
-	jr z,lprt_three_int
+	jr z,spr_lprt_three_int
 
 	cp 2
-	jr z,lprt_two_int
+	jr z,spr_lprt_two_int
 	
 	; one int only
-	ld de,temp_chars_buffer
+	ld de,spr_temp_chars_buffer
 	ld a,(de)
 	sub 48
 	ret
 	
-lprt_wrong_exit:
+spr_lprt_wrong_exit:
 	xor a
 	ret
 
 ; two int
-lprt_two_int:
+spr_lprt_two_int:
 	push bc
-	ld de,temp_chars_buffer
+	ld de,spr_temp_chars_buffer
 	ld a,(de)
 	sub 48
 	push de
@@ -372,9 +455,9 @@ lprt_two_int:
 	ret
 	
 ; three int
-lprt_three_int:
+spr_lprt_three_int:
 	push bc
-	ld de,temp_chars_buffer
+	ld de,spr_temp_chars_buffer
 	ld a,(de)
 	sub 48
 	push de
@@ -402,7 +485,7 @@ lprt_three_int:
 	pop bc
 	ret
 
-lprt_read_chars:
+spr_lprt_read_chars:
 	ld a,13
 	ld (de),a ; store eol as next default temp char
 	
@@ -412,7 +495,7 @@ lprt_read_chars:
 	cp 32
 	ret z ; ret if space
 	cp 13
-	jr z,lprt_read_chars ; loop if CR
+	jr z,spr_lprt_read_chars ; loop if CR
 	cp 10
 	ret z ; ret if LF
 	cp 48
@@ -424,10 +507,10 @@ lprt_read_chars:
 	ld (de),a
 	inc de
 	inc c
-	jp lprt_read_chars
+	jp spr_lprt_read_chars
 
 ; set tint
-lp_set_tint:
+spr_lp_set_tint:
 	push af
 	push bc
 	push de
@@ -440,21 +523,21 @@ lp_set_tint:
 	push hl
 	push de
 	push bc	
-	ld hl,real_palette_buffer
+	ld hl,spr_real_palette_buffer
 	ld de,$000000
 	ld e,b
 	ld d,3
 	mlt de
 	add hl,de
-	ld de,red_tint
+	ld de,spr_red_tint
 	ld a,(de)
 	ld (hl),a ; red
 	inc hl
-	ld de,green_tint
+	ld de,spr_green_tint
 	ld a,(de)
 	ld (hl),a ; green
 	inc hl
-	ld de,blue_tint
+	ld de,spr_blue_tint
 	ld a,(de)
 	ld (hl),a ; blue
 	pop bc
@@ -467,15 +550,15 @@ lp_set_tint:
 	vdu_a
 	vdu 255
 	
-	ld hl,red_tint
+	ld hl,spr_red_tint
 	ld a,(hl)
 	vdu_a
 
-	ld hl,green_tint
+	ld hl,spr_green_tint
 	ld a,(hl)
 	vdu_a
 
-	ld hl,blue_tint
+	ld hl,spr_blue_tint
 	ld a,(hl)
 	vdu_a
 
@@ -489,15 +572,15 @@ lp_set_tint:
 ; hl -> address of sprite data
 ; a -> current sprite number
 ; c -> return number of frames
-init_sprite:
+spr_init:
 	PUSH HL
 	POP IX
 
-	LD HL,frames_count
+	LD HL,spr_frames_count
 	LD C,(IX+1) ; get frames count
 	ld (HL),C
 	
-	LD HL,bitmap_size
+	LD HL,spr_bitmap_size
 	LD B,(IX+2) ; get bitmap size
 	ld (HL),B
 	
@@ -505,15 +588,15 @@ init_sprite:
 	INC IX
 	INC IX
 
-	LD HL,current_sprite
+	LD HL,spr_current_sprite
 	LD (HL),A
 	
-	LD HL,current_bitmap
-	LD DE,start_bitmap
+	LD HL,spr_current_bitmap
+	LD DE,spr_start_bitmap
 	LD A,(HL)
 	LD (DE),A
 	
-is_big_loop:
+spri_big_loop:
 	PUSH BC
 	PUSH IX
 	
@@ -521,7 +604,7 @@ is_big_loop:
 	VDU 23
 	VDU 27
 	VDU 0
-	LD HL,current_bitmap
+	LD HL,spr_current_bitmap
 	LD A,(HL)
 	PUSH HL
 	VDU_A
@@ -530,7 +613,7 @@ is_big_loop:
 	LD (HL),A
 	
 	; width & height -> de, hl
-	LD HL,bitmap_size
+	LD HL,spr_bitmap_size
 	LD DE,$000000
 	LD E,(HL)
 	PUSH DE
@@ -554,12 +637,12 @@ is_big_loop:
 	POP IX
 	POP BC
 	
-is_loop:
+spri_loop:
 	LD A,(IX+0)
 	PUSH IX
 	PUSH DE
 	PUSH BC
-	CALL send_RGBA_to_VDP
+	CALL spr_send_RGBA_to_VDP
 	POP BC
 	POP DE
 	POP IX
@@ -568,17 +651,17 @@ is_loop:
 	LD A,D
 	OR E
 	CP 0
-	JR NZ,is_loop
+	JR NZ,spri_loop
 
 	DEC C
 	LD A,C
 	CP 0
-	JR Z,is_add_frames_to_sprite
-	JP is_big_loop
+	JR Z,spri_add_frames_to_sprite
+	JP spri_big_loop
 
-is_add_frames_to_sprite:
+spri_add_frames_to_sprite:
 	; prepare current sprite
-	LD HL,current_sprite
+	LD HL,spr_current_sprite
 	LD A,(HL)
 	
 	; select sprite
@@ -594,12 +677,12 @@ is_add_frames_to_sprite:
 	VDU 27
 	VDU 5
 
-	LD HL,frames_count
+	LD HL,spr_frames_count
 	LD C,(HL) ; c -> frames count
-	LD HL,start_bitmap
+	LD HL,spr_start_bitmap
 	LD A,(HL) ; a -> start bitmap
 
-isafts_loop:
+spriafts_loop:
 	PUSH BC
 	PUSH AF
 	VDU 23
@@ -616,15 +699,15 @@ isafts_loop:
 	LD A,C
 	CP 0
 	LD A,B ;restore A
-	JP NZ,isafts_loop
+	JP NZ,spriafts_loop
 
-	LD HL,frames_count
+	LD HL,spr_frames_count
 	LD C,(HL)
 	RET
 
 ; activate sprites
 ; a -> sprites count
-activate_sprites:
+spr_activate:
 	PUSH AF
 	VDU 23
 	VDU 27
@@ -638,7 +721,7 @@ activate_sprites:
 ; a -> sprite number
 ; de -> x
 ; hl -> y
-set_sprite_position:
+spr_set_position:
 	PUSH HL
 	PUSH DE
 	PUSH AF
@@ -658,7 +741,7 @@ set_sprite_position:
 	RET
 
 ; a -> sprite number
-show_sprite:
+spr_show:
 	PUSH AF
 	VDU 23
 	VDU 27
@@ -672,9 +755,7 @@ show_sprite:
 	RET
 
 ; a -> sprite number
-hide_sprite:
-	PUSH HL
-	PUSH DE
+spr_hide:
 	PUSH AF
 	VDU 23
 	VDU 27
@@ -688,30 +769,33 @@ hide_sprite:
 	RET
 
 ; flip buffer
-flip:
+spr_update:
 	VDU 23
 	VDU 27
 	VDU 15
-	
+	ret
+
+; flip buffer
+spr_flip:
 	VDU 23
 	VDU 0
 	VDU $C3
 	ret
 
-set_sprite_next_frame:
+spr_set_next_frame:
 	VDU 23
 	VDU 27
 	VDU 8	
 	RET
 
-set_sprite_previous_frame:
+spr_set_previous_frame:
 	VDU 23
 	VDU 27
 	VDU 9
 	RET
 	
 ; print 'header error'
-print_header_error:
+spr_print_header_error:
 	vdu 7	
 	
 	; locate x,y
@@ -720,16 +804,15 @@ print_header_error:
 	vdu 0
 
 	; print text
-	ld hl,header_error
+	ld hl,spr_header_error
 	ld bc,0
 	xor a
 	rst.lis $18
 
-	call input_key
-	ret
+	jp spr_input_key
 
 ; print 'file error'
-print_file_error:
+spr_print_file_error:
 	vdu 7
 	
 	; locate x,y
@@ -738,16 +821,15 @@ print_file_error:
 	vdu 0
 
 	; print text
-	ld hl,file_error
+	ld hl,spr_file_error
 	ld bc,0
 	xor a
 	rst.lis $18
 
-	call input_key
-	ret
+	jp spr_input_key
 
 ; print 'data error'
-print_data_error:
+spr_print_data_error:
 	vdu 7	
 	
 	; locate x,y
@@ -756,28 +838,20 @@ print_data_error:
 	vdu 0
 
 	; print text
-	ld hl,data_error
+	ld hl,spr_data_error
 	ld bc,0
 	xor a
 	rst.lis $18
 
-	call input_key
-	ret
-
-; get an ascii key value
-input_key:
-	push bc
-	moscall mos_getkey
-	pop bc
-	ret
+	jp spr_input_key
 
 ; send RGB tint into the VDP
 ; a -> color
 ; hl -> real palette
-send_RGBA_to_VDP:
+spr_send_RGBA_to_VDP:
 	PUSH AF
 
-	LD HL,real_palette_buffer
+	LD HL,spr_real_palette_buffer
 	LD DE,$000000
 	LD E,A
 	LD D,3
@@ -804,33 +878,33 @@ send_RGBA_to_VDP:
 	POP AF
 	
 	CP 0 ; color = 0 ?
-	JR NZ,srtv_not_transparent
+	JR NZ,spr_srtv_not_transparent
 
 	LD A,0 ; alpha = 0
-	JR srtv_write
+	JR spr_srtv_write
 
-srtv_not_transparent:
+spr_srtv_not_transparent:
 	LD A,255 ; alpha = 255
 	
-srtv_write:
+spr_srtv_write:
 	VDU_A
 	RET
 
 ; sleep 10 ms (approximatively)
-sleep10:
+spr_sleep10:
 	LD BC,10000
-	CALL sleep
+	CALL spr_sleep
 	RET
 
 ; sleep 50 ms (approximatively)
-sleep50:
+spr_sleep50:
 	LD BC,50000
-	CALL sleep
+	CALL spr_sleep
 	RET
 
 ; sleep microseconds
 ; input : BC*HL
-sleep:
+spr_sleep:
 	PUSH BC
 	NOP ; 18 NOPS
 	NOP ; for 18 MHtz
@@ -855,5 +929,13 @@ sleep:
 	LD A,B
 	OR C
 	CP 0
-	JR NZ,sleep
+	JR NZ,spr_sleep
 	RET
+
+; get an ascii key value
+; (needed in case of file errors)
+spr_input_key:
+	push bc
+	moscall mos_getkey
+	pop bc
+	ret
