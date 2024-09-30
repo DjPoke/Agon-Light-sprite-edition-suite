@@ -68,22 +68,41 @@ start:
 	LD A,0 ; sprite number
 	CALL init_sprite ; c -> frames count
 	
-	LD A,0
-	LD DE,152
-	LD HL,112
-	;CALL set_sprite_position
+	LD A,1 ; 1 sprite activated
+	CALL activate_sprites
 	
 	LD A,0
-	;CALL show_sprite
+	LD DE,0
+	PUSH DE
+	LD HL,112
+	CALL set_sprite_position
+	
+	LD A,0
+	CALL show_sprite
+
+	POP DE
 
 main_loop:
-	;CALL flip
-	JP main_loop
+	PUSH DE
+	LD A,0
+	LD HL,112
+	CALL set_sprite_position
+	CALL flip
+	CALL sleep50
+	CALL set_sprite_next_frame
+	POP DE
+	INC DE
+	INC DE
+	LD HL,320
+	OR A
+	SBC HL,DE
+	ADD HL,DE
+	JP NZ,main_loop
 
 exit_program:
 	; reset to mode 1
-	;VDU 22
-	;VDU 1
+	VDU 22
+	VDU 1
 	
 	; enable logical screen
 	VDU 23

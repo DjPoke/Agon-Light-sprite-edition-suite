@@ -617,17 +617,22 @@ isafts_loop:
 	CP 0
 	LD A,B ;restore A
 	JP NZ,isafts_loop
-	
-	VDU 23
-	VDU 27
-	VDU 7
-	LD HL,start_bitmap
-	LD A,(HL) ; a -> start bitmap
-	VDU_A
-	
+
 	LD HL,frames_count
 	LD C,(HL)
 	RET
+
+; activate sprites
+; a -> sprites count
+activate_sprites:
+	PUSH AF
+	VDU 23
+	VDU 27
+	VDU 7
+	POP AF
+	VDU_A
+	RET
+
 
 ;  a sprite
 ; a -> sprite number
@@ -654,8 +659,6 @@ set_sprite_position:
 
 ; a -> sprite number
 show_sprite:
-	PUSH HL
-	PUSH DE
 	PUSH AF
 	VDU 23
 	VDU 27
@@ -694,6 +697,18 @@ flip:
 	VDU 0
 	VDU $C3
 	ret
+
+set_sprite_next_frame:
+	VDU 23
+	VDU 27
+	VDU 8	
+	RET
+
+set_sprite_previous_frame:
+	VDU 23
+	VDU 27
+	VDU 9
+	RET
 	
 ; print 'header error'
 print_header_error:
@@ -801,8 +816,20 @@ srtv_write:
 	VDU_A
 	RET
 
+; sleep 10 ms (approximatively)
+sleep10:
+	LD BC,10000
+	CALL sleep
+	RET
+
+; sleep 50 ms (approximatively)
+sleep50:
+	LD BC,50000
+	CALL sleep
+	RET
+
 ; sleep microseconds
-; input : BC
+; input : BC*HL
 sleep:
 	PUSH BC
 	NOP ; 18 NOPS
