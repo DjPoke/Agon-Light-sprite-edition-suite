@@ -14,10 +14,10 @@ easily be compiled for Mac (intel, M1/M2), Linux and Raspberry Pi.
 
 tileset structure:
 =================
-colors count : byte
-tiles count  : byte
-tiles size	 : byte
-data         : tile after tile width x height bytes of colors (color numbers from the palette)
+colors count 				 : byte
+tiles count in a row 		 : byte
+tiles size (width or height) : byte
+data         				 : tile after tile width x height bytes of colors (color numbers from the palette)
 
 
 DjPoke
