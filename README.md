@@ -15,6 +15,9 @@ Current work:
 * spredit is now working again, and palettes will be improved.
 * png2scn and png2spr have been improved.
 * scnviewer and sprviewer are new.
+* added a screen loader in ez80 assembler.
+* added a sprites loader in ez80 assembler.
+* added png2tileset.
 
 All Purebasic 6.1.2 programs can be freely compiled and adapted for Raspberry Pi, MacOS or Linux.
 
