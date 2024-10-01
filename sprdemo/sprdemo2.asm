@@ -101,11 +101,11 @@ main_loop:
 	LD A,0
 	LD HL,112
 	CALL spr_set_position
+	CALL spr_set_next_frame
 	CALL spr_update
 	CALL spr_flip
 	LD BC,4000
 	CALL spr_sleep
-	CALL spr_set_next_frame
 	POP DE
 	INC DE
 	LD HL,320

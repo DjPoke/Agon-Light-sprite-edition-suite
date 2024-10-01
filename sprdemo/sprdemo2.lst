@@ -8,7 +8,7 @@ PC     Output      Line
 040000             0007   .ASSUME ADL=1
 040000             0008   .ORG $040000
 040000             0009   
-040000 C3 09 0E 04 0010   	JP start
+040000 C3 EA 0D 04 0010   	JP start
 040004             0011   
 040004             0012   ; MOS header
 040004 00 00 00 00 0013   .ALIGN 64
@@ -885,11 +885,11 @@ PC     Output      Line
 04041E             0006*  
 04041E             0007*  ;===================================
 04041E             0008*  ; equ's
-04041E             0009*  HEADER_BUFFER_SIZE:	equ 16
+04041E             0009*  SPR_HEADER_BUFFER_SIZE:	equ 16
 04041E             0010*  
-04041E             0011*  MAX_PAL_DATA: equ 836 ; max palette chars
-04041E             0012*  MAX_PAL_DATA_HI: equ 03h
-04041E             0013*  MAX_PAL_DATA_LO: equ 44h
+04041E             0011*  SPR_MAX_PAL_DATA: equ 836 ; max palette chars
+04041E             0012*  SPR_MAX_PAL_DATA_HI: equ 03h
+04041E             0013*  SPR_MAX_PAL_DATA_LO: equ 44h
 04041E             0014*  
 04041E             0015*  ;===================================
 04041E             0016*  ; data
@@ -907,7 +907,7 @@ PC     Output      Line
 040431             0025*  	ds 192
 0404F1             0026*  
 0404F1             0027*  spr_palette_buffer:
-0404F1             0028*  	ds MAX_PAL_DATA + 1
+0404F1             0028*  	ds SPR_MAX_PAL_DATA + 1
 040836             0029*  
 040836             0030*  spr_temp_chars_buffer:
 040836 00 00 00 00 0031*  	db 0,0,0,0
@@ -1064,7 +1064,7 @@ PC     Output      Line
 040961             0164*  spr_load_palette:
 040961             0165*  	; compare loaded header with needed header
 040961 11 1E 04 04 0166*  	ld de,spr_header
-040965 06 10       0167*  	ld b,HEADER_BUFFER_SIZE
+040965 06 10       0167*  	ld b,SPR_HEADER_BUFFER_SIZE
 040967             0168*  
 040967             0169*  spr_lp_compare:
 040967 1A          0170*  	ld a,(de)
@@ -1130,10 +1130,10 @@ PC     Output      Line
 0409B5 23          0230*  	inc hl
 0409B6 13          0231*  	inc de ; count chars
 0409B7 7A          0232*  	ld a,d
-0409B8 FE 03       0233*  	cp MAX_PAL_DATA_HI
+0409B8 FE 03       0233*  	cp SPR_MAX_PAL_DATA_HI
 0409BA DA AF 09 04 0234*  	jp c,spr_lp_load_pal_loop
 0409BE 7B          0235*  	ld a,e
-0409BF FE 44       0236*  	cp MAX_PAL_DATA_LO
+0409BF FE 44       0236*  	cp SPR_MAX_PAL_DATA_LO
 0409C1 DA AF 09 04 0237*  	jp c,spr_lp_load_pal_loop
 0409C5 C3 DB 09 04 0238*  	jp spr_lp_read_palette_data
 0409C9             0239*  
@@ -1141,14 +1141,14 @@ PC     Output      Line
 0409C9 C5          0241*  	push bc
 0409CA             0242*  
 0409CA             0243*  	; read error
-0409CA CD 68 0D 04 0244*  	call spr_print_file_error
+0409CA CD 49 0D 04 0244*  	call spr_print_file_error
 0409CE             0245*  
 0409CE C1          0246*  	pop bc
 0409CF C3 D2 0A 04 0247*  	jp spr_lp_exit
 0409D3             0248*  
 0409D3             0249*  spr_lp_header_error:
 0409D3             0250*  	; write error
-0409D3 CD 49 0D 04 0251*  	call spr_print_header_error
+0409D3 CD 2A 0D 04 0251*  	call spr_print_header_error
 0409D7 C3 D2 0A 04 0252*  	jp spr_lp_exit
 0409DB             0253*  
 0409DB             0254*  spr_lp_read_palette_data:
@@ -1300,10 +1300,10 @@ PC     Output      Line
 040AD2 C9          0400*  	ret
 040AD3             0401*  
 040AD3             0402*  spr_lp_data_error:
-040AD3 C3 87 0D 04 0403*  	jp spr_print_data_error
+040AD3 C3 68 0D 04 0403*  	jp spr_print_data_error
 040AD7             0404*  
 040AD7             0405*  spr_lp_file_error:
-040AD7 C3 68 0D 04 0406*  	jp spr_print_file_error
+040AD7 C3 49 0D 04 0406*  	jp spr_print_file_error
 040ADB             0407*  
 040ADB             0408*  spr_lp_read_tint:
 040ADB 0E 00       0409*  	ld c,0 ; number of chars readen for a single string number
@@ -1571,7 +1571,7 @@ PC     Output      Line
 040C2E DD E5       0642*  	PUSH IX
 040C30 D5          0643*  	PUSH DE
 040C31 C5          0644*  	PUSH BC
-040C32 CD A6 0D 04 0645*  	CALL spr_send_RGBA_to_VDP
+040C32 CD 87 0D 04 0645*  	CALL spr_send_RGBA_to_VDP
 040C36 C1          0646*  	POP BC
 040C37 D1          0647*  	POP DE
 040C38 DD E1       0648*  	POP IX
@@ -1672,514 +1672,488 @@ PC     Output      Line
 040CAB 49 D7       0001*M 		RST.LIS	10h
 040CAD C9          0717*  	RET
 040CAE             0718*  
-040CAE             0719*  
-040CAE             0720*  ;  a sprite
-040CAE             0721*  ; a -> sprite number
-040CAE             0722*  ; de -> x
-040CAE             0723*  ; hl -> y
-040CAE             0724*  spr_set_position:
-040CAE E5          0725*  	PUSH HL
-040CAF D5          0726*  	PUSH DE
-040CB0 F5          0727*  	PUSH AF
-040CB1             0728*  	VDU 23
-040CB1 3E 17       0001*M 		LD	A, function
-040CB3 49 D7       0002*M 		RST.LIS	10h
-040CB5             0729*  	VDU 27
-040CB5 3E 1B       0001*M 		LD	A, function
-040CB7 49 D7       0002*M 		RST.LIS	10h
-040CB9             0730*  	VDU 4
-040CB9 3E 04       0001*M 		LD	A, function
-040CBB 49 D7       0002*M 		RST.LIS	10h
-040CBD F1          0731*  	POP AF
-040CBE             0732*  	VDU_A
-040CBE 49 D7       0001*M 		RST.LIS	10h
-040CC0             0733*  
-040CC0             0734*  	VDU 23
-040CC0 3E 17       0001*M 		LD	A, function
-040CC2 49 D7       0002*M 		RST.LIS	10h
-040CC4             0735*  	VDU 27
-040CC4 3E 1B       0001*M 		LD	A, function
-040CC6 49 D7       0002*M 		RST.LIS	10h
-040CC8             0736*  	VDU 13
-040CC8 3E 0D       0001*M 		LD	A, function
-040CCA 49 D7       0002*M 		RST.LIS	10h
-040CCC D1          0737*  	POP DE
-040CCD             0738*  	VDU_DE
-040CCD 7B          0001*M 		LD A,E
-040CCE 49 D7       0002*M 		RST.LIS	10h
-040CD0 7A          0003*M 		LD A,D
-040CD1 49 D7       0004*M 		RST.LIS	10h
-040CD3 E1          0739*  	POP HL
-040CD4             0740*  	VDU_HL
-040CD4 7D          0001*M 		LD A,L
-040CD5 49 D7       0002*M 		RST.LIS	10h
-040CD7 7C          0003*M 		LD A,H
-040CD8 49 D7       0004*M 		RST.LIS	10h
-040CDA C9          0741*  	RET
-040CDB             0742*  
-040CDB             0743*  ; a -> sprite number
-040CDB             0744*  spr_show:
-040CDB F5          0745*  	PUSH AF
-040CDC             0746*  	VDU 23
+040CAE             0719*  ; select sprite a
+040CAE             0720*  spr_select:
+040CAE F5          0721*  	PUSH AF
+040CAF             0722*  	VDU 23
+040CAF 3E 17       0001*M 		LD	A, function
+040CB1 49 D7       0002*M 		RST.LIS	10h
+040CB3             0723*  	VDU 27
+040CB3 3E 1B       0001*M 		LD	A, function
+040CB5 49 D7       0002*M 		RST.LIS	10h
+040CB7             0724*  	VDU 4
+040CB7 3E 04       0001*M 		LD	A, function
+040CB9 49 D7       0002*M 		RST.LIS	10h
+040CBB F1          0725*  	POP AF
+040CBC             0726*  	VDU_A
+040CBC 49 D7       0001*M 		RST.LIS	10h
+040CBE C9          0727*  	RET
+040CBF             0728*  
+040CBF             0729*  ;  a sprite
+040CBF             0730*  ; a -> sprite number
+040CBF             0731*  ; de -> x
+040CBF             0732*  ; hl -> y
+040CBF             0733*  spr_set_position:
+040CBF E5          0734*  	PUSH HL
+040CC0 D5          0735*  	PUSH DE
+040CC1             0736*  	VDU 23
+040CC1 3E 17       0001*M 		LD	A, function
+040CC3 49 D7       0002*M 		RST.LIS	10h
+040CC5             0737*  	VDU 27
+040CC5 3E 1B       0001*M 		LD	A, function
+040CC7 49 D7       0002*M 		RST.LIS	10h
+040CC9             0738*  	VDU 13
+040CC9 3E 0D       0001*M 		LD	A, function
+040CCB 49 D7       0002*M 		RST.LIS	10h
+040CCD D1          0739*  	POP DE
+040CCE             0740*  	VDU_DE
+040CCE 7B          0001*M 		LD A,E
+040CCF 49 D7       0002*M 		RST.LIS	10h
+040CD1 7A          0003*M 		LD A,D
+040CD2 49 D7       0004*M 		RST.LIS	10h
+040CD4 E1          0741*  	POP HL
+040CD5             0742*  	VDU_HL
+040CD5 7D          0001*M 		LD A,L
+040CD6 49 D7       0002*M 		RST.LIS	10h
+040CD8 7C          0003*M 		LD A,H
+040CD9 49 D7       0004*M 		RST.LIS	10h
+040CDB C9          0743*  	RET
+040CDC             0744*  
+040CDC             0745*  ; a -> sprite number
+040CDC             0746*  spr_show:
+040CDC             0747*  	VDU 23
 040CDC 3E 17       0001*M 		LD	A, function
 040CDE 49 D7       0002*M 		RST.LIS	10h
-040CE0             0747*  	VDU 27
+040CE0             0748*  	VDU 27
 040CE0 3E 1B       0001*M 		LD	A, function
 040CE2 49 D7       0002*M 		RST.LIS	10h
-040CE4             0748*  	VDU 4
-040CE4 3E 04       0001*M 		LD	A, function
+040CE4             0749*  	VDU 11
+040CE4 3E 0B       0001*M 		LD	A, function
 040CE6 49 D7       0002*M 		RST.LIS	10h
-040CE8 F1          0749*  	POP AF
-040CE9             0750*  	VDU_A
-040CE9 49 D7       0001*M 		RST.LIS	10h
-040CEB             0751*  
-040CEB             0752*  	VDU 23
-040CEB 3E 17       0001*M 		LD	A, function
-040CED 49 D7       0002*M 		RST.LIS	10h
-040CEF             0753*  	VDU 27
-040CEF 3E 1B       0001*M 		LD	A, function
-040CF1 49 D7       0002*M 		RST.LIS	10h
-040CF3             0754*  	VDU 11
-040CF3 3E 0B       0001*M 		LD	A, function
-040CF5 49 D7       0002*M 		RST.LIS	10h
-040CF7 C9          0755*  	RET
-040CF8             0756*  
-040CF8             0757*  ; a -> sprite number
-040CF8             0758*  spr_hide:
-040CF8 F5          0759*  	PUSH AF
-040CF9             0760*  	VDU 23
-040CF9 3E 17       0001*M 		LD	A, function
-040CFB 49 D7       0002*M 		RST.LIS	10h
-040CFD             0761*  	VDU 27
-040CFD 3E 1B       0001*M 		LD	A, function
-040CFF 49 D7       0002*M 		RST.LIS	10h
-040D01             0762*  	VDU 4
-040D01 3E 04       0001*M 		LD	A, function
-040D03 49 D7       0002*M 		RST.LIS	10h
-040D05 F1          0763*  	POP AF
-040D06             0764*  	VDU_A
-040D06 49 D7       0001*M 		RST.LIS	10h
-040D08             0765*  
-040D08             0766*  	VDU 23
-040D08 3E 17       0001*M 		LD	A, function
-040D0A 49 D7       0002*M 		RST.LIS	10h
-040D0C             0767*  	VDU 27
-040D0C 3E 1B       0001*M 		LD	A, function
-040D0E 49 D7       0002*M 		RST.LIS	10h
-040D10             0768*  	VDU 12
-040D10 3E 0C       0001*M 		LD	A, function
+040CE8 C9          0750*  	RET
+040CE9             0751*  
+040CE9             0752*  ; a -> sprite number
+040CE9             0753*  spr_hide:
+040CE9             0754*  	VDU 23
+040CE9 3E 17       0001*M 		LD	A, function
+040CEB 49 D7       0002*M 		RST.LIS	10h
+040CED             0755*  	VDU 27
+040CED 3E 1B       0001*M 		LD	A, function
+040CEF 49 D7       0002*M 		RST.LIS	10h
+040CF1             0756*  	VDU 12
+040CF1 3E 0C       0001*M 		LD	A, function
+040CF3 49 D7       0002*M 		RST.LIS	10h
+040CF5 C9          0757*  	RET
+040CF6             0758*  
+040CF6             0759*  ; flip buffer
+040CF6             0760*  spr_update:
+040CF6             0761*  	VDU 23
+040CF6 3E 17       0001*M 		LD	A, function
+040CF8 49 D7       0002*M 		RST.LIS	10h
+040CFA             0762*  	VDU 27
+040CFA 3E 1B       0001*M 		LD	A, function
+040CFC 49 D7       0002*M 		RST.LIS	10h
+040CFE             0763*  	VDU 15
+040CFE 3E 0F       0001*M 		LD	A, function
+040D00 49 D7       0002*M 		RST.LIS	10h
+040D02 C9          0764*  	ret
+040D03             0765*  
+040D03             0766*  ; flip buffer
+040D03             0767*  spr_flip:
+040D03             0768*  	VDU 23
+040D03 3E 17       0001*M 		LD	A, function
+040D05 49 D7       0002*M 		RST.LIS	10h
+040D07             0769*  	VDU 0
+040D07 3E 00       0001*M 		LD	A, function
+040D09 49 D7       0002*M 		RST.LIS	10h
+040D0B             0770*  	VDU $C3
+040D0B 3E C3       0001*M 		LD	A, function
+040D0D 49 D7       0002*M 		RST.LIS	10h
+040D0F C9          0771*  	ret
+040D10             0772*  
+040D10             0773*  spr_set_next_frame:
+040D10             0774*  	VDU 23
+040D10 3E 17       0001*M 		LD	A, function
 040D12 49 D7       0002*M 		RST.LIS	10h
-040D14 C9          0769*  	RET
-040D15             0770*  
-040D15             0771*  ; flip buffer
-040D15             0772*  spr_update:
-040D15             0773*  	VDU 23
-040D15 3E 17       0001*M 		LD	A, function
-040D17 49 D7       0002*M 		RST.LIS	10h
-040D19             0774*  	VDU 27
-040D19 3E 1B       0001*M 		LD	A, function
-040D1B 49 D7       0002*M 		RST.LIS	10h
-040D1D             0775*  	VDU 15
-040D1D 3E 0F       0001*M 		LD	A, function
+040D14             0775*  	VDU 27
+040D14 3E 1B       0001*M 		LD	A, function
+040D16 49 D7       0002*M 		RST.LIS	10h
+040D18             0776*  	VDU 8
+040D18 3E 08       0001*M 		LD	A, function
+040D1A 49 D7       0002*M 		RST.LIS	10h
+040D1C C9          0777*  	RET
+040D1D             0778*  
+040D1D             0779*  spr_set_previous_frame:
+040D1D             0780*  	VDU 23
+040D1D 3E 17       0001*M 		LD	A, function
 040D1F 49 D7       0002*M 		RST.LIS	10h
-040D21 C9          0776*  	ret
-040D22             0777*  
-040D22             0778*  ; flip buffer
-040D22             0779*  spr_flip:
-040D22             0780*  	VDU 23
-040D22 3E 17       0001*M 		LD	A, function
-040D24 49 D7       0002*M 		RST.LIS	10h
-040D26             0781*  	VDU 0
-040D26 3E 00       0001*M 		LD	A, function
-040D28 49 D7       0002*M 		RST.LIS	10h
-040D2A             0782*  	VDU $C3
-040D2A 3E C3       0001*M 		LD	A, function
+040D21             0781*  	VDU 27
+040D21 3E 1B       0001*M 		LD	A, function
+040D23 49 D7       0002*M 		RST.LIS	10h
+040D25             0782*  	VDU 9
+040D25 3E 09       0001*M 		LD	A, function
+040D27 49 D7       0002*M 		RST.LIS	10h
+040D29 C9          0783*  	RET
+040D2A             0784*  
+040D2A             0785*  ; print 'header error'
+040D2A             0786*  spr_print_header_error:
+040D2A             0787*  	vdu 7
+040D2A 3E 07       0001*M 		LD	A, function
 040D2C 49 D7       0002*M 		RST.LIS	10h
-040D2E C9          0783*  	ret
-040D2F             0784*  
-040D2F             0785*  spr_set_next_frame:
-040D2F             0786*  	VDU 23
-040D2F 3E 17       0001*M 		LD	A, function
-040D31 49 D7       0002*M 		RST.LIS	10h
-040D33             0787*  	VDU 27
-040D33 3E 1B       0001*M 		LD	A, function
-040D35 49 D7       0002*M 		RST.LIS	10h
-040D37             0788*  	VDU 8
-040D37 3E 08       0001*M 		LD	A, function
-040D39 49 D7       0002*M 		RST.LIS	10h
-040D3B C9          0789*  	RET
-040D3C             0790*  
-040D3C             0791*  spr_set_previous_frame:
-040D3C             0792*  	VDU 23
-040D3C 3E 17       0001*M 		LD	A, function
-040D3E 49 D7       0002*M 		RST.LIS	10h
-040D40             0793*  	VDU 27
-040D40 3E 1B       0001*M 		LD	A, function
-040D42 49 D7       0002*M 		RST.LIS	10h
-040D44             0794*  	VDU 9
-040D44 3E 09       0001*M 		LD	A, function
-040D46 49 D7       0002*M 		RST.LIS	10h
-040D48 C9          0795*  	RET
-040D49             0796*  
-040D49             0797*  ; print 'header error'
-040D49             0798*  spr_print_header_error:
-040D49             0799*  	vdu 7
+040D2E             0788*  
+040D2E             0789*  	; locate x,y
+040D2E             0790*  	vdu 31
+040D2E 3E 1F       0001*M 		LD	A, function
+040D30 49 D7       0002*M 		RST.LIS	10h
+040D32             0791*  	vdu 0
+040D32 3E 00       0001*M 		LD	A, function
+040D34 49 D7       0002*M 		RST.LIS	10h
+040D36             0792*  	vdu 0
+040D36 3E 00       0001*M 		LD	A, function
+040D38 49 D7       0002*M 		RST.LIS	10h
+040D3A             0793*  
+040D3A             0794*  	; print text
+040D3A 21 5E 08 04 0795*  	ld hl,spr_header_error
+040D3E 01 00 00 00 0796*  	ld bc,0
+040D42 AF          0797*  	xor a
+040D43 49 DF       0798*  	rst.lis $18
+040D45             0799*  
+040D45 C3 E3 0D 04 0800*  	jp spr_input_key
+040D49             0801*  
+040D49             0802*  ; print 'file error'
+040D49             0803*  spr_print_file_error:
+040D49             0804*  	vdu 7
 040D49 3E 07       0001*M 		LD	A, function
 040D4B 49 D7       0002*M 		RST.LIS	10h
-040D4D             0800*  
-040D4D             0801*  	; locate x,y
-040D4D             0802*  	vdu 31
+040D4D             0805*  
+040D4D             0806*  	; locate x,y
+040D4D             0807*  	vdu 31
 040D4D 3E 1F       0001*M 		LD	A, function
 040D4F 49 D7       0002*M 		RST.LIS	10h
-040D51             0803*  	vdu 0
+040D51             0808*  	vdu 0
 040D51 3E 00       0001*M 		LD	A, function
 040D53 49 D7       0002*M 		RST.LIS	10h
-040D55             0804*  	vdu 0
+040D55             0809*  	vdu 0
 040D55 3E 00       0001*M 		LD	A, function
 040D57 49 D7       0002*M 		RST.LIS	10h
-040D59             0805*  
-040D59             0806*  	; print text
-040D59 21 5E 08 04 0807*  	ld hl,spr_header_error
-040D5D 01 00 00 00 0808*  	ld bc,0
-040D61 AF          0809*  	xor a
-040D62 49 DF       0810*  	rst.lis $18
-040D64             0811*  
-040D64 C3 02 0E 04 0812*  	jp spr_input_key
-040D68             0813*  
-040D68             0814*  ; print 'file error'
-040D68             0815*  spr_print_file_error:
-040D68             0816*  	vdu 7
+040D59             0810*  
+040D59             0811*  	; print text
+040D59 21 44 08 04 0812*  	ld hl,spr_file_error
+040D5D 01 00 00 00 0813*  	ld bc,0
+040D61 AF          0814*  	xor a
+040D62 49 DF       0815*  	rst.lis $18
+040D64             0816*  
+040D64 C3 E3 0D 04 0817*  	jp spr_input_key
+040D68             0818*  
+040D68             0819*  ; print 'data error'
+040D68             0820*  spr_print_data_error:
+040D68             0821*  	vdu 7
 040D68 3E 07       0001*M 		LD	A, function
 040D6A 49 D7       0002*M 		RST.LIS	10h
-040D6C             0817*  
-040D6C             0818*  	; locate x,y
-040D6C             0819*  	vdu 31
+040D6C             0822*  
+040D6C             0823*  	; locate x,y
+040D6C             0824*  	vdu 31
 040D6C 3E 1F       0001*M 		LD	A, function
 040D6E 49 D7       0002*M 		RST.LIS	10h
-040D70             0820*  	vdu 0
+040D70             0825*  	vdu 0
 040D70 3E 00       0001*M 		LD	A, function
 040D72 49 D7       0002*M 		RST.LIS	10h
-040D74             0821*  	vdu 0
+040D74             0826*  	vdu 0
 040D74 3E 00       0001*M 		LD	A, function
 040D76 49 D7       0002*M 		RST.LIS	10h
-040D78             0822*  
-040D78             0823*  	; print text
-040D78 21 44 08 04 0824*  	ld hl,spr_file_error
-040D7C 01 00 00 00 0825*  	ld bc,0
-040D80 AF          0826*  	xor a
-040D81 49 DF       0827*  	rst.lis $18
-040D83             0828*  
-040D83 C3 02 0E 04 0829*  	jp spr_input_key
-040D87             0830*  
-040D87             0831*  ; print 'data error'
-040D87             0832*  spr_print_data_error:
-040D87             0833*  	vdu 7
-040D87 3E 07       0001*M 		LD	A, function
-040D89 49 D7       0002*M 		RST.LIS	10h
-040D8B             0834*  
-040D8B             0835*  	; locate x,y
-040D8B             0836*  	vdu 31
-040D8B 3E 1F       0001*M 		LD	A, function
-040D8D 49 D7       0002*M 		RST.LIS	10h
-040D8F             0837*  	vdu 0
-040D8F 3E 00       0001*M 		LD	A, function
-040D91 49 D7       0002*M 		RST.LIS	10h
-040D93             0838*  	vdu 0
-040D93 3E 00       0001*M 		LD	A, function
-040D95 49 D7       0002*M 		RST.LIS	10h
-040D97             0839*  
-040D97             0840*  	; print text
-040D97 21 78 08 04 0841*  	ld hl,spr_data_error
-040D9B 01 00 00 00 0842*  	ld bc,0
-040D9F AF          0843*  	xor a
-040DA0 49 DF       0844*  	rst.lis $18
-040DA2             0845*  
-040DA2 C3 02 0E 04 0846*  	jp spr_input_key
-040DA6             0847*  
-040DA6             0848*  ; send RGB tint into the VDP
-040DA6             0849*  ; a -> color
-040DA6             0850*  ; hl -> real palette
-040DA6             0851*  spr_send_RGBA_to_VDP:
-040DA6 F5          0852*  	PUSH AF
-040DA7             0853*  
-040DA7 21 31 04 04 0854*  	LD HL,spr_real_palette_buffer
-040DAB 11 00 00 00 0855*  	LD DE,$000000
-040DAF 5F          0856*  	LD E,A
-040DB0 16 03       0857*  	LD D,3
-040DB2 ED 5C       0858*  	MLT DE
-040DB4 19          0859*  	ADD HL,DE
-040DB5             0860*  
-040DB5 E5          0861*  	PUSH HL
-040DB6 7E          0862*  	LD A,(HL)
-040DB7             0863*  	VDU_A
-040DB7 49 D7       0001*M 		RST.LIS	10h
-040DB9 E1          0864*  	POP HL
-040DBA             0865*  
-040DBA 23          0866*  	INC HL
-040DBB E5          0867*  	PUSH HL
-040DBC 7E          0868*  	LD A,(HL)
-040DBD             0869*  	VDU_A
-040DBD 49 D7       0001*M 		RST.LIS	10h
-040DBF E1          0870*  	POP HL
-040DC0             0871*  
-040DC0 23          0872*  	INC HL
-040DC1 E5          0873*  	PUSH HL
-040DC2 7E          0874*  	LD A,(HL)
-040DC3             0875*  	VDU_A
-040DC3 49 D7       0001*M 		RST.LIS	10h
-040DC5 E1          0876*  	POP HL
-040DC6             0877*  
-040DC6 F1          0878*  	POP AF
-040DC7             0879*  
-040DC7 FE 00       0880*  	CP 0 ; color = 0 ?
-040DC9 20 04       0881*  	JR NZ,spr_srtv_not_transparent
-040DCB             0882*  
-040DCB 3E 00       0883*  	LD A,0 ; alpha = 0
-040DCD 18 02       0884*  	JR spr_srtv_write
-040DCF             0885*  
-040DCF             0886*  spr_srtv_not_transparent:
-040DCF 3E FF       0887*  	LD A,255 ; alpha = 255
-040DD1             0888*  
-040DD1             0889*  spr_srtv_write:
-040DD1             0890*  	VDU_A
-040DD1 49 D7       0001*M 		RST.LIS	10h
-040DD3 C9          0891*  	RET
-040DD4             0892*  
-040DD4             0893*  ; sleep 10 ms (approximatively)
-040DD4             0894*  spr_sleep10:
-040DD4 01 10 27 00 0895*  	LD BC,10000
-040DD8 CD E6 0D 04 0896*  	CALL spr_sleep
-040DDC C9          0897*  	RET
-040DDD             0898*  
-040DDD             0899*  ; sleep 50 ms (approximatively)
-040DDD             0900*  spr_sleep50:
-040DDD 01 50 C3 00 0901*  	LD BC,50000
-040DE1 CD E6 0D 04 0902*  	CALL spr_sleep
-040DE5 C9          0903*  	RET
-040DE6             0904*  
-040DE6             0905*  ; sleep microseconds
-040DE6             0906*  ; input : BC*HL
-040DE6             0907*  spr_sleep:
-040DE6 C5          0908*  	PUSH BC
-040DE7 00          0909*  	NOP ; 18 NOPS
-040DE8 00          0910*  	NOP ; for 18 MHtz
-040DE9 00          0911*  	NOP
-040DEA 00          0912*  	NOP
-040DEB 00          0913*  	NOP
-040DEC 00          0914*  	NOP
-040DED 00          0915*  	NOP
-040DEE 00          0916*  	NOP
-040DEF 00          0917*  	NOP
-040DF0 00          0918*  	NOP
-040DF1 00          0919*  	NOP
-040DF2 00          0920*  	NOP
-040DF3 00          0921*  	NOP
-040DF4 00          0922*  	NOP
-040DF5 00          0923*  	NOP
-040DF6 00          0924*  	NOP
-040DF7 00          0925*  	NOP
-040DF8 00          0926*  	NOP
-040DF9 C1          0927*  	POP BC
-040DFA 0B          0928*  	DEC BC
-040DFB 78          0929*  	LD A,B
-040DFC B1          0930*  	OR C
-040DFD FE 00       0931*  	CP 0
-040DFF 20 E5       0932*  	JR NZ,spr_sleep
-040E01 C9          0933*  	RET
-040E02             0934*  
-040E02             0935*  ; get an ascii key value
-040E02             0936*  ; (needed in case of file errors)
-040E02             0937*  spr_input_key:
-040E02 C5          0938*  	push bc
-040E03             0939*  	moscall mos_getkey
-040E03 3E 00       0001*M 		LD	A, function
-040E05 49 CF       0002*M 		RST.LIS	08h
-040E07 C1          0940*  	pop bc
-040E08 C9          0941*  	ret
-040E09             0021   
-040E09             0022   ; equ
-040E09             0023   
-040E09             0024   
-040E09             0025   ; start main program ============================
-040E09             0026   start:
-040E09 F5          0027   	PUSH AF
-040E0A C5          0028   	PUSH BC
-040E0B D5          0029   	PUSH DE
-040E0C DD E5       0030   	PUSH IX
-040E0E FD E5       0031   	PUSH IY
-040E10             0032   
-040E10             0033   	; reset sprites and bitmaps data
-040E10             0034   	VDU 23
-040E10 3E 17       0001M  		LD	A, function
-040E12 49 D7       0002M  		RST.LIS	10h
-040E14             0035   	VDU 27
-040E14 3E 1B       0001M  		LD	A, function
-040E16 49 D7       0002M  		RST.LIS	10h
-040E18             0036   	VDU 16
-040E18 3E 10       0001M  		LD	A, function
-040E1A 49 D7       0002M  		RST.LIS	10h
-040E1C             0037   
-040E1C             0038   	; set mode 136 (like mode 8, but double buffered)
-040E1C             0039   	VDU 22
-040E1C 3E 16       0001M  		LD	A, function
-040E1E 49 D7       0002M  		RST.LIS	10h
-040E20             0040   	VDU 136
-040E20 3E 88       0001M  		LD	A, function
-040E22 49 D7       0002M  		RST.LIS	10h
-040E24             0041   
-040E24             0042   	; set black paper color
-040E24             0043   	VDU 17
-040E24 3E 11       0001M  		LD	A, function
-040E26 49 D7       0002M  		RST.LIS	10h
-040E28             0044   	VDU 128
-040E28 3E 80       0001M  		LD	A, function
-040E2A 49 D7       0002M  		RST.LIS	10h
-040E2C             0045   
-040E2C             0046   	; clear screen
-040E2C             0047   	VDU 12
-040E2C 3E 0C       0001M  		LD	A, function
-040E2E 49 D7       0002M  		RST.LIS	10h
-040E30             0048   
-040E30             0049   	; hide cursor
-040E30             0050   	VDU 23
-040E30 3E 17       0001M  		LD	A, function
-040E32 49 D7       0002M  		RST.LIS	10h
-040E34             0051   	VDU 1
-040E34 3E 01       0001M  		LD	A, function
-040E36 49 D7       0002M  		RST.LIS	10h
-040E38             0052   	VDU 0
-040E38 3E 00       0001M  		LD	A, function
-040E3A 49 D7       0002M  		RST.LIS	10h
-040E3C             0053   
-040E3C             0054   	; disable logical screen
-040E3C             0055   	VDU 23
-040E3C 3E 17       0001M  		LD	A, function
-040E3E 49 D7       0002M  		RST.LIS	10h
-040E40             0056   	VDU 0
-040E40 3E 00       0001M  		LD	A, function
-040E42 49 D7       0002M  		RST.LIS	10h
-040E44             0057   	VDU $C0
-040E44 3E C0       0001M  		LD	A, function
-040E46 49 D7       0002M  		RST.LIS	10h
-040E48             0058   	VDU 0
-040E48 3E 00       0001M  		LD	A, function
-040E4A 49 D7       0002M  		RST.LIS	10h
-040E4C             0059   
-040E4C             0060   	; set pen 15
-040E4C             0061   	VDU 17
-040E4C 3E 11       0001M  		LD	A, function
-040E4E 49 D7       0002M  		RST.LIS	10h
-040E50             0062   	VDU 15
-040E50 3E 0F       0001M  		LD	A, function
-040E52 49 D7       0002M  		RST.LIS	10h
-040E54             0063   
-040E54             0064   	; load crunched screen
-040E54 DD 21 0A 13 0065   	ld ix,screen
+040D78             0827*  
+040D78             0828*  	; print text
+040D78 21 78 08 04 0829*  	ld hl,spr_data_error
+040D7C 01 00 00 00 0830*  	ld bc,0
+040D80 AF          0831*  	xor a
+040D81 49 DF       0832*  	rst.lis $18
+040D83             0833*  
+040D83 C3 E3 0D 04 0834*  	jp spr_input_key
+040D87             0835*  
+040D87             0836*  ; send RGB tint into the VDP
+040D87             0837*  ; a -> color
+040D87             0838*  ; hl -> real palette
+040D87             0839*  spr_send_RGBA_to_VDP:
+040D87 F5          0840*  	PUSH AF
+040D88             0841*  
+040D88 21 31 04 04 0842*  	LD HL,spr_real_palette_buffer
+040D8C 11 00 00 00 0843*  	LD DE,$000000
+040D90 5F          0844*  	LD E,A
+040D91 16 03       0845*  	LD D,3
+040D93 ED 5C       0846*  	MLT DE
+040D95 19          0847*  	ADD HL,DE
+040D96             0848*  
+040D96 E5          0849*  	PUSH HL
+040D97 7E          0850*  	LD A,(HL)
+040D98             0851*  	VDU_A
+040D98 49 D7       0001*M 		RST.LIS	10h
+040D9A E1          0852*  	POP HL
+040D9B             0853*  
+040D9B 23          0854*  	INC HL
+040D9C E5          0855*  	PUSH HL
+040D9D 7E          0856*  	LD A,(HL)
+040D9E             0857*  	VDU_A
+040D9E 49 D7       0001*M 		RST.LIS	10h
+040DA0 E1          0858*  	POP HL
+040DA1             0859*  
+040DA1 23          0860*  	INC HL
+040DA2 E5          0861*  	PUSH HL
+040DA3 7E          0862*  	LD A,(HL)
+040DA4             0863*  	VDU_A
+040DA4 49 D7       0001*M 		RST.LIS	10h
+040DA6 E1          0864*  	POP HL
+040DA7             0865*  
+040DA7 F1          0866*  	POP AF
+040DA8             0867*  
+040DA8 FE 00       0868*  	CP 0 ; color = 0 ?
+040DAA 20 04       0869*  	JR NZ,spr_srtv_not_transparent
+040DAC             0870*  
+040DAC 3E 00       0871*  	LD A,0 ; alpha = 0
+040DAE 18 02       0872*  	JR spr_srtv_write
+040DB0             0873*  
+040DB0             0874*  spr_srtv_not_transparent:
+040DB0 3E FF       0875*  	LD A,255 ; alpha = 255
+040DB2             0876*  
+040DB2             0877*  spr_srtv_write:
+040DB2             0878*  	VDU_A
+040DB2 49 D7       0001*M 		RST.LIS	10h
+040DB4 C9          0879*  	RET
+040DB5             0880*  
+040DB5             0881*  ; sleep 10 ms (approximatively)
+040DB5             0882*  spr_sleep10:
+040DB5 01 10 27 00 0883*  	LD BC,10000
+040DB9 CD C7 0D 04 0884*  	CALL spr_sleep
+040DBD C9          0885*  	RET
+040DBE             0886*  
+040DBE             0887*  ; sleep 50 ms (approximatively)
+040DBE             0888*  spr_sleep50:
+040DBE 01 50 C3 00 0889*  	LD BC,50000
+040DC2 CD C7 0D 04 0890*  	CALL spr_sleep
+040DC6 C9          0891*  	RET
+040DC7             0892*  
+040DC7             0893*  ; sleep microseconds
+040DC7             0894*  ; input : BC*HL
+040DC7             0895*  spr_sleep:
+040DC7 C5          0896*  	PUSH BC
+040DC8 00          0897*  	NOP ; 18 NOPS
+040DC9 00          0898*  	NOP ; for 18 MHtz
+040DCA 00          0899*  	NOP
+040DCB 00          0900*  	NOP
+040DCC 00          0901*  	NOP
+040DCD 00          0902*  	NOP
+040DCE 00          0903*  	NOP
+040DCF 00          0904*  	NOP
+040DD0 00          0905*  	NOP
+040DD1 00          0906*  	NOP
+040DD2 00          0907*  	NOP
+040DD3 00          0908*  	NOP
+040DD4 00          0909*  	NOP
+040DD5 00          0910*  	NOP
+040DD6 00          0911*  	NOP
+040DD7 00          0912*  	NOP
+040DD8 00          0913*  	NOP
+040DD9 00          0914*  	NOP
+040DDA C1          0915*  	POP BC
+040DDB 0B          0916*  	DEC BC
+040DDC 78          0917*  	LD A,B
+040DDD B1          0918*  	OR C
+040DDE FE 00       0919*  	CP 0
+040DE0 20 E5       0920*  	JR NZ,spr_sleep
+040DE2 C9          0921*  	RET
+040DE3             0922*  
+040DE3             0923*  ; get an ascii key value
+040DE3             0924*  ; (needed in case of file errors)
+040DE3             0925*  spr_input_key:
+040DE3 C5          0926*  	push bc
+040DE4             0927*  	moscall mos_getkey
+040DE4 3E 00       0001*M 		LD	A, function
+040DE6 49 CF       0002*M 		RST.LIS	08h
+040DE8 C1          0928*  	pop bc
+040DE9 C9          0929*  	ret
+040DEA             0021   
+040DEA             0022   ; equ
+040DEA             0023   
+040DEA             0024   
+040DEA             0025   ; start main program ============================
+040DEA             0026   start:
+040DEA F5          0027   	PUSH AF
+040DEB C5          0028   	PUSH BC
+040DEC D5          0029   	PUSH DE
+040DED DD E5       0030   	PUSH IX
+040DEF FD E5       0031   	PUSH IY
+040DF1             0032   
+040DF1             0033   	; reset sprites and bitmaps data
+040DF1             0034   	VDU 23
+040DF1 3E 17       0001M  		LD	A, function
+040DF3 49 D7       0002M  		RST.LIS	10h
+040DF5             0035   	VDU 27
+040DF5 3E 1B       0001M  		LD	A, function
+040DF7 49 D7       0002M  		RST.LIS	10h
+040DF9             0036   	VDU 16
+040DF9 3E 10       0001M  		LD	A, function
+040DFB 49 D7       0002M  		RST.LIS	10h
+040DFD             0037   
+040DFD             0038   	; set mode 136 (like mode 8, but double buffered)
+040DFD             0039   	VDU 22
+040DFD 3E 16       0001M  		LD	A, function
+040DFF 49 D7       0002M  		RST.LIS	10h
+040E01             0040   	VDU 136
+040E01 3E 88       0001M  		LD	A, function
+040E03 49 D7       0002M  		RST.LIS	10h
+040E05             0041   
+040E05             0042   	; set black paper color
+040E05             0043   	VDU 17
+040E05 3E 11       0001M  		LD	A, function
+040E07 49 D7       0002M  		RST.LIS	10h
+040E09             0044   	VDU 128
+040E09 3E 80       0001M  		LD	A, function
+040E0B 49 D7       0002M  		RST.LIS	10h
+040E0D             0045   
+040E0D             0046   	; clear screen
+040E0D             0047   	VDU 12
+040E0D 3E 0C       0001M  		LD	A, function
+040E0F 49 D7       0002M  		RST.LIS	10h
+040E11             0048   
+040E11             0049   	; hide cursor
+040E11             0050   	VDU 23
+040E11 3E 17       0001M  		LD	A, function
+040E13 49 D7       0002M  		RST.LIS	10h
+040E15             0051   	VDU 1
+040E15 3E 01       0001M  		LD	A, function
+040E17 49 D7       0002M  		RST.LIS	10h
+040E19             0052   	VDU 0
+040E19 3E 00       0001M  		LD	A, function
+040E1B 49 D7       0002M  		RST.LIS	10h
+040E1D             0053   
+040E1D             0054   	; disable logical screen
+040E1D             0055   	VDU 23
+040E1D 3E 17       0001M  		LD	A, function
+040E1F 49 D7       0002M  		RST.LIS	10h
+040E21             0056   	VDU 0
+040E21 3E 00       0001M  		LD	A, function
+040E23 49 D7       0002M  		RST.LIS	10h
+040E25             0057   	VDU $C0
+040E25 3E C0       0001M  		LD	A, function
+040E27 49 D7       0002M  		RST.LIS	10h
+040E29             0058   	VDU 0
+040E29 3E 00       0001M  		LD	A, function
+040E2B 49 D7       0002M  		RST.LIS	10h
+040E2D             0059   
+040E2D             0060   	; set pen 15
+040E2D             0061   	VDU 17
+040E2D 3E 11       0001M  		LD	A, function
+040E2F 49 D7       0002M  		RST.LIS	10h
+040E31             0062   	VDU 15
+040E31 3E 0F       0001M  		LD	A, function
+040E33 49 D7       0002M  		RST.LIS	10h
+040E35             0063   
+040E35             0064   	; load crunched screen
+040E35 DD 21 EB 12 0065   	ld ix,screen
        04          
-040E59 FD 21 52 84 0066   	ld iy,screen_buffer
+040E3A FD 21 33 84 0066   	ld iy,screen_buffer
        04          
-040E5E CD 86 01 04 0067   	CALL scn_load
-040E62             0068   
-040E62             0069   	; get sprite palette from crunched screen
-040E62 21 C6 00 04 0070   	LD HL,scn_palette_rgb
-040E66 11 31 04 04 0071   	LD DE,spr_real_palette_buffer
-040E6A 01 00 00 00 0072   	LD BC,$000000
-040E6E DD 21 4A 00 0073   	LD IX,scn_colors_count
+040E3F CD 86 01 04 0067   	CALL scn_load
+040E43             0068   
+040E43             0069   	; get sprite palette from crunched screen
+040E43 21 C6 00 04 0070   	LD HL,scn_palette_rgb
+040E47 11 31 04 04 0071   	LD DE,spr_real_palette_buffer
+040E4B 01 00 00 00 0072   	LD BC,$000000
+040E4F DD 21 4A 00 0073   	LD IX,scn_colors_count
        04          
-040E73 DD 7E 00    0074   	LD A,(IX+0)
-040E76 4F          0075   	LD C,A
-040E77 06 03       0076   	LD B,3
-040E79 ED 4C       0077   	MLT BC
-040E7B ED B0       0078   	LDIR
-040E7D             0079   
-040E7D 21 07 12 04 0080   	LD HL,sprite1
-040E81 3E 00       0081   	LD A,0 ; sprite number
-040E83 CD BA 0B 04 0082   	CALL spr_init ; c -> frames count
-040E87             0083   
-040E87 3E 01       0084   	LD A,1 ; 1 sprite activated
-040E89 CD 9D 0C 04 0085   	CALL spr_activate
-040E8D             0086   
-040E8D 3E 00       0087   	LD A,0
-040E8F 11 00 00 00 0088   	LD DE,0
-040E93 D5          0089   	PUSH DE
-040E94 21 70 00 00 0090   	LD HL,112
-040E98 CD AE 0C 04 0091   	CALL spr_set_position
-040E9C             0092   
-040E9C 3E 00       0093   	LD A,0
-040E9E CD DB 0C 04 0094   	CALL spr_show
-040EA2             0095   
-040EA2 D1          0096   	POP DE
-040EA3             0097   
-040EA3             0098   main_loop:
-040EA3 CD 92 03 04 0099   	CALL scn_redraw
-040EA7 D5          0100   	PUSH DE
-040EA8 3E 00       0101   	LD A,0
-040EAA 21 70 00 00 0102   	LD HL,112
-040EAE CD AE 0C 04 0103   	CALL spr_set_position
-040EB2 CD 15 0D 04 0104   	CALL spr_update
-040EB6 CD 22 0D 04 0105   	CALL spr_flip
-040EBA 01 A0 0F 00 0106   	LD BC,4000
-040EBE CD E6 0D 04 0107   	CALL spr_sleep
-040EC2 CD 2F 0D 04 0108   	CALL spr_set_next_frame
-040EC6 D1          0109   	POP DE
-040EC7 13          0110   	INC DE
-040EC8 21 40 01 00 0111   	LD HL,320
-040ECC B7          0112   	OR A
-040ECD ED 52       0113   	SBC HL,DE
-040ECF 19          0114   	ADD HL,DE
-040ED0 C2 A3 0E 04 0115   	JP NZ,main_loop
-040ED4             0116   
-040ED4             0117   exit_program:
-040ED4             0118   	; reset to mode 1
-040ED4             0119   	VDU 22
-040ED4 3E 16       0001M  		LD	A, function
-040ED6 49 D7       0002M  		RST.LIS	10h
-040ED8             0120   	VDU 1
-040ED8 3E 01       0001M  		LD	A, function
-040EDA 49 D7       0002M  		RST.LIS	10h
-040EDC             0121   
-040EDC             0122   	; enable logical screen
-040EDC             0123   	VDU 23
-040EDC 3E 17       0001M  		LD	A, function
-040EDE 49 D7       0002M  		RST.LIS	10h
-040EE0             0124   	VDU 0
-040EE0 3E 00       0001M  		LD	A, function
-040EE2 49 D7       0002M  		RST.LIS	10h
-040EE4             0125   	VDU $C0
-040EE4 3E C0       0001M  		LD	A, function
-040EE6 49 D7       0002M  		RST.LIS	10h
-040EE8             0126   	VDU 1
-040EE8 3E 01       0001M  		LD	A, function
-040EEA 49 D7       0002M  		RST.LIS	10h
-040EEC             0127   
-040EEC             0128   	; position the texte cursor at home
-040EEC             0129   	VDU 30
-040EEC 3E 1E       0001M  		LD	A, function
-040EEE 49 D7       0002M  		RST.LIS	10h
-040EF0             0130   
-040EF0             0131   	; show cursor
-040EF0             0132   	VDU 23
-040EF0 3E 17       0001M  		LD	A, function
-040EF2 49 D7       0002M  		RST.LIS	10h
-040EF4             0133   	VDU 1
-040EF4 3E 01       0001M  		LD	A, function
-040EF6 49 D7       0002M  		RST.LIS	10h
-040EF8             0134   	VDU 1
-040EF8 3E 01       0001M  		LD	A, function
-040EFA 49 D7       0002M  		RST.LIS	10h
-040EFC             0135   
-040EFC FD E1       0136   	POP IY
-040EFE DD E1       0137   	POP IX
-040F00 D1          0138   	POP DE
-040F01 C1          0139   	POP BC
-040F02 F1          0140   	POP AF
-040F03 21 00 00 00 0141   	LD HL,0
-040F07             0142   
-040F07 C9          0143   	RET
-040F08             0144   
-040F08             0145   ; ===============================================
-040F08             0146   palette1:
-040F08 4A 41 53 43 0147   .incbin "data/X-Space.pal"
+040E54 DD 7E 00    0074   	LD A,(IX+0)
+040E57 4F          0075   	LD C,A
+040E58 06 03       0076   	LD B,3
+040E5A ED 4C       0077   	MLT BC
+040E5C ED B0       0078   	LDIR
+040E5E             0079   
+040E5E 21 E8 11 04 0080   	LD HL,sprite1
+040E62 3E 00       0081   	LD A,0 ; sprite number
+040E64 CD BA 0B 04 0082   	CALL spr_init ; c -> frames count
+040E68             0083   
+040E68 3E 01       0084   	LD A,1 ; 1 sprite activated
+040E6A CD 9D 0C 04 0085   	CALL spr_activate
+040E6E             0086   
+040E6E 3E 00       0087   	LD A,0
+040E70 11 00 00 00 0088   	LD DE,0
+040E74 D5          0089   	PUSH DE
+040E75 21 70 00 00 0090   	LD HL,112
+040E79 CD BF 0C 04 0091   	CALL spr_set_position
+040E7D             0092   
+040E7D 3E 00       0093   	LD A,0
+040E7F CD DC 0C 04 0094   	CALL spr_show
+040E83             0095   
+040E83 D1          0096   	POP DE
+040E84             0097   
+040E84             0098   main_loop:
+040E84 CD 92 03 04 0099   	CALL scn_redraw
+040E88 D5          0100   	PUSH DE
+040E89 3E 00       0101   	LD A,0
+040E8B 21 70 00 00 0102   	LD HL,112
+040E8F CD BF 0C 04 0103   	CALL spr_set_position
+040E93 CD 10 0D 04 0104   	CALL spr_set_next_frame
+040E97 CD F6 0C 04 0105   	CALL spr_update
+040E9B CD 03 0D 04 0106   	CALL spr_flip
+040E9F 01 A0 0F 00 0107   	LD BC,4000
+040EA3 CD C7 0D 04 0108   	CALL spr_sleep
+040EA7 D1          0109   	POP DE
+040EA8 13          0110   	INC DE
+040EA9 21 40 01 00 0111   	LD HL,320
+040EAD B7          0112   	OR A
+040EAE ED 52       0113   	SBC HL,DE
+040EB0 19          0114   	ADD HL,DE
+040EB1 C2 84 0E 04 0115   	JP NZ,main_loop
+040EB5             0116   
+040EB5             0117   exit_program:
+040EB5             0118   	; reset to mode 1
+040EB5             0119   	VDU 22
+040EB5 3E 16       0001M  		LD	A, function
+040EB7 49 D7       0002M  		RST.LIS	10h
+040EB9             0120   	VDU 1
+040EB9 3E 01       0001M  		LD	A, function
+040EBB 49 D7       0002M  		RST.LIS	10h
+040EBD             0121   
+040EBD             0122   	; enable logical screen
+040EBD             0123   	VDU 23
+040EBD 3E 17       0001M  		LD	A, function
+040EBF 49 D7       0002M  		RST.LIS	10h
+040EC1             0124   	VDU 0
+040EC1 3E 00       0001M  		LD	A, function
+040EC3 49 D7       0002M  		RST.LIS	10h
+040EC5             0125   	VDU $C0
+040EC5 3E C0       0001M  		LD	A, function
+040EC7 49 D7       0002M  		RST.LIS	10h
+040EC9             0126   	VDU 1
+040EC9 3E 01       0001M  		LD	A, function
+040ECB 49 D7       0002M  		RST.LIS	10h
+040ECD             0127   
+040ECD             0128   	; position the texte cursor at home
+040ECD             0129   	VDU 30
+040ECD 3E 1E       0001M  		LD	A, function
+040ECF 49 D7       0002M  		RST.LIS	10h
+040ED1             0130   
+040ED1             0131   	; show cursor
+040ED1             0132   	VDU 23
+040ED1 3E 17       0001M  		LD	A, function
+040ED3 49 D7       0002M  		RST.LIS	10h
+040ED5             0133   	VDU 1
+040ED5 3E 01       0001M  		LD	A, function
+040ED7 49 D7       0002M  		RST.LIS	10h
+040ED9             0134   	VDU 1
+040ED9 3E 01       0001M  		LD	A, function
+040EDB 49 D7       0002M  		RST.LIS	10h
+040EDD             0135   
+040EDD FD E1       0136   	POP IY
+040EDF DD E1       0137   	POP IX
+040EE1 D1          0138   	POP DE
+040EE2 C1          0139   	POP BC
+040EE3 F1          0140   	POP AF
+040EE4 21 00 00 00 0141   	LD HL,0
+040EE8             0142   
+040EE8 C9          0143   	RET
+040EE9             0144   
+040EE9             0145   ; ===============================================
+040EE9             0146   palette1:
+040EE9 4A 41 53 43 0147   .incbin "data/X-Space.pal"
        2D 50 41 4C 
        0D 0A 30 31 
        30 30 0D 0A 
@@ -2371,9 +2345,9 @@ PC     Output      Line
        36 20 31 35 
        38 20 31 35 
        34 0D 0A    
-041207             0148   
-041207             0149   sprite1:
-041207 40 01 10 03 0150   .incbin "data/X-Space.spr"
+0411E8             0148   
+0411E8             0149   sprite1:
+0411E8 40 01 10 03 0150   .incbin "data/X-Space.spr"
        03 03 03 00 
        00 00 00 00 
        00 00 00 00 
@@ -2438,9 +2412,9 @@ PC     Output      Line
        03 00 00 00 
        00 00 00 00 
        00 00 00    
-04130A             0151   
-04130A             0152   screen:
-04130A 08 05 04 03 0153   .incbin "data/X-Space.scn"
+0412EB             0151   
+0412EB             0152   screen:
+0412EB 08 05 04 03 0153   .incbin "data/X-Space.scn"
        0E 0C 0C 2D 
        1B 1E 61 27 
        21 B9 45 1D 
@@ -9690,4 +9664,4 @@ PC     Output      Line
        0F 00 24 00 
        03 00 00 2A 
        24 00 18 00 
-048452             0154   screen_buffer:
+048433             0154   screen_buffer:

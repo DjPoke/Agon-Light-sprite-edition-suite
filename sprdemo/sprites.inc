@@ -6,11 +6,11 @@
 
 ;===================================
 ; equ's
-HEADER_BUFFER_SIZE:	equ 16
+SPR_HEADER_BUFFER_SIZE:	equ 16
 
-MAX_PAL_DATA: equ 836 ; max palette chars
-MAX_PAL_DATA_HI: equ 03h
-MAX_PAL_DATA_LO: equ 44h
+SPR_MAX_PAL_DATA: equ 836 ; max palette chars
+SPR_MAX_PAL_DATA_HI: equ 03h
+SPR_MAX_PAL_DATA_LO: equ 44h
 
 ;===================================
 ; data
@@ -25,7 +25,7 @@ spr_real_palette_buffer:
 	ds 192
 
 spr_palette_buffer:
-	ds MAX_PAL_DATA + 1
+	ds SPR_MAX_PAL_DATA + 1
 
 spr_temp_chars_buffer:
 	db 0,0,0,0
@@ -164,7 +164,7 @@ spr_set_default_palette:
 spr_load_palette:
 	; compare loaded header with needed header
 	ld de,spr_header
-	ld b,HEADER_BUFFER_SIZE
+	ld b,SPR_HEADER_BUFFER_SIZE
 
 spr_lp_compare:
 	ld a,(de)
@@ -230,10 +230,10 @@ spr_lp_load_pal_loop:
 	inc hl
 	inc de ; count chars
 	ld a,d
-	cp MAX_PAL_DATA_HI
+	cp SPR_MAX_PAL_DATA_HI
 	jp c,spr_lp_load_pal_loop
 	ld a,e
-	cp MAX_PAL_DATA_LO
+	cp SPR_MAX_PAL_DATA_LO
 	jp c,spr_lp_load_pal_loop
 	jp spr_lp_read_palette_data
 
@@ -716,6 +716,15 @@ spr_activate:
 	VDU_A
 	RET
 
+; select sprite a
+spr_select:
+	PUSH AF
+	VDU 23
+	VDU 27
+	VDU 4
+	POP AF
+	VDU_A
+	RET
 
 ;  a sprite
 ; a -> sprite number
@@ -724,13 +733,6 @@ spr_activate:
 spr_set_position:
 	PUSH HL
 	PUSH DE
-	PUSH AF
-	VDU 23
-	VDU 27
-	VDU 4
-	POP AF
-	VDU_A
-	
 	VDU 23
 	VDU 27
 	VDU 13
@@ -742,13 +744,6 @@ spr_set_position:
 
 ; a -> sprite number
 spr_show:
-	PUSH AF
-	VDU 23
-	VDU 27
-	VDU 4
-	POP AF
-	VDU_A
-
 	VDU 23
 	VDU 27
 	VDU 11
@@ -756,13 +751,6 @@ spr_show:
 
 ; a -> sprite number
 spr_hide:
-	PUSH AF
-	VDU 23
-	VDU 27
-	VDU 4
-	POP AF
-	VDU_A
-
 	VDU 23
 	VDU 27
 	VDU 12
