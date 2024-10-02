@@ -22,7 +22,7 @@ Global palcount.l = 0
 Global version$ ="3.0"
 
 ; create the window
-If OpenWindow(0, 0, 0, 1024, 768, "png2scn (v" + version$ + ")",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
+If OpenWindow(0, 0, 0, 1024, 768 + MenuHeight(), "png2scn (v" + version$ + ")",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
   ; create the menu
   If CreateMenu(0, WindowID(0))
     MenuTitle("File")
@@ -408,8 +408,8 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 234
-; FirstLine = 213
+; CursorPosition = 24
+; FirstLine = 12
 ; Folding = -
 ; EnableXP
 ; UseIcon = icons\png2scn.ico

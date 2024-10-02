@@ -13,7 +13,7 @@ Global palcount.l = 0
 Global version$ = "1.0"
 
 ; create the window
-If OpenWindow(0, 0, 0, 1024, 768, "scnviewer (v" + version$ + ")",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
+If OpenWindow(0, 0, 0, 1024, 768 + MenuHeight(), "scnviewer (v" + version$ + ")",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
   ; create the menu
   If CreateMenu(0, WindowID(0))
     MenuTitle("File")
@@ -200,8 +200,7 @@ DataSection
 EndDataSection
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 88
-; FirstLine = 67
+; CursorPosition = 15
 ; Folding = -
 ; EnableXP
 ; DPIAware

@@ -23,7 +23,7 @@ Global size.a = 0
 Global version$ = "3.0"
 
 ; create the window
-If OpenWindow(0, 0, 0, 256, 256, "png2spr (v" + version$ + ")",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
+If OpenWindow(0, 0, 0, 256, 256 + MenuHeight(), "png2spr (v" + version$ + ")",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
   ; create the menu
   If CreateMenu(0, WindowID(0))
     MenuTitle("File")
@@ -291,7 +291,7 @@ Procedure ApplyPalette(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 37
+; CursorPosition = 25
 ; FirstLine = 12
 ; Folding = -
 ; EnableXP

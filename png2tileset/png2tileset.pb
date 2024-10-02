@@ -21,7 +21,7 @@ Global tsize.a = 0
 Global version$ = "1.0"
 
 ; create the window
-If OpenWindow(0, 0, 0, 512, 512, "png2tileset (v" + version$ + ")",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
+If OpenWindow(0, 0, 0, 512, 512 + MenuHeight(), "png2tileset (v" + version$ + ")",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
   ; create the menu
   If CreateMenu(0, WindowID(0))
     MenuTitle("File")
@@ -243,8 +243,7 @@ Procedure ApplyPalette(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 191
-; FirstLine = 185
+; CursorPosition = 23
 ; Folding = -
 ; EnableXP
 ; Executable = png2tileset.exe

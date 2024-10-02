@@ -17,7 +17,7 @@ Global size.l = 0
 Global version$ = "1.0"
 
 ; create the window
-If OpenWindow(0, 0, 0, 256, 256, "sprviewer (v" + version$ + ")",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
+If OpenWindow(0, 0, 0, 256, 256 + MenuHeight(), "sprviewer (v" + version$ + ")",#PB_Window_SystemMenu|#PB_Window_ScreenCentered|#PB_Window_MinimizeGadget)
   ; create the menu
   If CreateMenu(0, WindowID(0))
     MenuTitle("File")
@@ -180,8 +180,7 @@ Procedure LoadPalette(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 116
-; FirstLine = 99
+; CursorPosition = 19
 ; Folding = -
 ; EnableXP
 ; DPIAware
