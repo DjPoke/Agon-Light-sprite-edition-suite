@@ -189,7 +189,7 @@ Procedure ApplyPalette(file$)
     WriteByte(1, palcount)
     
     ; write number of tiles
-    WriteByte(1, tsize)
+    WriteByte(1, tsize * tsize)
     
     ; write size of each tile
     WriteByte(1, size)
@@ -243,7 +243,7 @@ Procedure ApplyPalette(file$)
 EndProcedure
 
 ; IDE Options = PureBasic 6.12 LTS (Windows - x64)
-; CursorPosition = 206
+; CursorPosition = 191
 ; FirstLine = 185
 ; Folding = -
 ; EnableXP
